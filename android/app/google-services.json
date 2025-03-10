@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "723708655722",
+    "project_id": "uber-health-app",
+    "storage_bucket": "uber-health-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:723708655722:android:36735f6d594ece86c2f213",
+        "android_client_info": {
+          "package_name": "com.example.uber_health_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJCDEbNNw-GuGFk0ZL1ZE-ynW9bV-3mFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
