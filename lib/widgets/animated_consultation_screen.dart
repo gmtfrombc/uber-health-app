@@ -2,8 +2,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
-import '../screens/final_screen.dart';
+import 'package:provider/provider.dart';
 import '../screens/home_screen.dart';
+import '../screens/final_screen.dart';
+import '../models/message.dart';
+import '../providers/request_provider.dart';
+import '../services/chatgpt_service.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
   final bool
@@ -32,11 +36,11 @@ class AnimatedConsultationScreenState
   @override
   void initState() {
     super.initState();
-    // Configure flows based on consult vs. medical question and urgency.
+    // Configure the animations and messages based on flow
     if (widget.isImmediate) {
       // Immediate flows:
       if (widget.isSynchronous) {
-        // Quick Consult: 4-stage flow.
+        // Quick Consult: 4-stage flow
         animations = [
           'assets/animations/doctor_request.json',
           'assets/animations/doctor_search.json',
@@ -50,7 +54,7 @@ class AnimatedConsultationScreenState
           'Connecting you with Dr. Tolson',
         ];
       } else {
-        // Quick Medical Question: 3-stage flow (omit the "connecting" stage).
+        // Quick Medical Question: 3-stage flow (omit connecting stage)
         animations = [
           'assets/animations/doctor_request.json',
           'assets/animations/doctor_search.json',
@@ -64,68 +68,78 @@ class AnimatedConsultationScreenState
       }
     } else {
       // Non-immediate flows (Routine or No Rush):
+      // Both consult and medical question flows use a 2-stage sequence here.
+      animations = [
+        'assets/animations/doctor_request.json',
+        'assets/animations/doctor_connected.json',
+      ];
       if (widget.isSynchronous) {
-        // Consult (Routine/No Rush Consult): 2-stage flow.
-        animations = [
-          'assets/animations/doctor_request.json',
-          'assets/animations/doctor_connected.json',
-        ];
-        String finalMessage;
+        // For consults
         if (widget.urgency.toLowerCase() == 'routine') {
-          finalMessage =
-              'Your request has been received, we will notify you by text when your provider is ready (expect 30-60 minutes). Please be ready to connect within 5 minutes of the notification.';
+          messages = [
+            'Reading your request',
+            'Your request has been received, we will notify you by text when your provider is ready (expect 30-60 minutes). Please be ready to connect within 5 minutes of the notification.',
+          ];
         } else if (widget.urgency.toLowerCase() == 'no rush') {
-          finalMessage =
-              'Your request has been received, we will notify you by text when your provider is ready (expect 12-24 hours). Please be ready to connect within 5 minutes of the notification.';
+          messages = [
+            'Reading your request',
+            'Your request has been received, we will notify you by text when your provider is ready (expect 12-24 hours). Please be ready to connect within 5 minutes of the notification.',
+          ];
         } else {
-          finalMessage =
-              'Your request has been received, we will notify you by text when your provider is ready.';
+          messages = [
+            'Reading your request',
+            'Your request has been received, we will notify you by text when your provider is ready.',
+          ];
         }
-        messages = ['Reading your request', finalMessage];
       } else {
-        // Medical Question (Routine/No Rush): 2-stage flow.
-        animations = [
-          'assets/animations/doctor_request.json',
-          'assets/animations/doctor_connected.json',
-        ];
-        String finalMessage;
+        // For medical questions
         if (widget.urgency.toLowerCase() == 'routine') {
-          finalMessage =
-              'Your request has been received, we will notify you by text when the provider has responded to your request (expect 30-60 minutes).';
+          messages = [
+            'Reading your request',
+            'Your request has been received, we will notify you by text when the provider has responded to your request (expect 30-60 minutes).',
+          ];
         } else if (widget.urgency.toLowerCase() == 'no rush') {
-          finalMessage =
-              'Your request has been received, we will notify you by text when the provider has responded to your request (expect 12-24 hours).';
+          messages = [
+            'Reading your request',
+            'Your request has been received, we will notify you by text when the provider has responded to your request (expect 12-24 hours).',
+          ];
         } else {
-          finalMessage =
-              'Your request has been received, we will notify you by text when the provider has responded to your request.';
+          messages = [
+            'Reading your request',
+            'Your request has been received, we will notify you by text when the provider has responded to your request.',
+          ];
         }
-        messages = ['Reading your request', finalMessage];
       }
     }
+    // Start the animation sequence and summary generation concurrently.
     animateStages();
+    if (widget.isImmediate) {
+      _generateSummary(); // Only generate summary automatically for immediate flows.
+    }
   }
 
   Future<void> animateStages() async {
     if (!widget.isImmediate) {
-      // For non-immediate flows, auto-advance the first stage, then remain on the final stage.
+      // Non-immediate flows: auto advance the first stage, then remain on the final stage (with a "Got it!" button).
       setState(() {
         currentStage = 0;
       });
       await Future.delayed(const Duration(seconds: 3));
+      if (!mounted) return;
       setState(() {
-        currentStage = animations.length - 1; // final static stage with button.
+        currentStage = animations.length - 1;
       });
-      // Do not auto-advance further; wait for user action.
+      // Remain on final stage; user can tap "Got it!" to finish.
     } else {
       // Immediate flows: auto-advance through all stages.
       for (int i = 0; i < animations.length; i++) {
+        if (!mounted) return;
         setState(() {
           currentStage = i;
         });
         await Future.delayed(const Duration(seconds: 3));
       }
       await Future.delayed(const Duration(seconds: 1));
-      // Check if the widget is still mounted before using the context.
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -133,6 +147,41 @@ class AnimatedConsultationScreenState
           builder: (_) => FinalScreen(isSynchronous: widget.isSynchronous),
         ),
       );
+    }
+  }
+
+  Future<void> _generateSummary() async {
+    // Retrieve the saved conversation from RequestProvider.
+    final requestProvider = Provider.of<RequestProvider>(
+      context,
+      listen: false,
+    );
+    final conversationMessages = requestProvider.conversation;
+    if (conversationMessages == null) return;
+
+    // Build conversation for summarization.
+    List<Map<String, String>> conversation =
+        conversationMessages.map((m) {
+          return {
+            "role": m.sender == 'patient' ? "user" : "assistant",
+            "content": m.content,
+          };
+        }).toList();
+    // Prepend a system prompt specifically for summarization.
+    conversation.insert(0, {
+      "role": "system",
+      "content": "Please summarize the following conversation concisely.",
+    });
+
+    try {
+      String summary = await ChatGPTService().getAIResponse(conversation);
+      // Append the summary as a new message to the conversation.
+      requestProvider.updateConversation([
+        ...conversationMessages,
+        Message(sender: 'ai', content: summary, timestamp: DateTime.now()),
+      ]);
+    } catch (e) {
+      debugPrint("Error generating summary: $e");
     }
   }
 
@@ -159,7 +208,6 @@ class AnimatedConsultationScreenState
                 textAlign: TextAlign.center,
               ),
             ),
-            // For non-immediate flows, if at the final stage, show "Got it!" button.
             if (!widget.isImmediate && currentStage == animations.length - 1)
               Padding(
                 padding: const EdgeInsets.only(top: 20),

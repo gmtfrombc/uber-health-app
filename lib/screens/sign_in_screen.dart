@@ -5,7 +5,7 @@ import 'home_screen.dart';
 import 'sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({Key? key}) : super(key: key);
+  const SignInScreen({super.key});
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -13,10 +13,10 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController(
-    text: "test@example.com",
+    text: "bsmith@yahoo.com",
   ); // Hard-coded for testing
   final TextEditingController _passwordController = TextEditingController(
-    text: "password123",
+    text: "password",
   ); // Hard-coded for testing
 
   bool _isLoading = false;
