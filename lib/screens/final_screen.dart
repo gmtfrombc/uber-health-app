@@ -1,6 +1,7 @@
 // lib/screens/final_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'home_screen.dart'; // Import HomeScreen
 
 class FinalScreen extends StatelessWidget {
   final bool isSynchronous;
@@ -39,7 +40,11 @@ class FinalScreen extends StatelessWidget {
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
-                // Define what should happen next.
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  (route) => false,
+                );
               },
               child: Text(buttonText),
             ),

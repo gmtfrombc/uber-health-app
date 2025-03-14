@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import '../screens/home_screen.dart';
-import '../screens/final_screen.dart';
 import '../models/message.dart';
 import '../providers/request_provider.dart';
 import '../services/chatgpt_service.dart';
+import '../utils/prompts.dart';
+import '../screens/home_screen.dart';
+import '../screens/final_screen.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
-  final bool
-  isSynchronous; // true for consults (telehealth), false for medical questions (messaging)
-  final bool isImmediate; // true if "Quick", false if Routine or No Rush
+  final bool isSynchronous; // true for consults, false for medical questions
+  final bool isImmediate; // indicates if it's a quick request
   final String urgency; // "Quick", "Routine", or "No Rush"
 
   const AnimatedConsultationScreen({
@@ -36,11 +36,10 @@ class AnimatedConsultationScreenState
   @override
   void initState() {
     super.initState();
-    // Configure the animations and messages based on flow
+    // Set up animations and messages based on flow.
     if (widget.isImmediate) {
-      // Immediate flows:
       if (widget.isSynchronous) {
-        // Quick Consult: 4-stage flow
+        // Quick Consult: 4-stage flow.
         animations = [
           'assets/animations/doctor_request.json',
           'assets/animations/doctor_search.json',
@@ -54,7 +53,7 @@ class AnimatedConsultationScreenState
           'Connecting you with Dr. Tolson',
         ];
       } else {
-        // Quick Medical Question: 3-stage flow (omit connecting stage)
+        // Quick Medical Question: 3-stage flow.
         animations = [
           'assets/animations/doctor_request.json',
           'assets/animations/doctor_search.json',
@@ -67,60 +66,45 @@ class AnimatedConsultationScreenState
         ];
       }
     } else {
-      // Non-immediate flows (Routine or No Rush):
-      // Both consult and medical question flows use a 2-stage sequence here.
+      // Non-immediate flows: 2-stage sequence.
       animations = [
         'assets/animations/doctor_request.json',
         'assets/animations/doctor_connected.json',
       ];
       if (widget.isSynchronous) {
-        // For consults
-        if (widget.urgency.toLowerCase() == 'routine') {
-          messages = [
-            'Reading your request',
-            'Your request has been received, we will notify you by text when your provider is ready (expect 30-60 minutes). Please be ready to connect within 5 minutes of the notification.',
-          ];
-        } else if (widget.urgency.toLowerCase() == 'no rush') {
-          messages = [
-            'Reading your request',
-            'Your request has been received, we will notify you by text when your provider is ready (expect 12-24 hours). Please be ready to connect within 5 minutes of the notification.',
-          ];
-        } else {
-          messages = [
-            'Reading your request',
-            'Your request has been received, we will notify you by text when your provider is ready.',
-          ];
-        }
+        messages =
+            widget.urgency.toLowerCase() == 'routine'
+                ? [
+                  'Reading your request',
+                  'Your request has been received, we will notify you by text when your provider is ready (expect 30-60 minutes). Please be ready to connect within 5 minutes of the notification.',
+                ]
+                : [
+                  'Reading your request',
+                  'Your request has been received, we will notify you by text when your provider is ready (expect 12-24 hours). Please be ready to connect within 5 minutes of the notification.',
+                ];
       } else {
-        // For medical questions
-        if (widget.urgency.toLowerCase() == 'routine') {
-          messages = [
-            'Reading your request',
-            'Your request has been received, we will notify you by text when the provider has responded to your request (expect 30-60 minutes).',
-          ];
-        } else if (widget.urgency.toLowerCase() == 'no rush') {
-          messages = [
-            'Reading your request',
-            'Your request has been received, we will notify you by text when the provider has responded to your request (expect 12-24 hours).',
-          ];
-        } else {
-          messages = [
-            'Reading your request',
-            'Your request has been received, we will notify you by text when the provider has responded to your request.',
-          ];
-        }
+        messages =
+            widget.urgency.toLowerCase() == 'routine'
+                ? [
+                  'Reading your request',
+                  'Your request has been received, we will notify you by text when the provider has responded to your request (expect 30-60 minutes).',
+                ]
+                : [
+                  'Reading your request',
+                  'Your request has been received, we will notify you by text when the provider has responded to your request (expect 12-24 hours).',
+                ];
       }
     }
-    // Start the animation sequence and summary generation concurrently.
+    // Start the animation sequence and summary generation concurrently for immediate flows.
     animateStages();
     if (widget.isImmediate) {
-      _generateSummary(); // Only generate summary automatically for immediate flows.
+      _generateSummary();
     }
   }
 
   Future<void> animateStages() async {
     if (!widget.isImmediate) {
-      // Non-immediate flows: auto advance the first stage, then remain on the final stage (with a "Got it!" button).
+      // For non-immediate flows: auto advance the first stage, then remain on the final stage.
       setState(() {
         currentStage = 0;
       });
@@ -129,9 +113,9 @@ class AnimatedConsultationScreenState
       setState(() {
         currentStage = animations.length - 1;
       });
-      // Remain on final stage; user can tap "Got it!" to finish.
+      // Non-immediate flows wait for user action ("Got it!").
     } else {
-      // Immediate flows: auto-advance through all stages.
+      // For immediate flows: auto advance through all stages.
       for (int i = 0; i < animations.length; i++) {
         if (!mounted) return;
         setState(() {
@@ -141,6 +125,7 @@ class AnimatedConsultationScreenState
       }
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
+      // Instead of returning to HomeScreen, navigate to FinalScreen.
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -151,7 +136,6 @@ class AnimatedConsultationScreenState
   }
 
   Future<void> _generateSummary() async {
-    // Retrieve the saved conversation from RequestProvider.
     final requestProvider = Provider.of<RequestProvider>(
       context,
       listen: false,
@@ -167,15 +151,12 @@ class AnimatedConsultationScreenState
             "content": m.content,
           };
         }).toList();
-    // Prepend a system prompt specifically for summarization.
-    conversation.insert(0, {
-      "role": "system",
-      "content": "Please summarize the following conversation concisely.",
-    });
+    // Prepend the system message for summary using triagePrompt.
+    conversation.insert(0, {"role": "system", "content": triagePrompt});
 
     try {
       String summary = await ChatGPTService().getAIResponse(conversation);
-      // Append the summary as a new message to the conversation.
+      // Append the summary as a new AI message.
       requestProvider.updateConversation([
         ...conversationMessages,
         Message(sender: 'ai', content: summary, timestamp: DateTime.now()),
@@ -215,7 +196,7 @@ class AnimatedConsultationScreenState
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                      MaterialPageRoute(builder: (_) => HomeScreen()),
                       (route) => false,
                     );
                   },

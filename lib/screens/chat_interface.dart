@@ -27,24 +27,49 @@ class ChatInterface extends StatefulWidget {
 class _ChatInterfaceState extends State<ChatInterface> {
   final TextEditingController _textController = TextEditingController();
   final List<Message> _messages = [];
+  final ScrollController _scrollController = ScrollController();
   bool _isLoadingAI = false;
+  bool _triageComplete = false; // Flag to indicate triage completion
   final ChatGPTService _chatGPTService = ChatGPTService();
 
-  /// Handles sending a patient's message and then getting the AI response.
+  @override
+  void initState() {
+    super.initState();
+    // Add initial welcome message from the AI triage nurse.
+    _messages.add(
+      Message(
+        sender: 'ai',
+        content: 'Hi there, how can I help you today?',
+        timestamp: DateTime.now(),
+      ),
+    );
+    _scrollToBottom();
+  }
+
+  /// Automatically scrolls the conversation to the bottom.
+  void _scrollToBottom() {
+    // Delay to ensure the new message is rendered.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  /// Handles sending a patient's message and then obtaining the AI response.
   void _handleSend() async {
     String text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    // If the final triage message is already sent, don't process further.
-    bool triageComplete = _messages.any(
-      (msg) =>
-          msg.sender == 'ai' &&
-          msg.content.contains("I have enough information"),
-    );
-    if (triageComplete) {
+    // Prevent further input if triage is already complete.
+    if (_triageComplete) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Triage complete. Please click 'Done' to continue."),
+          content: Text("Triage is complete. Please click 'Done' to continue."),
         ),
       );
       return;
@@ -57,34 +82,34 @@ class _ChatInterfaceState extends State<ChatInterface> {
       _textController.clear();
       _isLoadingAI = true;
     });
+    _scrollToBottom();
 
     // Build conversation history for the API call.
     List<Map<String, String>> conversation =
-        _messages
-            .map(
-              (m) => {
-                "role": m.sender == 'patient' ? "user" : "assistant",
-                "content": m.content,
-              },
-            )
-            .toList();
-    // Prepend the system prompt.
+        _messages.map((m) {
+          return {
+            "role": m.sender == 'patient' ? "user" : "assistant",
+            "content": m.content,
+          };
+        }).toList();
+    // Prepend the system prompt (used for ongoing triage).
     conversation.insert(0, {"role": "system", "content": defaultPrompt});
 
-    // If there are at least 3 patient messages, send final triage message.
+    // Check if enough patient messages have been sent.
     int patientCount = _messages.where((m) => m.sender == 'patient').length;
-    if (patientCount >= 7) {
+    if (patientCount >= 10) {
       setState(() {
         _messages.add(
           Message(
             sender: 'ai',
-            content:
-                "Okay, I have enough information, you can click 'Done' to continue.",
+            content: "Okay, I have all the information that I need. Please click 'Done' to continue.",
             timestamp: DateTime.now(),
           ),
         );
         _isLoadingAI = false;
+        _triageComplete = true;
       });
+      _scrollToBottom();
       return;
     }
 
@@ -96,6 +121,23 @@ class _ChatInterfaceState extends State<ChatInterface> {
         );
         _isLoadingAI = false;
       });
+      _scrollToBottom();
+      // Check if the AI indicates triage completion.
+      if (aiResponse.contains("[TRIAGE_COMPLETE]")) {
+        setState(() {
+          // Optionally remove the token from the response.
+          _messages.removeLast();
+          _messages.add(
+            Message(
+              sender: 'ai',
+              content: "Triage complete. Please click 'Done' to continue.",
+              timestamp: DateTime.now(),
+            ),
+          );
+          _triageComplete = true;
+        });
+        _scrollToBottom();
+      }
     } catch (e) {
       setState(() {
         _isLoadingAI = false;
@@ -106,12 +148,18 @@ class _ChatInterfaceState extends State<ChatInterface> {
 
   /// When 'Done' is tapped, save the conversation and navigate to the animated workflow.
   void _handleDone() {
+    if (!_triageComplete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Triage is not complete yet.")),
+      );
+      return;
+    }
     // Save the conversation via RequestProvider.
     Provider.of<RequestProvider>(
       context,
       listen: false,
     ).updateConversation(_messages);
-    // Navigate to the animated workflow screen.
+    // Navigate to the animated consultation screen.
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -128,6 +176,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
   @override
   void dispose() {
     _textController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -156,6 +205,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(8),
               itemCount: _messages.length,
               itemBuilder:
@@ -176,11 +226,13 @@ class _ChatInterfaceState extends State<ChatInterface> {
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _handleSend(),
+                    enabled:
+                        !_triageComplete, // Disable input if triage is complete.
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
-                  onPressed: _handleSend,
+                  onPressed: _triageComplete ? null : _handleSend,
                 ),
               ],
             ),
@@ -188,7 +240,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
           Padding(
             padding: const EdgeInsets.all(8),
             child: ElevatedButton(
-              onPressed: _handleDone,
+              onPressed: _triageComplete ? _handleDone : null,
               child: const Text('Done'),
             ),
           ),

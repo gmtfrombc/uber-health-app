@@ -2,10 +2,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message.dart';
 import '../models/patient_request.dart';
-
+import 'package:flutter/material.dart';
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Creates a new conversation document and returns its ID.
   Future<String> savePatientRequest(
     PatientRequest request,
     List<Message> conversation, {
@@ -22,16 +23,24 @@ class FirebaseService {
       'messages': conversation.map((msg) => msg.toMap()).toList(),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-      'aiTriageSummary': aiTriageSummary, // initially may be null
+      'aiTriageSummary': aiTriageSummary,
       'providerResponse': providerResponse,
       'providerInstructions': providerInstructions,
     };
 
-    // Save the document and return its id
     DocumentReference docRef = await _firestore
         .collection('conversations')
         .add(data);
-    print("Document added with ID: ${docRef.id}");
+    debugPrint("Document added with ID: ${docRef.id}");
     return docRef.id;
+  }
+
+  // Updates an existing conversation document.
+  Future<void> updatePatientRequest(
+    String docId,
+    Map<String, dynamic> data,
+  ) async {
+    await _firestore.collection('conversations').doc(docId).update(data);
+    debugPrint("Document $docId updated.");
   }
 }

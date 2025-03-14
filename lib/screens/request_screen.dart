@@ -1,12 +1,25 @@
 // lib/screens/request_screen.dart
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../models/patient_request.dart';
 import '../providers/request_provider.dart';
-import '../screens/chat_interface.dart'; // Updated import to use ChatInterface
+import '../screens/chat_interface.dart';
 
-class RequestScreen extends StatelessWidget {
+class RequestScreen extends StatefulWidget {
   const RequestScreen({super.key});
+
+  @override
+  State<RequestScreen> createState() => _RequestScreenState();
+}
+
+class _RequestScreenState extends State<RequestScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Clear any previous conversation data so a new conversation is started.
+    Provider.of<RequestProvider>(context, listen: false).clearRequest();
+  }
 
   // A helper method to create a tile
   Widget buildTile({
@@ -25,21 +38,17 @@ class RequestScreen extends StatelessWidget {
         subtitle: Text(timing),
         trailing: Text(price, style: const TextStyle(fontSize: 16)),
         onTap: () {
-          // Save the request details to the provider (if desired)
+          // Get the current user's UID and create a new request.
+          final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
           Provider.of<RequestProvider>(context, listen: false).createRequest(
-            PatientRequest(
-              patientId:
-                  'prototype_patient', // Updated parameter: use patientId
-              requestType: type,
-              urgency: urgency,
-            ),
+            PatientRequest(patientId: uid, requestType: type, urgency: urgency),
           );
-          // Determine if this is a quick (immediate) request
+          // Determine if this is a quick (immediate) request.
           bool isImmediate = urgency.toLowerCase() == 'quick';
-          // For consults, we assume synchronous (telehealth); for questions, asynchronous
+          // For consults, we assume synchronous (telehealth); for questions, asynchronous.
           bool isSynchronous = type == RequestType.consult;
 
-          // Navigate to the ChatInterface first, which will then lead to the animations
+          // Navigate to the ChatInterface screen.
           Navigator.push(
             context,
             MaterialPageRoute(
