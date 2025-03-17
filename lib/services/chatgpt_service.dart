@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ChatGPTService {
   final String _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
 
@@ -14,7 +15,7 @@ class ChatGPTService {
     };
 
     final body = jsonEncode({
-      "model": "gpt-3.5-turbo",
+      "model": "gpt-4o",
       "messages": conversation,
       "temperature": 0.7,
       "max_tokens": 150,

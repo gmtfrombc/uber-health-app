@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/sign_in_screen.dart';
+import '../screens/summary_list_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -49,6 +50,17 @@ class _AppDrawerState extends State<AppDrawer> {
             title: const Text('Settings'),
             onTap: () {
               Navigator.pop(context); // Close the drawer
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.article),
+            title: const Text('View AI Summary'),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer first
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SummaryListScreen()),
+              );
             },
           ),
           ListTile(

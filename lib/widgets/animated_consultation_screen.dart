@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import '../models/message.dart';
 import '../providers/request_provider.dart';
 import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart';
@@ -11,9 +10,11 @@ import '../screens/home_screen.dart';
 import '../screens/final_screen.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
-  final bool isSynchronous; // true for consults, false for medical questions
-  final bool isImmediate; // indicates if it's a quick request
-  final String urgency; // "Quick", "Routine", or "No Rush"
+  final bool isSynchronous; // true for consult, false for medical question
+  final bool
+  isImmediate; // for consult: Quick = immediate; for medical question, always non-immediate
+  final String
+  urgency; // For consult: "Quick" or "Routine"; for medical question: "Routine"
 
   const AnimatedConsultationScreen({
     required this.isSynchronous,
@@ -36,10 +37,10 @@ class AnimatedConsultationScreenState
   @override
   void initState() {
     super.initState();
-    // Set up animations and messages based on flow.
-    if (widget.isImmediate) {
-      if (widget.isSynchronous) {
-        // Quick Consult: 4-stage flow.
+    if (widget.isSynchronous) {
+      // Consult flow.
+      if (widget.urgency.toLowerCase() == 'quick') {
+        // Quick Consult immediate flow: 4-stage.
         animations = [
           'assets/animations/doctor_request.json',
           'assets/animations/doctor_search.json',
@@ -52,59 +53,44 @@ class AnimatedConsultationScreenState
           'Provider is reviewing your request',
           'Connecting you with Dr. Tolson',
         ];
-      } else {
-        // Quick Medical Question: 3-stage flow.
+      } else if (widget.urgency.toLowerCase() == 'routine') {
+        // Routine Consult (12-24 hours) non-immediate flow: 2-stage.
         animations = [
           'assets/animations/doctor_request.json',
-          'assets/animations/doctor_search.json',
-          'assets/animations/doctor_review.json',
+          'assets/animations/doctor_connected.json',
         ];
         messages = [
           'Reading your request',
-          'Contacting healthcare provider',
-          'Provider is reviewing your request',
+          'Your request has been received, we will notify you by text when your provider is ready (expect 12-24 hours). Please be ready to connect within 5 minutes of the notification.',
         ];
+      } else {
+        // Fallback (should not occur)
+        animations = [
+          'assets/animations/doctor_request.json',
+          'assets/animations/doctor_connected.json',
+        ];
+        messages = ['Reading your request', 'Your request has been received.'];
       }
     } else {
-      // Non-immediate flows: 2-stage sequence.
+      // Medical Question flow: always non-immediate, 2-stage.
       animations = [
         'assets/animations/doctor_request.json',
         'assets/animations/doctor_connected.json',
       ];
-      if (widget.isSynchronous) {
-        messages =
-            widget.urgency.toLowerCase() == 'routine'
-                ? [
-                  'Reading your request',
-                  'Your request has been received, we will notify you by text when your provider is ready (expect 30-60 minutes). Please be ready to connect within 5 minutes of the notification.',
-                ]
-                : [
-                  'Reading your request',
-                  'Your request has been received, we will notify you by text when your provider is ready (expect 12-24 hours). Please be ready to connect within 5 minutes of the notification.',
-                ];
-      } else {
-        messages =
-            widget.urgency.toLowerCase() == 'routine'
-                ? [
-                  'Reading your request',
-                  'Your request has been received, we will notify you by text when the provider has responded to your request (expect 30-60 minutes).',
-                ]
-                : [
-                  'Reading your request',
-                  'Your request has been received, we will notify you by text when the provider has responded to your request (expect 12-24 hours).',
-                ];
-      }
+      messages = [
+        'Reading your request',
+        'Your request has been received, we will notify you by text when the provider has responded to your question (expect 12-24 hours).',
+      ];
     }
-    // Start the animation sequence and summary generation concurrently for immediate flows.
     animateStages();
-    if (widget.isImmediate) {
+    if (widget.isImmediate && widget.isSynchronous) {
       _generateSummary();
     }
   }
 
   Future<void> animateStages() async {
     if (!widget.isImmediate) {
-      // For non-immediate flows: auto advance the first stage, then remain on the final stage.
+      // Non-immediate flows: auto advance first stage, then remain on final stage.
       setState(() {
         currentStage = 0;
       });
@@ -113,9 +99,9 @@ class AnimatedConsultationScreenState
       setState(() {
         currentStage = animations.length - 1;
       });
-      // Non-immediate flows wait for user action ("Got it!").
+      // Wait for user action ("Got it!") before proceeding.
     } else {
-      // For immediate flows: auto advance through all stages.
+      // Immediate flows: auto-advance through all stages.
       for (int i = 0; i < animations.length; i++) {
         if (!mounted) return;
         setState(() {
@@ -125,7 +111,6 @@ class AnimatedConsultationScreenState
       }
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
-      // Instead of returning to HomeScreen, navigate to FinalScreen.
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -142,8 +127,6 @@ class AnimatedConsultationScreenState
     );
     final conversationMessages = requestProvider.conversation;
     if (conversationMessages == null) return;
-
-    // Build conversation for summarization.
     List<Map<String, String>> conversation =
         conversationMessages.map((m) {
           return {
@@ -151,16 +134,10 @@ class AnimatedConsultationScreenState
             "content": m.content,
           };
         }).toList();
-    // Prepend the system message for summary using triagePrompt.
     conversation.insert(0, {"role": "system", "content": triagePrompt});
-
     try {
       String summary = await ChatGPTService().getAIResponse(conversation);
-      // Append the summary as a new AI message.
-      requestProvider.updateConversation([
-        ...conversationMessages,
-        Message(sender: 'ai', content: summary, timestamp: DateTime.now()),
-      ]);
+      requestProvider.updateConversationWithSummary(summary, {});
     } catch (e) {
       debugPrint("Error generating summary: $e");
     }
@@ -196,7 +173,7 @@ class AnimatedConsultationScreenState
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => HomeScreen()),
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
                       (route) => false,
                     );
                   },

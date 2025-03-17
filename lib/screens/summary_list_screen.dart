@@ -3,9 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'summary_detail_screen.dart';
+import '../services/firebase_service.dart';
 
 class SummaryListScreen extends StatelessWidget {
-  const SummaryListScreen({Key? key}) : super(key: key);
+  const SummaryListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +36,6 @@ class SummaryListScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Log each document for debugging purposes.
-          for (var doc in snapshot.data?.docs ?? []) {
-            debugPrint("Document ID: ${doc.id} Data: ${doc.data()}");
-          }
-
           // Filter documents to only include those with a non-empty aiTriageSummary.
           final docs = snapshot.data?.docs ?? [];
           final validDocs =
@@ -62,24 +58,46 @@ class SummaryListScreen extends StatelessWidget {
               final Timestamp timestamp = data['createdAt'] as Timestamp;
               final DateTime createdAt = timestamp.toDate();
               final String summary = data['aiTriageSummary'];
-              return ListTile(
-                title: Text(
-                  'Summary from ${createdAt.toLocal().toString().substring(0, 16)}',
+              return Dismissible(
+                key: Key(doc.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                subtitle: Text(
-                  summary.length > 50
-                      ? '${summary.substring(0, 50)}...'
-                      : summary,
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => SummaryDetailScreen(conversationId: doc.id),
-                    ),
-                  );
+                onDismissed: (direction) async {
+                  try {
+                    await FirebaseService().deleteConversation(doc.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Summary deleted")),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error deleting summary: $e")),
+                    );
+                  }
                 },
+                child: ListTile(
+                  title: Text(
+                    'Summary from ${createdAt.toLocal().toString().substring(0, 16)}',
+                  ),
+                  subtitle: Text(
+                    summary.length > 50
+                        ? '${summary.substring(0, 50)}...'
+                        : summary,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => SummaryDetailScreen(conversationId: doc.id),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );

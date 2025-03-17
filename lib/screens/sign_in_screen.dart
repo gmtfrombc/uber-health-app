@@ -13,7 +13,7 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController(
-    text: "bsmith@yahoo.com",
+    text: "bsmith@google.com",
   ); // Hard-coded for testing
   final TextEditingController _passwordController = TextEditingController(
     text: "password",
@@ -33,7 +33,6 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text.trim(),
       );
       if (credential.user != null) {
-        // Navigate to HomeScreen on successful sign in.
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),

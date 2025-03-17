@@ -7,6 +7,7 @@ import 'providers/request_provider.dart';
 import 'providers/user_provider.dart';
 import 'screens/auth_wrapper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'theme.dart'; // Import our custom theme
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,10 +29,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Uber Health Prototype',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme, // Use our custom theme
         home: const AuthWrapper(),
       ),
     );

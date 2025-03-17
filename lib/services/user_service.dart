@@ -9,8 +9,8 @@ class UserService {
   // Save a new user profile to Firestore (creates/overwrites the document).
   Future<void> saveUserProfile(UserModel user) async {
     try {
-      await _firestore.collection('users').doc(user.uid).set(user.toMap());
-      debugPrint("User profile saved successfully for uid: ${user.uid}");
+      final userMap = user.toMap();
+      await _firestore.collection('users').doc(user.uid).set(userMap);
     } catch (error) {
       debugPrint("Error saving user profile: $error");
       rethrow;
@@ -25,11 +25,10 @@ class UserService {
       if (doc.exists) {
         return UserModel.fromMap(doc.data() as Map<String, dynamic>);
       } else {
-        print("No user profile found for uid: $uid");
         return null;
       }
     } catch (error) {
-      print("Error getting user profile: $error");
+      debugPrint("Error retrieving user profile: $error");
       rethrow;
     }
   }
@@ -37,8 +36,8 @@ class UserService {
   // Update an existing user profile.
   Future<void> updateUserProfile(UserModel user) async {
     try {
-      await _firestore.collection('users').doc(user.uid).update(user.toMap());
-      debugPrint("User profile updated successfully for uid: ${user.uid}");
+      final userMap = user.toMap();
+      await _firestore.collection('users').doc(user.uid).update(userMap);
     } catch (error) {
       debugPrint("Error updating user profile: $error");
       rethrow;

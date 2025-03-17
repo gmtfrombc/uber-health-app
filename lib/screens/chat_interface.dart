@@ -4,15 +4,15 @@ import 'package:provider/provider.dart';
 import '../models/message.dart';
 import '../providers/request_provider.dart';
 import '../services/chatgpt_service.dart';
-import '../utils/prompts.dart';
+import '../utils/prompts.dart'; // Contains defaultPrompt, triagePrompt, medicalQuestionPrompt, and categoryPrompts
 import '../widgets/animated_consultation_screen.dart';
 
 class ChatInterface extends StatefulWidget {
+  final bool isSynchronous; // true for consult, false for medical question
   final bool
-  isSynchronous; // true for consult (telehealth), false for medical question (messaging)
-  final bool isImmediate; // true if "Quick", false if Routine or No Rush
-  final String urgency; // "Quick", "Routine", or "No Rush"
-
+  isImmediate; // For consult: Quick = immediate; for medical question, always immediate (or can adjust if needed)
+  final String
+  urgency; // For consult: "Quick" or "Routine"; for medical question: "Routine"
   const ChatInterface({
     required this.isSynchronous,
     required this.isImmediate,
@@ -29,26 +29,25 @@ class _ChatInterfaceState extends State<ChatInterface> {
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingAI = false;
-  bool _triageComplete = false; // Flag to indicate triage completion
+  bool _triageComplete = false;
+  bool _isGeneratingSummary = false; // New flag for summary generation
   final ChatGPTService _chatGPTService = ChatGPTService();
 
   @override
   void initState() {
     super.initState();
-    // Add initial welcome message from the AI triage nurse.
     _messages.add(
       Message(
         sender: 'ai',
-        content: 'Hi there, how can I help you today?',
+        content:
+            'Hi there! I\'m your virtual health assistant. I’ll help gather some details about what’s going on so your provider has the right information. \n\nLet\'s start with a brief description of your concern (e.g., I\'ve had a bad sore throat for the last week).\n\nThen I\'ll ask a few follow-up questions to understand your situation better.',
         timestamp: DateTime.now(),
       ),
     );
     _scrollToBottom();
   }
 
-  /// Automatically scrolls the conversation to the bottom.
   void _scrollToBottom() {
-    // Delay to ensure the new message is rendered.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -60,12 +59,9 @@ class _ChatInterfaceState extends State<ChatInterface> {
     });
   }
 
-  /// Handles sending a patient's message and then obtaining the AI response.
   void _handleSend() async {
     String text = _textController.text.trim();
     if (text.isEmpty) return;
-
-    // Prevent further input if triage is already complete.
     if (_triageComplete) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -74,7 +70,6 @@ class _ChatInterfaceState extends State<ChatInterface> {
       );
       return;
     }
-
     setState(() {
       _messages.add(
         Message(sender: 'patient', content: text, timestamp: DateTime.now()),
@@ -83,8 +78,6 @@ class _ChatInterfaceState extends State<ChatInterface> {
       _isLoadingAI = true;
     });
     _scrollToBottom();
-
-    // Build conversation history for the API call.
     List<Map<String, String>> conversation =
         _messages.map((m) {
           return {
@@ -92,17 +85,28 @@ class _ChatInterfaceState extends State<ChatInterface> {
             "content": m.content,
           };
         }).toList();
-    // Prepend the system prompt (used for ongoing triage).
-    conversation.insert(0, {"role": "system", "content": defaultPrompt});
-
-    // Check if enough patient messages have been sent.
+    final requestProvider = Provider.of<RequestProvider>(
+      context,
+      listen: false,
+    );
+    String promptToUse;
+    if (requestProvider.selectedCategory == "Medical Question") {
+      promptToUse = medicalQuestionPrompt;
+    } else if (requestProvider.selectedCategory != null &&
+        categoryPrompts.containsKey(requestProvider.selectedCategory)) {
+      promptToUse = categoryPrompts[requestProvider.selectedCategory]!;
+    } else {
+      promptToUse = defaultPrompt;
+    }
+    conversation.insert(0, {"role": "system", "content": promptToUse});
     int patientCount = _messages.where((m) => m.sender == 'patient').length;
     if (patientCount >= 10) {
       setState(() {
         _messages.add(
           Message(
             sender: 'ai',
-            content: "Okay, I have all the information that I need. Please click 'Done' to continue.",
+            content:
+                "Okay, I have all the information that I need. Please click 'Done' to continue.",
             timestamp: DateTime.now(),
           ),
         );
@@ -112,7 +116,6 @@ class _ChatInterfaceState extends State<ChatInterface> {
       _scrollToBottom();
       return;
     }
-
     try {
       final aiResponse = await _chatGPTService.getAIResponse(conversation);
       setState(() {
@@ -122,15 +125,14 @@ class _ChatInterfaceState extends State<ChatInterface> {
         _isLoadingAI = false;
       });
       _scrollToBottom();
-      // Check if the AI indicates triage completion.
       if (aiResponse.contains("[TRIAGE_COMPLETE]")) {
         setState(() {
-          // Optionally remove the token from the response.
           _messages.removeLast();
           _messages.add(
             Message(
               sender: 'ai',
-              content: "Triage complete. Please click 'Done' to continue.",
+              content:
+                  "Okay, I have all the information that I need. Please click 'Done' to continue.",
               timestamp: DateTime.now(),
             ),
           );
@@ -146,20 +148,37 @@ class _ChatInterfaceState extends State<ChatInterface> {
     }
   }
 
-  /// When 'Done' is tapped, save the conversation and navigate to the animated workflow.
-  void _handleDone() {
+  void _handleDone() async {
     if (!_triageComplete) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Triage is not complete yet.")),
       );
       return;
     }
-    // Save the conversation via RequestProvider.
-    Provider.of<RequestProvider>(
-      context,
-      listen: false,
-    ).updateConversation(_messages);
-    // Navigate to the animated consultation screen.
+    setState(() {
+      _isGeneratingSummary = true;
+    });
+    // Build conversation for summary generation.
+    List<Map<String, String>> conversation =
+        _messages.map((m) {
+          return {
+            "role": m.sender == 'patient' ? "user" : "assistant",
+            "content": m.content,
+          };
+        }).toList();
+    conversation.insert(0, {"role": "system", "content": triagePrompt});
+    String summary = "";
+    try {
+      summary = await _chatGPTService.getAIResponse(conversation);
+    } catch (e) {
+      debugPrint("Error generating summary: $e");
+      summary = "Error generating summary.";
+    }
+    Provider.of<RequestProvider>(context, listen: false)
+        .updateConversationWithSummary(summary, {});
+    setState(() {
+      _isGeneratingSummary = false;
+    });
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -180,7 +199,6 @@ class _ChatInterfaceState extends State<ChatInterface> {
     super.dispose();
   }
 
-  /// Displays a chat bubble for a given message.
   Widget _buildMessageBubble(Message message) {
     bool isPatient = message.sender == 'patient';
     return Align(
@@ -200,7 +218,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat with Triage Nurse')),
+      appBar: AppBar(title: const Text('Virtual Assistant')),
       body: Column(
         children: [
           Expanded(
@@ -221,13 +239,15 @@ class _ChatInterfaceState extends State<ChatInterface> {
                   child: TextField(
                     controller: _textController,
                     decoration: const InputDecoration(
-                      hintText: 'Enter your message...',
+                      hintText: 'Enter your medical info here...',
                       border: OutlineInputBorder(),
                     ),
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    minLines: 1,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _handleSend(),
-                    enabled:
-                        !_triageComplete, // Disable input if triage is complete.
+                    enabled: !_triageComplete,
                   ),
                 ),
                 IconButton(
@@ -239,10 +259,13 @@ class _ChatInterfaceState extends State<ChatInterface> {
           ),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: ElevatedButton(
-              onPressed: _triageComplete ? _handleDone : null,
-              child: const Text('Done'),
-            ),
+            child:
+                _isGeneratingSummary
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                      onPressed: _triageComplete ? _handleDone : null,
+                      child: const Text('Done'),
+                    ),
           ),
         ],
       ),

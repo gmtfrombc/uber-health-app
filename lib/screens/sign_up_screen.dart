@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../models/user_model.dart';
-import 'home_screen.dart';
+import 'onboarding_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -14,7 +14,8 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   // Additional patient info fields
@@ -37,24 +38,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
             password: _passwordController.text.trim(),
           );
       if (credential.user != null) {
-        // Create a user profile
+        // Debug: Print values from controllers.
+        debugPrint('First Name: ${_firstNameController.text}');
+        debugPrint('Last Name: ${_lastNameController.text}');
+        debugPrint('Email: ${_emailController.text}');
+        debugPrint('DOB: ${_dobController.text}');
+        debugPrint('Gender: ${_genderController.text}');
+        debugPrint('Ethnicity: ${_ethnicityController.text}');
+
+        // Create a new user profile with firstname and lastname.
         UserModel newUser = UserModel(
           uid: credential.user!.uid,
           role: 'patient',
-          name: _nameController.text.trim(),
+          firstname: _firstNameController.text.trim(),
+          lastname: _lastNameController.text.trim(),
           email: _emailController.text.trim(),
           dob: _dobController.text.trim(),
           gender: _genderController.text.trim(),
           ethnicity: _ethnicityController.text.trim(),
           createdAt: DateTime.now(),
         );
-        // Save the user profile using the UserProvider
+        // Save the user profile using the UserProvider.
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         await userProvider.saveUser(newUser);
-        // Navigate to HomeScreen on successful sign-up
+        // Navigate to OnboardingScreen on successful sign-up.
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -73,7 +83,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _dobController.dispose();
@@ -92,8 +103,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: "Full Name"),
+              controller: _firstNameController,
+              decoration: const InputDecoration(labelText: "First Name"),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _lastNameController,
+              decoration: const InputDecoration(labelText: "Last Name"),
             ),
             const SizedBox(height: 16),
             TextField(
