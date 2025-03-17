@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/message.dart';
 import '../providers/request_provider.dart';
 import '../services/chatgpt_service.dart';
-import '../utils/prompts.dart'; // Contains defaultPrompt, triagePrompt, medicalQuestionPrompt, and categoryPrompts
+import '../utils/prompts.dart'; // Should define defaultPrompt, providerPromptConsult, providerPromptQuestion, ptPromptConsult, ptPromptQuestion, and getInitialPrompt.
 import '../widgets/animated_consultation_screen.dart';
 
 class ChatInterface extends StatefulWidget {
@@ -36,13 +36,24 @@ class _ChatInterfaceState extends State<ChatInterface> {
   @override
   void initState() {
     super.initState();
+    // Retrieve the current request from the provider.
+    final requestProvider = Provider.of<RequestProvider>(
+      context,
+      listen: false,
+    );
+    final currentRequest = requestProvider.currentRequest;
+    // Determine the initial prompt based on provider and request type.
+    String initialPrompt;
+    if (currentRequest != null) {
+      initialPrompt = getInitialPrompt(
+        currentRequest.providerType,
+        currentRequest.requestType,
+      );
+    } else {
+      initialPrompt = defaultPrompt; // Fallback prompt.
+    }
     _messages.add(
-      Message(
-        sender: 'ai',
-        content:
-            'Hi there! I\'m your virtual health assistant. I’ll help gather some details about what’s going on so your provider has the right information. \n\nLet\'s start with a brief description of your concern (e.g., I\'ve had a bad sore throat for the last week).\n\nThen I\'ll ask a few follow-up questions to understand your situation better.',
-        timestamp: DateTime.now(),
-      ),
+      Message(sender: 'ai', content: initialPrompt, timestamp: DateTime.now()),
     );
     _scrollToBottom();
   }
@@ -89,14 +100,12 @@ class _ChatInterfaceState extends State<ChatInterface> {
       context,
       listen: false,
     );
-    String promptToUse;
-    if (requestProvider.selectedCategory == "Medical Question") {
-      promptToUse = medicalQuestionPrompt;
-    } else if (requestProvider.selectedCategory != null &&
-        categoryPrompts.containsKey(requestProvider.selectedCategory)) {
-      promptToUse = categoryPrompts[requestProvider.selectedCategory]!;
-    } else {
-      promptToUse = defaultPrompt;
+    String promptToUse = defaultPrompt;
+    if (requestProvider.selectedCategory != null) {
+      promptToUse = getComplaintPrompt(
+        requestProvider.providerType,
+        requestProvider.selectedCategory!,
+      );
     }
     conversation.insert(0, {"role": "system", "content": promptToUse});
     int patientCount = _messages.where((m) => m.sender == 'patient').length;
@@ -174,8 +183,10 @@ class _ChatInterfaceState extends State<ChatInterface> {
       debugPrint("Error generating summary: $e");
       summary = "Error generating summary.";
     }
-    Provider.of<RequestProvider>(context, listen: false)
-        .updateConversationWithSummary(summary, {});
+    Provider.of<RequestProvider>(
+      context,
+      listen: false,
+    ).updateConversationWithSummary(summary, {});
     setState(() {
       _isGeneratingSummary = false;
     });

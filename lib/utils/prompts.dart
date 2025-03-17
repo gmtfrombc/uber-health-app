@@ -1,3 +1,23 @@
+import '../models/patient_request.dart';
+
+String getInitialPrompt(ProviderType providerType, RequestType requestType) {
+  if (providerType == ProviderType.medicalProvider) {
+    if (requestType == RequestType.consult) {
+      return providerPromptConsult;
+    } else if (requestType == RequestType.medicalQuestion) {
+      return providerPromptQuestion;
+    }
+  } else if (providerType == ProviderType.physicalTherapist) {
+    if (requestType == RequestType.consult) {
+      return ptPromptConsult;
+    } else if (requestType == RequestType.medicalQuestion) {
+      return ptPromptQuestion;
+    }
+  }
+  // Fallback prompt if no match.
+  return defaultPrompt;
+}
+
 const String defaultPrompt = '''
 You are an expert, experienced triage nurse, trained to take a basic history from a patient through a chat interface. 
 Output Format:
@@ -43,3 +63,82 @@ You are an highly experienced triage nurse who has worked in healthcare for many
 **INSTRUCTIONS:*** 
 Never give medical advice, recommendations, or directions to the patient. Your only task is to clarify the question if needed, which will always be evaluated by a licensed healthcare professional. 
 ''';
+
+const Map<String, String> medicalProviderComplaintPrompts = {
+  'Cough and Cold Symptoms':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Cough and Cold Symptoms.',
+  'Urinary Symptoms':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Urinary Symptoms.',
+  'Allergy Symptoms':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Allergy Symptoms.',
+  'Intestinal Symptoms':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Intestinal Symptoms.',
+  'Rashes and Skin Problems':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Rashes and Skin Problems.',
+  'Musculoskeletal Problems':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Musculoskeletal Problems.',
+  'General Wellness':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: General Wellness.',
+  'Other':
+      'Lorem ipsum dolor sit amet, prompt for medical provider: Other symptoms.',
+};
+
+/// Complaint prompts for Physical Therapists.
+const Map<String, String> physicalTherapistComplaintPrompts = {
+  'Neck Pain':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Neck Pain.',
+  'Low Back Pain':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Low Back Pain.',
+  'Shoulder Pain':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Shoulder Pain.',
+  'Elbow Pain':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Elbow Pain.',
+  'Wrist and Hand Pain':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Wrist and Hand Pain.',
+  'Hip': 'Lorem ipsum dolor sit amet, prompt for physical therapist: Hip Pain.',
+  'Knee':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Knee Pain.',
+  'Ankle and Foot':
+      'Lorem ipsum dolor sit amet, prompt for physical therapist: Ankle and Foot Pain.',
+};
+
+String getComplaintPrompt(ProviderType providerType, String category) {
+  if (providerType == ProviderType.medicalProvider) {
+    return medicalProviderComplaintPrompts[category] ?? defaultPrompt;
+  } else if (providerType == ProviderType.physicalTherapist) {
+    return physicalTherapistComplaintPrompts[category] ?? defaultPrompt;
+  }
+  return defaultPrompt;
+}
+
+/// Default prompt to use if no specific prompt is matched.
+//the rest below are the initial prompts
+//
+//
+//
+//
+//
+//
+const String defaultConsultPrompt =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. This is the default prompt.";
+
+/// Prompt for Medical Consult (both urgent and routine).
+const String providerPromptConsult =
+    "Lorem ipsum dolor sit amet, Provider Consult prompt. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
+
+/// Prompt for Medical Question.
+const String providerPromptQuestion =
+    '''You are an highly experienced triage nurse who has worked in healthcare for many years. Your role is to assess the medical question posed by a patient in the chat and present the question to a physician who will give a reply. You are to assess the patient's question and ask clarifying questions if needed. If the question is straightforward, you do not need to ask clarifying questions. Respond in a conversational rather than technical tone. Respond with clear, concise language. Once you have determined that the question is clear, end your response with the token "[TRIAGE_COMPLETE]". 
+**INSTRUCTIONS:*** 
+Never give medical advice, recommendations, or directions to the patient. Your only task is to clarify the question if needed, which will always be evaluated by a licensed healthcare professional. 
+''';
+
+/// Prompt for Physical Therapy Consult (both urgent and routine).
+const String ptPromptConsult =
+    "Lorem ipsum dolor sit amet, Physical Therapy Consult prompt. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+/// Prompt for Physical Therapy Question.
+const String ptPromptQuestion =
+    "Lorem ipsum dolor sit amet, Physical Therapy Question prompt. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.";
+
+/// Returns
