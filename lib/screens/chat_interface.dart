@@ -185,16 +185,32 @@ class _ChatInterfaceState extends State<ChatInterface> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       debugPrint("Current user ID: $userId");
 
+      if (userId == null) {
+        throw Exception("User not authenticated");
+      }
+
       // Save the summary and wait for the operation to complete
       final requestProvider = Provider.of<RequestProvider>(
         context,
         listen: false,
       );
 
-      await requestProvider.updateConversationWithSummary(summary, {});
-      debugPrint(
-        "Summary saved successfully with ID: ${requestProvider.lastConversationId}",
-      );
+      // Save conversation messages to provider if not already there
+      if (requestProvider.conversation == null) {
+        debugPrint("Adding messages to provider before saving summary");
+        await requestProvider.updateConversation(_messages);
+      }
+
+      final conversationId = await requestProvider
+          .updateConversationWithSummary(summary, {});
+
+      if (conversationId == null) {
+        throw Exception(
+          "Failed to save summary - returned conversation ID is null",
+        );
+      }
+
+      debugPrint("Summary saved successfully with ID: $conversationId");
 
       setState(() {
         _isGeneratingSummary = false;
@@ -220,7 +236,6 @@ class _ChatInterfaceState extends State<ChatInterface> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
-      summary = "Error generating summary.";
     }
   }
 

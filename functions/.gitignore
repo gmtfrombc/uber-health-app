@@ -20,4 +20,4 @@ firebase-debug.log
 .env.*
 
 # Log files
-*.log
+*.log.env.local

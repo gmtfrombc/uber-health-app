@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../models/patient_request.dart';
 import '../services/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RequestProvider with ChangeNotifier {
   PatientRequest? currentRequest;
@@ -67,13 +69,36 @@ class RequestProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateConversationWithSummary(
+  Future<String?> updateConversationWithSummary(
     String summary,
     Map<String, dynamic> additionalData,
   ) async {
-    if (currentRequest == null || conversation == null) {
-      debugPrint('Cannot save summary: currentRequest or conversation is null');
-      return;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    debugPrint('Attempting to save summary for user: $userId');
+
+    // Initialize currentRequest if it's null
+    if (currentRequest == null && userId != null) {
+      debugPrint('Creating new request since currentRequest is null');
+      currentRequest = PatientRequest(
+        patientId: userId,
+        requestType: RequestType.medicalQuestion, // Default type
+        urgency: 'Routine',
+        category: selectedCategory ?? 'General',
+        timestamp: DateTime.now(),
+      );
+    }
+
+    // Initialize conversation if it's null
+    if (conversation == null) {
+      debugPrint('Creating empty conversation array since it is null');
+      conversation = [];
+    }
+
+    if (currentRequest == null) {
+      debugPrint(
+        'ERROR: Cannot save summary: Still no currentRequest - user not logged in?',
+      );
+      return null;
     }
 
     debugPrint(
@@ -84,11 +109,12 @@ class RequestProvider with ChangeNotifier {
       'patientId': currentRequest!.patientId,
       'requestType': currentRequest!.requestType.name,
       'urgency': currentRequest!.urgency,
-      'category': currentRequest!.category,
+      'category': currentRequest!.category ?? 'General',
       'providerType': providerType.name,
       'status': 'pending',
       'messages': conversation!.map((msg) => msg.toMap()).toList(),
       'aiTriageSummary': summary,
+      'createdAt': FieldValue.serverTimestamp(),
       ...additionalData,
     };
 
@@ -105,16 +131,26 @@ class RequestProvider with ChangeNotifier {
           providerResponse: additionalData['providerResponse'],
           providerInstructions: additionalData['providerInstructions'],
         );
+
+        if (lastConversationId == null || lastConversationId!.isEmpty) {
+          debugPrint(
+            'ERROR: Failed to save conversation - returned ID is null or empty',
+          );
+          return null;
+        }
+
         debugPrint('Created conversation with ID: $lastConversationId');
         notifyListeners();
+        return lastConversationId;
       } else {
         debugPrint('Updating existing conversation: $lastConversationId');
         await FirebaseService().updatePatientRequest(lastConversationId!, data);
         debugPrint('Updated conversation successfully');
+        return lastConversationId;
       }
     } catch (e) {
-      debugPrint('Error saving conversation: $e');
-      rethrow; // rethrow to allow handling in the UI
+      debugPrint('ERROR: Exception saving conversation: $e');
+      return null;
     }
   }
 }
