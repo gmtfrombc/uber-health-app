@@ -7,7 +7,7 @@ import 'chat_interface.dart';
 
 class ProviderListScreen extends StatelessWidget {
   final String urgency; // "Quick" or "Routine"
-  const ProviderListScreen({Key? key, required this.urgency}) : super(key: key);
+  const ProviderListScreen({super.key, required this.urgency});
 
   @override
   Widget build(BuildContext context) {

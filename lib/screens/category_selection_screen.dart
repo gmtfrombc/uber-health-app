@@ -14,10 +14,10 @@ class CategorySelectionScreen extends StatelessWidget {
   final String urgency;
   final ChatMode chatMode;
   const CategorySelectionScreen({
-    Key? key,
+    super.key,
     required this.urgency,
     required this.chatMode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

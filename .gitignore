@@ -5,9 +5,11 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -46,6 +48,7 @@ app.*.map.json
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+lib/firebase_options.dart
 
 # Environment variables and sensitive files
 **/.env

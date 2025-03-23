@@ -7,13 +7,11 @@ import 'providers/request_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/provider_provider.dart'; // New provider state management for provider list flow
 import 'screens/auth_wrapper.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'theme.dart'; // Import our custom theme
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: "assets/.env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Configure Firebase emulators in debug mode

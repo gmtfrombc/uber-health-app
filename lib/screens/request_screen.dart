@@ -9,7 +9,7 @@ import 'chat_interface.dart';
 import 'category_selection_screen.dart';
 
 class RequestScreen extends StatefulWidget {
-  const RequestScreen({Key? key}) : super(key: key);
+  const RequestScreen({super.key});
 
   @override
   State<RequestScreen> createState() => _RequestScreenState();
