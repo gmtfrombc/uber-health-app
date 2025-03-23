@@ -22,7 +22,7 @@ export const generateAIResponse = functions.https.onCall(async (data: any, conte
             throw new Error("OpenAI API key not configured");
         }
 
-        console.log('Using API key provided in request data');
+        console.log('OpenAI API key found in environment variables');
 
         // Log only the keys to avoid circular structure issues
         let dataKeys = [];
@@ -114,7 +114,7 @@ export const generateMedicalSummary = functions.https.onCall(async (data: any, c
             throw new Error("OpenAI API key not configured");
         }
 
-        console.log('Using API key for OpenAI');
+        console.log('OpenAI API key found in environment variables');
         const openaiClient = new OpenAI({ apiKey });
 
         if (!chatMessages || !Array.isArray(chatMessages)) {

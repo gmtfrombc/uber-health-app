@@ -64,4 +64,4 @@ lib/firebase_options.dart
 **/yarn-error.log
 
 # Build outputs
-functions/lib/ 
+functions/lib/ functions/.env.local

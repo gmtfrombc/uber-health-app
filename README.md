@@ -1,6 +1,89 @@
 # Uber Health App
 
-A Flutter healthcare application that allows patients to connect with healthcare providers.
+A Flutter application that provides a conversational healthcare interface using Firebase Functions and OpenAI.
+
+## Development Environment Setup
+
+This project has two workflow options:
+
+### Option 1: Local Development Workflow (Recommended for Development)
+
+This setup uses Firebase Emulators to allow local development without affecting production.
+
+#### Prerequisites:
+- Flutter SDK installed
+- Firebase CLI installed
+- Node.js 20 or higher
+- OpenJDK 17 for Firebase Emulators
+- OpenAI API key
+
+#### Setup Steps:
+
+1. Clone the repository
+   ```
+   git clone <repository-url>
+   cd uber_health_app_stable
+   ```
+
+2. Switch to the development branch
+   ```
+   git checkout dev-environment
+   ```
+
+3. Start the development environment:
+   ```
+   ./dev_start_all.sh
+   ```
+   This script will:
+   - Prompt for your OpenAI API key (which is securely stored in `.env.local`)
+   - Start the Firebase emulators
+   - Start the Flutter app
+
+   Alternatively, you can:
+   - Run `./dev_start.sh` to just start the Firebase emulators
+   - Then in a separate terminal, run `./run_flutter.sh` to start the Flutter app
+
+### Option 2: Production Workflow
+
+For production deployment, the app uses Firebase Functions with secrets.
+
+#### Setup Steps:
+
+1. Switch to the production branch
+   ```
+   git checkout firebase_functions
+   ```
+
+2. Configure Firebase:
+   ```
+   firebase login
+   firebase functions:secrets:set OPENAI_KEY
+   ```
+
+3. Deploy Firebase Functions:
+   ```
+   cd functions
+   npm run deploy
+   ```
+
+4. Run Flutter app:
+   ```
+   flutter run
+   ```
+
+## Architecture
+
+- **Flutter App**: Front-end mobile application for iOS/Android
+- **Firebase Functions**: Backend API that securely communicates with OpenAI
+- **OpenAI API**: Provides AI-powered chat capabilities for medical triage
+
+## Important Note
+
+The OpenAI API key is handled differently in each workflow:
+- In local development, it's stored in a `.env.local` file (not committed to Git)
+- In production, it's stored as a Firebase Secret
+
+Never commit API keys to the Git repository.
 
 ## Security Note
 
