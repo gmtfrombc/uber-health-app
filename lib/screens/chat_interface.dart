@@ -6,6 +6,7 @@ import '../providers/request_provider.dart';
 import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart'; // Should define defaultPrompt, providerPromptConsult, providerPromptQuestion, ptPromptConsult, ptPromptQuestion, and getInitialPrompt.
 import '../widgets/animated_consultation_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -179,28 +180,48 @@ class _ChatInterfaceState extends State<ChatInterface> {
     String summary = "";
     try {
       summary = await _chatGPTService.getAIResponse(conversation);
+
+      // Get current user ID for debugging
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      debugPrint("Current user ID: $userId");
+
+      // Save the summary and wait for the operation to complete
+      final requestProvider = Provider.of<RequestProvider>(
+        context,
+        listen: false,
+      );
+
+      await requestProvider.updateConversationWithSummary(summary, {});
+      debugPrint(
+        "Summary saved successfully with ID: ${requestProvider.lastConversationId}",
+      );
+
+      setState(() {
+        _isGeneratingSummary = false;
+      });
+
+      // Now navigate after the save is complete
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => AnimatedConsultationScreen(
+                isSynchronous: widget.isSynchronous,
+                isImmediate: widget.isImmediate,
+                urgency: widget.urgency,
+              ),
+        ),
+      );
     } catch (e) {
-      debugPrint("Error generating summary: $e");
+      debugPrint("Error generating or saving summary: $e");
+      setState(() {
+        _isGeneratingSummary = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
       summary = "Error generating summary.";
     }
-    Provider.of<RequestProvider>(
-      context,
-      listen: false,
-    ).updateConversationWithSummary(summary, {});
-    setState(() {
-      _isGeneratingSummary = false;
-    });
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (_) => AnimatedConsultationScreen(
-              isSynchronous: widget.isSynchronous,
-              isImmediate: widget.isImmediate,
-              urgency: widget.urgency,
-            ),
-      ),
-    );
   }
 
   @override

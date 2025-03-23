@@ -71,7 +71,14 @@ class RequestProvider with ChangeNotifier {
     String summary,
     Map<String, dynamic> additionalData,
   ) async {
-    if (currentRequest == null || conversation == null) return;
+    if (currentRequest == null || conversation == null) {
+      debugPrint('Cannot save summary: currentRequest or conversation is null');
+      return;
+    }
+
+    debugPrint(
+      'Preparing to save summary for user ID: ${currentRequest!.patientId}',
+    );
 
     Map<String, dynamic> data = {
       'patientId': currentRequest!.patientId,
@@ -85,18 +92,29 @@ class RequestProvider with ChangeNotifier {
       ...additionalData,
     };
 
-    if (lastConversationId == null) {
-      lastConversationId = await FirebaseService().savePatientRequest(
-        currentRequest!,
-        conversation!,
-        aiTriageSummary: summary,
-        status: 'pending',
-        providerResponse: additionalData['providerResponse'],
-        providerInstructions: additionalData['providerInstructions'],
-      );
-      notifyListeners();
-    } else {
-      await FirebaseService().updatePatientRequest(lastConversationId!, data);
+    debugPrint('Data prepared with summary length: ${summary.length}');
+
+    try {
+      if (lastConversationId == null) {
+        debugPrint('Creating new conversation document');
+        lastConversationId = await FirebaseService().savePatientRequest(
+          currentRequest!,
+          conversation!,
+          aiTriageSummary: summary,
+          status: 'pending',
+          providerResponse: additionalData['providerResponse'],
+          providerInstructions: additionalData['providerInstructions'],
+        );
+        debugPrint('Created conversation with ID: $lastConversationId');
+        notifyListeners();
+      } else {
+        debugPrint('Updating existing conversation: $lastConversationId');
+        await FirebaseService().updatePatientRequest(lastConversationId!, data);
+        debugPrint('Updated conversation successfully');
+      }
+    } catch (e) {
+      debugPrint('Error saving conversation: $e');
+      rethrow; // rethrow to allow handling in the UI
     }
   }
 }

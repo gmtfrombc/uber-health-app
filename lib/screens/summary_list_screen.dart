@@ -12,6 +12,7 @@ class SummaryListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get current user's UID from FirebaseAuth
     final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    debugPrint('SummaryListScreen - Current user ID: $userId');
 
     // Query the 'conversations' collection for documents belonging to this user,
     // ordered by createdAt descending.
@@ -23,11 +24,12 @@ class SummaryListScreen extends StatelessWidget {
             .snapshots();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Summaries')),
+      appBar: AppBar(title: const Text('AI Triage Summaries')),
       body: StreamBuilder<QuerySnapshot>(
         stream: summariesStream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            debugPrint('SummaryListScreen Error: ${snapshot.error}');
             return Center(
               child: Text('Error loading summaries: ${snapshot.error}'),
             );
@@ -36,8 +38,20 @@ class SummaryListScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Filter documents to only include those with a non-empty aiTriageSummary.
+          // Log raw data for debugging
           final docs = snapshot.data?.docs ?? [];
+          debugPrint(
+            'SummaryListScreen - Found ${docs.length} documents in Firestore',
+          );
+
+          for (var doc in docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            debugPrint(
+              'Document ID: ${doc.id}, patientId: ${data['patientId']}, has summary: ${data.containsKey('aiTriageSummary')}',
+            );
+          }
+
+          // Filter documents to only include those with a non-empty aiTriageSummary.
           final validDocs =
               docs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
@@ -46,6 +60,10 @@ class SummaryListScreen extends StatelessWidget {
                     summary is String &&
                     summary.trim().isNotEmpty;
               }).toList();
+
+          debugPrint(
+            'SummaryListScreen - Valid documents with summaries: ${validDocs.length}',
+          );
 
           if (validDocs.isEmpty) {
             return const Center(child: Text('No summaries available.'));
