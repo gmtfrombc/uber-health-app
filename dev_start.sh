@@ -55,12 +55,15 @@ if grep -q "OPENAI_API_KEY=replace_with_your_key" .env.local || ! grep -q "OPENA
   sed -i '' "s/OPENAI_API_KEY=.*/OPENAI_API_KEY=$OPENAI_API_KEY/" .env.local
   echo "OpenAI API key securely saved to .env.local"
 else
+  # Extract API key from .env.local for use in this session
+  OPENAI_API_KEY=$(grep "OPENAI_API_KEY=" .env.local | cut -d= -f2)
   echo "Using existing OpenAI API key from .env.local"
 fi
 
 # Start Firebase emulators
 echo "Starting Firebase emulators..."
-firebase emulators:start --env-file=.env.local
+export OPENAI_API_KEY="$OPENAI_API_KEY"
+firebase emulators:start
 
 # Note: To run the Flutter app, open a new terminal and run:
 # flutter run
