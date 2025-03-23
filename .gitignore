@@ -65,3 +65,4 @@ lib/firebase_options.dart
 
 # Build outputs
 functions/lib/ functions/.env.local
+.env.local
