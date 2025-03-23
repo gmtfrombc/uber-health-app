@@ -1,0 +1,70 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "uber-health-app",
+          "appId": "1:723708655722:android:36735f6d594ece86c2f213",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "uber-health-app",
+          "appId": "1:723708655722:ios:da2b0cc2619d5b3cc2f213",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "uber-health-app",
+          "appId": "1:723708655722:ios:da2b0cc2619d5b3cc2f213",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "uber-health-app",
+          "configurations": {
+            "android": "1:723708655722:android:36735f6d594ece86c2f213",
+            "ios": "1:723708655722:ios:da2b0cc2619d5b3cc2f213",
+            "macos": "1:723708655722:ios:da2b0cc2619d5b3cc2f213",
+            "web": "1:723708655722:web:6766907293f90b69c2f213",
+            "windows": "1:723708655722:web:45b3a80740196602c2f213"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ],
+      "runtime": "nodejs18",
+      "cpuConfig": null,
+      "memoryConfig": null
+    }
+  ],
+  "emulators": {
+    "functions": {
+      "port": 5002,
+      "host": "localhost"
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4002
+    }
+  }
+}

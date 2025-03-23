@@ -1,0 +1,23 @@
+# Compiled JavaScript files
+lib/**/*.js
+lib/**/*.js.map
+
+# TypeScript v1 declaration files
+typings/
+
+# Node.js dependency directory
+node_modules/
+*.local
+
+# Runtime configuration file
+.runtimeconfig.json
+
+# Firebase debug log file
+firebase-debug.log
+
+# Environment variables
+.env
+.env.*
+
+# Log files
+*.log

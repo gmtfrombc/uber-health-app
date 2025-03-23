@@ -1,0 +1,145 @@
+> npm run build && firebase emulators:start --only functions
+
+
+> build
+> tsc
+
+i  emulators: Starting emulators: functions
+⚠  functions: The following emulators are not running, calls to the
+⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: app
+⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, firestore, database, hosting, pubsub, storage, datac
+⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, firestore, database, hosting, pubsub, storage, dataconnect
+i  functions: Watching "/Users/gmtfr/Programming/Flutter/uber_healt
+i  functions: Watching "/Users/gmtfr/Programming/Flutter/uber_health_app_stable/functions" for Cloud Functions...
+⚠  functions: package.json indicates an outdated version of firebas
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-funct
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when 
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+⚠  functions: Your requested "node" version "18" doesn't match your
+⚠  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host.
+i  functions: You are using a version of firebase-functions SDK (4.
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions 
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use th
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly
+Serving at port 8115
+
+✔  functions: Loaded functions definitions from source: generateAIR
+✔  functions: Loaded functions definitions from source: generateAIResponse, generateMedicalSummary.
+✔  functions[us-central1-generateAIResponse]: http function initial
+✔  functions[us-central1-generateAIResponse]: http function initialized (http://127.0.0.1:5002/uber-health-app/us-central1/generateAIR
+✔  functions[us-central1-generateAIResponse]: http function initialized (http://127.0.0.1:5002/uber-health-app/us-central1/generateAIResponse).
+✔  functions[us-central1-generateMedicalSummary]: http function ini
+✔  functions[us-central1-generateMedicalSummary]: http function initialized (http://127.0.0.1:5002/uber-health-app/us-central1/generat
+✔  functions[us-central1-generateMedicalSummary]: http function initialized (http://127.0.0.1:5002/uber-health-app/us-central1/generateMedicalSummary).
+
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4002/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌───────────┬────────────────┬─────────────────────────────────┐
+│ Emulator  │ Host:Port      │ View in Emulator UI             │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Functions │ 127.0.0.1:5002 │ http://127.0.0.1:4002/functions │
+└───────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500
+
+Issues? Report them at https://github.com/firebase/firebase-tools/i
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+i  functions: Beginning execution of "us-central1-generateAIRespons
+i  functions: Beginning execution of "us-central1-generateAIResponse"
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%2
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQ
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22iat%22%3A1742699404%2C%22exp%22%3A1742703
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22iat%22%3A1742699404%2C%22exp%22%3A1742703004%2C%22email%22%3A%22bsmith%40google.com%22%2C%22email_verified%2
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22iat%22%3A1742699404%2C%22exp%22%3A1742703004%2C%22email%22%3A%22bsmith%40google.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22iat%22%3A1742699404%2C%22exp%22%3A1742703004%2C%22email%22%3A%22bsmith%40google.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3A%5B%22bsmith%40google.com%22%5D%7D%2C%22sign_in_provider%22%3A%22p
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22iat%22%3A1742699404%2C%22exp%22%3A1742703004%2C%22email%22%3A%22bsmith%40google.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3A%5B%22bsmith%40google.com%22%5D%7D%2C%22sign_in_provider%22%3A%22password%22%7D%2C%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%7D%7
+>  {"key":"x-callable-context-auth","value":"%7B%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22token%22%3A%7B%22iss%22%3A%22https%3A%2F%2Fsecuretoken.google.com%2Fuber-health-app%22%2C%22aud%22%3A%22uber-health-app%22%2C%22auth_time%22%3A1742612823%2C%22user_id%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22sub%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%2C%22iat%22%3A1742699404%2C%22exp%22%3A1742703004%2C%22email%22%3A%22bsmith%40google.com%22%2C%22email_verified%22%3Afalse%2C%22firebase%22%3A%7B%22identities%22%3A%7B%22email%22%3A%5B%22bsmith%40google.com%22%5D%7D%2C%22sign_in_provider%22%3A%22password%22%7D%2C%22uid%22%3A%22H2t1LdKqQTQii85vCHgUAgUJ2i43%22%7D%7D","severity":"DEBUG","message":"Callable functions auth override"}
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googl
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verificati
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification pa
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+>  Using API key provided in request data
+⚠  External network resource requested!
+   - URL: "https://api.openai.com/v1/chat/completions"
+ - Be careful, this may be a production service.
+i  functions: Finished "us-central1-generateAIResponse" in 1028.608
+i  functions: Finished "us-central1-generateAIResponse" in 1028.608542ms
+⚠  functions: package.json indicates an outdated version of firebas
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-funct
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when 
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+⚠  functions: Your requested "node" version "18" doesn't match your
+⚠  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host.
+i  functions: You are using a version of firebase-functions SDK (4.
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions 
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use th
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly
+Serving at port 8820
+
+⚠  functions: package.json indicates an outdated version of firebas
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-funct
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when 
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+⚠  functions: Your requested "node" version "18" doesn't match your
+⚠  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host.
+i  functions: You are using a version of firebase-functions SDK (4.
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions 
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use th
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly
+Serving at port 8599
+
+✔  functions: Loaded functions definitions from source: generateAIR
+✔  functions: Loaded functions definitions from source: generateAIResponse, generateMedicalSummary.
+⚠  functions: package.json indicates an outdated version of firebas
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-funct
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when 
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+⚠  functions: Your requested "node" version "18" doesn't match your
+⚠  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host.
+i  functions: You are using a version of firebase-functions SDK (4.
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions 
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use th
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly
+Serving at port 8347
+
+✔  functions: Loaded functions definitions from source: generateAIR
+✔  functions: Loaded functions definitions from source: generateAIResponse, generateMedicalSummary.
+✔  functions: Loaded functions definitions from source: generateAIR
+✔  functions: Loaded functions definitions from source: generateAIResponse, generateMedicalSummary.
+⚠  functions: package.json indicates an outdated version of firebas
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-funct
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when 
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+⚠  functions: Your requested "node" version "18" doesn't match your
+⚠  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host.
+i  functions: You are using a version of firebase-functions SDK (4.
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions 
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use th
+i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly
+Serving at port 8649
+
+✔  functions: Loaded functions definitions from source: generateAIR
+✔  functions: Loaded functions definitions from source: generateAIResponse, generateMedicalSummary.
+^C 
+i  emulators: Received SIGINT (Ctrl-C) for the first time. Starting
+i  emulators: Received SIGINT (Ctrl-C) for the first time. Starting a clean shutdown.
+i  emulators: Please wait for a clean shutdown or send the SIGINT (
+i  emulators: Please wait for a clean shutdown or send the SIGINT (Ctrl-C) signal again to stop right now.
+i  emulators: Shutting down emulators.
+i  ui: Stopping Emulator UI
+i  functions: Stopping Functions Emulator
+i  eventarc: Stopping Eventarc Emulator
+i  tasks: Stopping Cloud Tasks Emulator
+i  hub: Stopping emulator hub
