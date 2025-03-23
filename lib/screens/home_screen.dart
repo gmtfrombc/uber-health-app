@@ -6,6 +6,7 @@ import 'profile_edit_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
+import 'video_call_home_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -135,36 +136,70 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Bottom button.
+              // Bottom buttons row
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 2,
-                      backgroundColor: Colors.teal,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RequestScreen(),
+                child: Row(
+                  children: [
+                    // Consult button
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 2,
+                          backgroundColor: Colors.teal,
                         ),
-                      );
-                    },
-                    child: const Text(
-                      'Request a Consult',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RequestScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Request a Consult',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    // Video call button
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 2,
+                          backgroundColor: Colors.blueAccent,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const VideoCallHomeScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.video_call),
+                        label: const Text(
+                          'Video Call',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

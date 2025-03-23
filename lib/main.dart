@@ -31,9 +31,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => RequestProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(
-          create: (_) => ProviderProvider(),
-        ), // Added new provider
+        ChangeNotifierProvider(create: (_) => ProviderProvider()),
       ],
       child: MaterialApp(
         title: 'Uber Health Prototype',
