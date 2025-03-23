@@ -4,17 +4,15 @@ A Flutter application that provides a conversational healthcare interface using 
 
 ## Development Environment Setup
 
-This project has two workflow options:
+### Production Development Workflow
 
-### Option 1: Production Development Workflow (Current)
-
-This setup connects to your production Firebase project while securing the OpenAI API key locally.
+This setup connects directly to your production Firebase project, using your cloud-stored API key.
 
 #### Prerequisites:
 - Flutter SDK installed
 - Firebase CLI installed
 - Node.js 20 or higher
-- OpenAI API key
+- OpenAI API key stored as a Firebase Secret
 
 #### Setup Steps:
 
@@ -26,7 +24,7 @@ This setup connects to your production Firebase project while securing the OpenA
 
 2. Switch to the development branch
    ```
-   git checkout dev-environment
+   git checkout production-dev
    ```
 
 3. Start the development environment:
@@ -34,7 +32,6 @@ This setup connects to your production Firebase project while securing the OpenA
    ./dev_start_all.sh
    ```
    This script will:
-   - Prompt for your OpenAI API key (which is securely stored in `.env.local`)
    - Build the Firebase Functions
    - Start the Flutter app
 
@@ -42,86 +39,19 @@ This setup connects to your production Firebase project while securing the OpenA
    - Run `./dev_start.sh` to just build the Firebase Functions
    - Then in a separate terminal, run `./run_flutter.sh` to start the Flutter app
 
-### Option 2: Emulator Development Workflow (Alternative)
-
-For isolated development using Firebase Emulators (available on the `emulator-workflow` branch).
-
-#### Prerequisites:
-- Flutter SDK installed
-- Firebase CLI installed
-- Node.js 20 or higher
-- OpenJDK 17 for Firebase Emulators
-- OpenAI API key
-
-#### Setup Steps:
-
-1. Clone the repository
-   ```
-   git clone <repository-url>
-   cd uber_health_app_stable
-   ```
-
-2. Switch to the development branch
-   ```
-   git checkout dev-environment
-   ```
-
-3. Start the development environment:
-   ```
-   ./dev_start_all.sh
-   ```
-   This script will:
-   - Prompt for your OpenAI API key (which is securely stored in `.env.local`)
-   - Start the Firebase emulators
-   - Start the Flutter app
-
-   Alternatively, you can:
-   - Run `./dev_start.sh` to just start the Firebase emulators
-   - Then in a separate terminal, run `./run_flutter.sh` to start the Flutter app
-
-### Option 2: Production Workflow
-
-For production deployment, the app uses Firebase Functions with secrets.
-
-#### Setup Steps:
-
-1. Switch to the production branch
-   ```
-   git checkout firebase_functions
-   ```
-
-2. Configure Firebase:
-   ```
-   firebase login
-   firebase functions:secrets:set OPENAI_KEY
-   ```
-
-3. Deploy Firebase Functions:
-   ```
-   cd functions
-   npm run deploy
-   ```
-
-4. Run Flutter app:
-   ```
-   flutter run
-   ```
-
 ## Architecture
 
 - **Flutter App**: Front-end mobile application for iOS/Android
 - **Firebase Functions**: Backend API that securely communicates with OpenAI
 - **OpenAI API**: Provides AI-powered chat capabilities for medical triage
 
-## Important Note
+## Security Considerations
 
-The OpenAI API key is handled securely:
-- Stored in a `.env.local` file (not committed to Git)
-- In production, it's stored as a Firebase Secret
-
-Never commit API keys to the Git repository.
-
-## Security Note
+### API Key Security
+- The OpenAI API key is securely stored as a Firebase Secret
+- Never commit API keys to Git repositories
+- Regenerate keys if they have been exposed
+- Add API key restrictions in the Google Cloud Console
 
 ### Firebase Configuration
 
@@ -138,15 +68,6 @@ If you've cloned this repository:
 1. Copy `lib/firebase_options_template.dart` to `lib/firebase_options.dart`
 2. Replace the placeholder values with your actual Firebase configuration
 3. Make sure `lib/firebase_options.dart` is in `.gitignore` to prevent accidentally committing it
-
-### API Key Security
-
-For Firebase and other API keys:
-
-1. Regenerate keys if they have been exposed
-2. Add API key restrictions in the Google Cloud Console
-3. For web applications, consider setting up API restrictions based on HTTP referrers
-4. For mobile applications, consider using Firebase App Check to add an additional layer of security
 
 ## Getting Started
 
