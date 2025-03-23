@@ -16,21 +16,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Configure Firebase emulators in debug mode
+  // Log initialization for debugging
   if (kDebugMode) {
-    try {
-      // Connect to Firebase Auth emulator
-      await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-
-      // Connect to Firebase Firestore emulator
-      FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-
-      // Firebase Functions emulator is configured in ChatGPTService
-
-      debugPrint('Firebase emulators configured for development');
-    } catch (e) {
-      debugPrint('Failed to configure Firebase emulators: $e');
-    }
+    debugPrint('Firebase initialized with production configuration');
   }
 
   runApp(const MyApp());
