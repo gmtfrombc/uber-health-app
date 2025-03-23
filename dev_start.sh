@@ -60,10 +60,9 @@ else
   echo "Using existing OpenAI API key from .env.local"
 fi
 
-# Start Firebase emulators
-echo "Starting Firebase emulators..."
-export OPENAI_API_KEY="$OPENAI_API_KEY"
-firebase emulators:start
+echo "Building Firebase Functions..."
+npm run build
 
-# Note: To run the Flutter app, open a new terminal and run:
-# flutter run
+echo "Functions built successfully! You can now run your Flutter app."
+echo "To run your Flutter app, use: flutter run"
+cd ..

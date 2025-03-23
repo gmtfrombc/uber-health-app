@@ -60,22 +60,14 @@ else
   echo "Using existing OpenAI API key from .env.local"
 fi
 
-# Start Firebase emulators in the background
-echo "Starting Firebase emulators..."
-(export OPENAI_API_KEY="$OPENAI_API_KEY" && firebase emulators:start) &
-EMULATOR_PID=$!
+# Build functions
+echo "Building Firebase Functions..."
+npm run build
+echo "Functions built successfully!"
 
-# Wait for emulators to start
-echo "Waiting for emulators to start (10 seconds)..."
-sleep 10
-
-# Change back to project root directory
+# Go back to the project root
 cd ..
 
 # Start Flutter app
 echo "Starting Flutter app..."
 flutter run
-
-# Cleanup when Flutter app is closed
-kill $EMULATOR_PID
-echo "Dev environment stopped."

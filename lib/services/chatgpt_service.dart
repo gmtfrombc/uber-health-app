@@ -10,10 +10,9 @@ class ChatGPTService {
     // Configure Firebase Functions to use the production environment
     _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
 
-    // Enable emulator in debug mode for faster development
+    // For debugging purposes only
     if (kDebugMode) {
-      _functions.useFunctionsEmulator('localhost', 5003);
-      debugPrint('Using Firebase Functions emulator on port 5003');
+      debugPrint('Using production Firebase Functions');
     }
   }
 
@@ -54,18 +53,12 @@ class ChatGPTService {
 
       if (data['success'] == true && data['content'] != null) {
         return data['content'] as String;
-      } else {
-        // Extract error details
-        String errorMessage = 'Unknown error';
-        if (data['error'] != null) {
-          errorMessage = data['error'].toString();
-        }
-        debugPrint('AI response error: $errorMessage');
-        return 'I apologize, but I encountered an issue processing your request: $errorMessage. Please try again.';
       }
+
+      throw Exception(data['error'] ?? 'Unknown error');
     } catch (e) {
-      debugPrint('Error getting AI response from Firebase: $e');
-      return 'An error occurred while processing your request. Please try again later.';
+      debugPrint('Error getting AI response: $e');
+      return 'Sorry, there was an error communicating with the AI service. Please try again later.';
     }
   }
 

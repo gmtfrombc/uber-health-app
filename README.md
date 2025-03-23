@@ -6,9 +6,45 @@ A Flutter application that provides a conversational healthcare interface using 
 
 This project has two workflow options:
 
-### Option 1: Local Development Workflow (Recommended for Development)
+### Option 1: Production Development Workflow (Current)
 
-This setup uses Firebase Emulators to allow local development without affecting production.
+This setup connects to your production Firebase project while securing the OpenAI API key locally.
+
+#### Prerequisites:
+- Flutter SDK installed
+- Firebase CLI installed
+- Node.js 20 or higher
+- OpenAI API key
+
+#### Setup Steps:
+
+1. Clone the repository
+   ```
+   git clone <repository-url>
+   cd uber_health_app_stable
+   ```
+
+2. Switch to the development branch
+   ```
+   git checkout dev-environment
+   ```
+
+3. Start the development environment:
+   ```
+   ./dev_start_all.sh
+   ```
+   This script will:
+   - Prompt for your OpenAI API key (which is securely stored in `.env.local`)
+   - Build the Firebase Functions
+   - Start the Flutter app
+
+   Alternatively, you can:
+   - Run `./dev_start.sh` to just build the Firebase Functions
+   - Then in a separate terminal, run `./run_flutter.sh` to start the Flutter app
+
+### Option 2: Emulator Development Workflow (Alternative)
+
+For isolated development using Firebase Emulators (available on the `emulator-workflow` branch).
 
 #### Prerequisites:
 - Flutter SDK installed
@@ -79,8 +115,8 @@ For production deployment, the app uses Firebase Functions with secrets.
 
 ## Important Note
 
-The OpenAI API key is handled differently in each workflow:
-- In local development, it's stored in a `.env.local` file (not committed to Git)
+The OpenAI API key is handled securely:
+- Stored in a `.env.local` file (not committed to Git)
 - In production, it's stored as a Firebase Secret
 
 Never commit API keys to the Git repository.
