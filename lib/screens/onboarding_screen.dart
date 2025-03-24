@@ -40,15 +40,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       UserModel user = await FirebaseService().getUserMedicalInfo(uid);
       debugPrint("Fetched user data: ${user.toMap()}");
-      setState(() {
-        _user = user;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint("Error fetching user data: $e");
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
