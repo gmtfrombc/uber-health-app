@@ -105,11 +105,14 @@ class RequestProvider with ChangeNotifier {
       'Preparing to save summary for user ID: ${currentRequest!.patientId}',
     );
 
+    // Safely use currentRequest after null assertion
+    final request = currentRequest!;
+
     Map<String, dynamic> data = {
-      'patientId': currentRequest!.patientId,
-      'requestType': currentRequest!.requestType.name,
-      'urgency': currentRequest!.urgency,
-      'category': currentRequest!.category ?? 'General',
+      'patientId': request.patientId,
+      'requestType': request.requestType.name,
+      'urgency': request.urgency,
+      'category': request.category,
       'providerType': providerType.name,
       'status': 'pending',
       'messages': conversation!.map((msg) => msg.toMap()).toList(),
@@ -124,7 +127,7 @@ class RequestProvider with ChangeNotifier {
       if (lastConversationId == null) {
         debugPrint('Creating new conversation document');
         lastConversationId = await FirebaseService().savePatientRequest(
-          currentRequest!,
+          request,
           conversation!,
           aiTriageSummary: summary,
           status: 'pending',

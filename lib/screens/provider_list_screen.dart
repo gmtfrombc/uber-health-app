@@ -23,9 +23,9 @@ class ProviderListScreen extends StatelessWidget {
           return Card(
             margin: const EdgeInsets.all(8.0),
             child: ListTile(
-              title: Text(provider.name),
+              title: Text(provider.fullName),
               subtitle: Text(
-                "${provider.credentials}\nCost: \$${provider.cost}\nWait time: ${provider.waitTime}",
+                "${provider.specialty ?? 'General'}\nCost: \$${provider.cost}\nWait time: ${provider.waitTime}",
               ),
               isThreeLine: true,
               onTap: () {
