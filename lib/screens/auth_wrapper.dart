@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_in_screen.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
+import 'provider_dashboard_screen.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
 
@@ -32,10 +33,17 @@ class AuthWrapper extends StatelessWidget {
               }
               if (userSnapshot.hasData) {
                 final userModel = userSnapshot.data!;
-                // If the user is onboarded, go to HomeScreen; otherwise, OnboardingScreen.
-                return userModel.onboarded
-                    ? const HomeScreen()
-                    : const OnboardingScreen();
+
+                // Route based on user role
+                if (userModel.role == 'provider') {
+                  // Providers go to their dashboard
+                  return const ProviderDashboardScreen();
+                } else {
+                  // Patients go to home or onboarding depending on status
+                  return userModel.onboarded
+                      ? const HomeScreen()
+                      : const OnboardingScreen();
+                }
               }
               // If no profile data exists, sign out and return SignInScreen.
               FirebaseAuth.instance.signOut();
