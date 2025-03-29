@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../models/patient_request.dart';
-import '../models/chat_mode.dart'; // Import the common ChatMode
 import '../providers/request_provider.dart';
 import 'chat_interface.dart';
 import 'category_selection_screen.dart';
@@ -17,7 +16,6 @@ class RequestScreen extends StatefulWidget {
 
 class _RequestScreenState extends State<RequestScreen> {
   int selectedProviderToggleIndex = 0; // 0: Medical, 1: Physical Therapist
-  ChatMode selectedChatMode = ChatMode.regular;
 
   @override
   void initState() {
@@ -80,45 +78,6 @@ class _RequestScreenState extends State<RequestScreen> {
     );
   }
 
-  // Chat mode toggle widget.
-  Widget chatModeToggle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Choose Chat Mode',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          ToggleButtons(
-            isSelected: [
-              selectedChatMode == ChatMode.regular,
-              selectedChatMode == ChatMode.voice,
-            ],
-            onPressed: (int index) {
-              setState(() {
-                selectedChatMode =
-                    index == 0 ? ChatMode.regular : ChatMode.voice;
-              });
-            },
-            children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Regular Chat'),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Voice Chat'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   // Build a tile for each consultation option.
   Widget buildTile({
     required BuildContext context,
@@ -154,19 +113,15 @@ class _RequestScreenState extends State<RequestScreen> {
             ),
           );
           if (type == RequestType.consult) {
-            // Navigate to CategorySelectionScreen, passing the selected chat mode.
+            // Navigate to CategorySelectionScreen
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (_) => CategorySelectionScreen(
-                      urgency: urgency,
-                      chatMode: selectedChatMode,
-                    ),
+                builder: (_) => CategorySelectionScreen(urgency: urgency),
               ),
             );
           } else {
-            // For questions, navigate directly to ChatInterface.
+            // For questions, navigate directly to ChatInterface
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -193,7 +148,6 @@ class _RequestScreenState extends State<RequestScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             providerToggle(),
-            chatModeToggle(),
             const SizedBox(height: 12),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),

@@ -12,3 +12,6 @@ PRODUCT_BUNDLE_IDENTIFIER = com.example.uberHealthApp
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+
+// The minimum deployment target for macOS
+MACOSX_DEPLOYMENT_TARGET = 11.0

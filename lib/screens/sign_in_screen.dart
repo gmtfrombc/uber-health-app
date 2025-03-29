@@ -1,8 +1,8 @@
 // lib/screens/sign_in_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen.dart';
 import 'sign_up_screen.dart';
+import 'auth_wrapper.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -13,7 +13,7 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController(
-    text: "bsmith@google.com",
+    text: "ddoctor@gmail.com",
   ); // Hard-coded for testing
   final TextEditingController _passwordController = TextEditingController(
     text: "password",
@@ -27,26 +27,47 @@ class _SignInScreenState extends State<SignInScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
-    try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      if (credential.user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+
+    // Simple retry logic
+    int maxRetries = 3;
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        final credential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
+
+        if (credential.user != null) {
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          );
+          return; // Success, exit the method
+        }
+      } on FirebaseAuthException catch (e) {
+        // Auth-specific errors shouldn't be retried
+        setState(() {
+          _errorMessage = e.message;
+        });
+        break;
+      } catch (e) {
+        // For network errors, retry if not the last attempt
+        if (attempt == maxRetries - 1) {
+          setState(() {
+            _errorMessage =
+                "Network error. Please check your connection and try again.";
+          });
+        } else {
+          // Wait before retrying with exponential backoff
+          await Future.delayed(
+            Duration(seconds: 1 << attempt),
+          ); // 1, 2, 4 seconds
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = "An error occurred. Please try again.";
-      });
     }
+
     setState(() {
       _isLoading = false;
     });

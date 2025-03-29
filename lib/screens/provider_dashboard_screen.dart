@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
-import '../models/patient_request.dart';
 import '../providers/provider_dashboard_provider.dart';
 import '../providers/user_provider.dart';
+import '../screens/auth_wrapper.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -35,6 +35,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       listen: false,
     );
     await dashboardProvider.initialize();
+    if (!mounted) return;
     setState(() {
       _initializing = false;
     });
@@ -97,12 +98,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             },
             tooltip: 'Refresh Dashboard',
           ),
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {
-              Scaffold.of(context).openEndDrawer();
-            },
-            tooltip: 'Profile',
+          Builder(
+            builder:
+                (context) => IconButton(
+                  icon: const Icon(Icons.account_circle),
+                  onPressed: () {
+                    Scaffold.of(context).openEndDrawer();
+                  },
+                  tooltip: 'Profile & Log Out',
+                ),
           ),
         ],
       ),
@@ -111,11 +115,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Left sidebar navigation
-          _buildSidebar(isDesktop),
+          _buildSidebar(isDesktop || isTablet),
 
           // Main content area
           Expanded(
-            flex: isDesktop ? 3 : 2,
+            flex: isDesktop ? 3 : (isTablet ? 2 : 1),
             child:
                 dashboardProvider.selectedPatient != null
                     ? _buildPatientDetails(dashboardProvider)
@@ -136,74 +140,86 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   Widget _buildSidebar(bool isExpanded) {
     final dashboardProvider = Provider.of<ProviderDashboardProvider>(context);
     return Container(
-      width: isExpanded ? 300 : 100,
+      width: isExpanded ? 250 : 80,
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
-          right: BorderSide(color: Colors.grey.shade300, width: 1),
+          right: BorderSide(color: Theme.of(context).dividerColor),
         ),
       ),
       child: Column(
         children: [
-          // Navigation menu
-          NavigationRail(
-            extended: isExpanded,
-            selectedIndex: _selectedNavIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedNavIndex = index;
-
-                // Clear selected patient when switching away from patient lists
-                if (index != 1 && index != 2) {
-                  dashboardProvider.clearSelectedPatient();
-                }
-              });
-            },
-            destinations: [
-              NavigationRailDestination(
-                icon: Icon(Icons.dashboard),
-                label: Text('Dashboard'),
-              ),
-              NavigationRailDestination(
-                icon: Badge(
-                  label: Text(
-                    dashboardProvider.urgentRequests.length.toString(),
+          SizedBox(
+            height: 400, // Fixed height for the navigation rail
+            child: NavigationRail(
+              extended: isExpanded,
+              destinations: [
+                NavigationRailDestination(
+                  icon: const Icon(Icons.dashboard),
+                  label: const Text('Dashboard'),
+                ),
+                NavigationRailDestination(
+                  icon: Badge(
+                    label: Text(
+                      dashboardProvider.urgentRequests.length.toString(),
+                    ),
+                    isLabelVisible: dashboardProvider.urgentRequests.isNotEmpty,
+                    child: const Icon(Icons.emergency),
                   ),
-                  isLabelVisible: dashboardProvider.urgentRequests.isNotEmpty,
-                  child: Icon(Icons.priority_high),
+                  label: const Text('Urgent Consults'),
                 ),
-                label: Text('Urgent Consults'),
-              ),
-              NavigationRailDestination(
-                icon: Badge(
-                  label: Text(
-                    dashboardProvider.scheduledRequests.length.toString(),
+                NavigationRailDestination(
+                  icon: Badge(
+                    label: Text(
+                      dashboardProvider.pendingRequests.length.toString(),
+                    ),
+                    isLabelVisible:
+                        dashboardProvider.pendingRequests.isNotEmpty,
+                    child: const Icon(Icons.pending_actions),
                   ),
-                  isLabelVisible:
-                      dashboardProvider.scheduledRequests.isNotEmpty,
-                  child: Icon(Icons.calendar_today),
+                  label: const Text('Pending Consults'),
                 ),
-                label: Text('Scheduled Patients'),
-              ),
-              NavigationRailDestination(
-                icon: Badge(
-                  label: Text(dashboardProvider.messages.length.toString()),
-                  isLabelVisible: dashboardProvider.messages.isNotEmpty,
-                  child: Icon(Icons.message),
+                NavigationRailDestination(
+                  icon: Badge(
+                    label: Text(
+                      dashboardProvider.scheduledRequests.length.toString(),
+                    ),
+                    isLabelVisible:
+                        dashboardProvider.scheduledRequests.isNotEmpty,
+                    child: const Icon(Icons.calendar_today),
+                  ),
+                  label: const Text('Scheduled'),
                 ),
-                label: Text('Messages'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.note),
-                label: Text('Completed Notes'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.settings),
-                label: Text('Settings'),
-              ),
-            ],
+                NavigationRailDestination(
+                  icon: Badge(
+                    label: Text(dashboardProvider.messages.length.toString()),
+                    isLabelVisible: dashboardProvider.messages.isNotEmpty,
+                    child: const Icon(Icons.message),
+                  ),
+                  label: const Text('Messages'),
+                ),
+                NavigationRailDestination(
+                  icon: const Icon(Icons.note),
+                  label: const Text('Notes'),
+                ),
+                NavigationRailDestination(
+                  icon: const Icon(Icons.settings),
+                  label: const Text('Settings'),
+                ),
+              ],
+              selectedIndex: _selectedNavIndex,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _selectedNavIndex = index;
+                  // Clear selected patient when switching away from patient lists
+                  if (index != 1 && index != 2) {
+                    dashboardProvider.clearSelectedPatient();
+                  }
+                });
+              },
+            ),
           ),
-
-          // Display list based on selected navigation item
+          // Display list based on selected navigation item when sidebar is expanded
           if (isExpanded)
             Expanded(child: _buildContentListForNav(_selectedNavIndex)),
         ],
@@ -217,30 +233,36 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
     switch (navIndex) {
       case 1: // Urgent Consults
-        return _buildPatientList(
+        return _buildConsultationList(
           dashboardProvider.urgentRequests,
           emptyMessage: 'No urgent consults',
           listTitle: 'Urgent Consults',
         );
 
-      case 2: // Scheduled Patients
-        return _buildPatientList(
+      case 2: // Pending Consults
+        return _buildConsultationList(
+          dashboardProvider.pendingRequests,
+          emptyMessage: 'No pending consults',
+          listTitle: 'Pending Consults',
+        );
+
+      case 3: // Scheduled Patients
+        return _buildConsultationList(
           dashboardProvider.scheduledRequests,
           emptyMessage: 'No scheduled patients',
           listTitle: 'Scheduled Patients',
         );
 
-      case 3: // Messages
-        return Center(child: Text('Messages will be displayed here'));
+      case 4: // Messages
+        return const Center(child: Text('Messages coming soon'));
 
-      case 4: // Completed Notes
-        return Center(child: Text('Completed notes will be displayed here'));
+      case 5: // Notes
+        return const Center(child: Text('Notes coming soon'));
 
-      case 5: // Settings
-        return Center(child: Text('Settings will be displayed here'));
+      case 6: // Settings
+        return const Center(child: Text('Settings coming soon'));
 
-      case 0: // Dashboard - default
-      default:
+      default: // Dashboard
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -254,6 +276,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               _buildQuickAccessItem(
                 'Urgent Consults',
                 dashboardProvider.urgentRequests.length,
+              ),
+              _buildQuickAccessItem(
+                'Pending Consults',
+                dashboardProvider.pendingRequests.length,
               ),
               _buildQuickAccessItem(
                 'Scheduled Patients',
@@ -285,9 +311,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 title == 'Urgent Consults'
                     ? 1
                     : title == 'Scheduled Patients'
-                    ? 2
-                    : title == 'New Messages'
                     ? 3
+                    : title == 'New Messages'
+                    ? 4
                     : 0;
           });
         },
@@ -295,9 +321,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // Build list of patients
-  Widget _buildPatientList(
-    List<PatientRequest> requests, {
+  // Build list of patients/consultations
+  Widget _buildConsultationList(
+    List<ConsultationRequest> consultations, {
     required String emptyMessage,
     required String listTitle,
   }) {
@@ -306,7 +332,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       listen: false,
     );
 
-    if (requests.isEmpty) {
+    if (consultations.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -331,14 +357,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: requests.length,
+            itemCount: consultations.length,
             itemBuilder: (context, index) {
-              final request = requests[index];
+              final consultation = consultations[index];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: ListTile(
                   title: FutureBuilder<UserModel?>(
-                    future: _fetchPatientName(request.patientId),
+                    future: _fetchPatientName(consultation.patientId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Text('Loading patient...');
@@ -351,19 +377,42 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       );
                     },
                   ),
-                  subtitle: Text(
-                    '${request.category} • ${request.urgency}\nRequested: ${_formatTimestamp(request.timestamp)}',
-                    maxLines: 2,
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${consultation.category} • ${consultation.urgency}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (consultation.scheduledDateTime != null)
+                        Text(
+                          'Scheduled: ${consultation.formattedScheduledDateTime}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                        ),
+                      Text(
+                        'Requested: ${_formatTimestamp(consultation.createdAt)}',
+                      ),
+                      if (consultation.aiTriageSummary != null)
+                        Text(
+                          _truncateText(consultation.aiTriageSummary!, 50),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                    ],
                   ),
                   isThreeLine: true,
                   trailing: Icon(Icons.chevron_right),
                   onTap: () {
                     dashboardProvider.selectPatient(
-                      request.patientId,
-                      request.id,
+                      consultation.patientId,
+                      consultation.id,
                     );
                   },
-                  selected: dashboardProvider.selectedRequest?.id == request.id,
+                  selected:
+                      dashboardProvider.selectedRequest?.id == consultation.id,
                 ),
               );
             },
@@ -373,26 +422,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // Helper to format timestamp
-  String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
-  }
-
-  // Cache for patient names to avoid duplicate fetches
+  // Define a cache to avoid repeated patient lookups
   final Map<String, Future<UserModel?>> _patientCache = {};
 
-  // Fetch patient name
+  // Helper function to fetch patient names
   Future<UserModel?> _fetchPatientName(String patientId) {
     if (!_patientCache.containsKey(patientId)) {
       _patientCache[patientId] = FirebaseFirestore.instance
@@ -411,6 +444,29 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           });
     }
     return _patientCache[patientId]!;
+  }
+
+  // Helper function to format timestamps
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      }
+      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+    } else {
+      return '${timestamp.month}/${timestamp.day}/${timestamp.year}';
+    }
+  }
+
+  // Helper function to truncate text
+  String _truncateText(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
   }
 
   // Patient details content
@@ -506,44 +562,26 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInfoRow(
-                            'Chief Complaint',
-                            triageSummary.chiefComplaint,
-                          ),
-                          const Divider(),
-                          Text(
-                            'Summary',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(triageSummary.summary),
-                          const Divider(),
-                          Text(
-                            'Assessment',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(triageSummary.assessment),
-                          const Divider(),
-                          Text(
-                            'Recommended Action',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(triageSummary.recommendedAction),
-                          const SizedBox(height: 16),
-                          Chip(
-                            label: Text(
-                              'Urgency: ${triageSummary.urgencyLevel}',
-                              style: TextStyle(
+                          // Add a visual urgency indicator at the top
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getUrgencyColor(request.urgency),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Urgency: ${request.urgency}',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            backgroundColor: _getUrgencyColor(
-                              triageSummary.urgencyLevel,
-                            ),
                           ),
+                          Text(triageSummary),
                         ],
                       )
                       : const Text('No triage summary available'),
@@ -714,7 +752,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 CircleAvatar(
                   backgroundColor: color,
                   child: Icon(icon, color: Colors.white),
@@ -815,7 +860,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             onTap: () {
               // Sign out functionality
               FirebaseAuth.instance.signOut();
-              Navigator.pop(context);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                (route) => false,
+              );
             },
           ),
         ],

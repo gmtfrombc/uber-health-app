@@ -12,6 +12,8 @@ enum RequestStatus {
   inProgress, // Provider actively working with patient
   completed, // Visit complete
   cancelled, // Request cancelled
+  scheduled, // Appointment scheduled for future
+  checkedIn, // Patient checked in for appointment
 }
 
 class PatientRequest {
@@ -27,6 +29,7 @@ class PatientRequest {
   final String? triageSummaryId;
   final DateTime? startTime;
   final DateTime? endTime;
+  final DateTime? scheduledDateTime; // Time when appointment is scheduled
 
   PatientRequest({
     this.id = '', // Allow empty string for new requests
@@ -41,6 +44,7 @@ class PatientRequest {
     this.triageSummaryId,
     this.startTime,
     this.endTime,
+    this.scheduledDateTime,
   }) : timestamp = timestamp ?? DateTime.now() {
     if (patientId.isEmpty) {
       debugPrint('WARNING: Creating PatientRequest with empty patientId');
@@ -60,6 +64,7 @@ class PatientRequest {
       'triageSummaryId': triageSummaryId,
       'startTime': startTime?.millisecondsSinceEpoch,
       'endTime': endTime?.millisecondsSinceEpoch,
+      'scheduledDateTime': scheduledDateTime?.millisecondsSinceEpoch,
     };
   }
 
@@ -88,6 +93,10 @@ class PatientRequest {
       endTime:
           map['endTime'] != null
               ? DateTime.fromMillisecondsSinceEpoch(map['endTime'])
+              : null,
+      scheduledDateTime:
+          map['scheduledDateTime'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(map['scheduledDateTime'])
               : null,
     );
   }
@@ -144,6 +153,7 @@ class PatientRequest {
     String? triageSummaryId,
     DateTime? startTime,
     DateTime? endTime,
+    DateTime? scheduledDateTime,
   }) {
     return PatientRequest(
       id: id ?? this.id,
@@ -158,10 +168,23 @@ class PatientRequest {
       triageSummaryId: triageSummaryId ?? this.triageSummaryId,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
+      scheduledDateTime: scheduledDateTime ?? this.scheduledDateTime,
     );
   }
 
   // Utility to check if request is active (not completed or cancelled)
   bool get isActive =>
       status != RequestStatus.completed && status != RequestStatus.cancelled;
+
+  // Check if this is a scheduled appointment
+  bool get isScheduled =>
+      status == RequestStatus.scheduled && scheduledDateTime != null;
+
+  // Check if appointment time is approaching (within 15 minutes)
+  bool get isApproachingAppointment {
+    if (!isScheduled || scheduledDateTime == null) return false;
+    final now = DateTime.now();
+    final difference = scheduledDateTime!.difference(now);
+    return difference.inMinutes <= 15 && difference.inMinutes > 0;
+  }
 }

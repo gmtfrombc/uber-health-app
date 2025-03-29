@@ -15,11 +15,14 @@ class AnimatedConsultationScreen extends StatefulWidget {
   isImmediate; // for consult: Quick = immediate; for medical question, always non-immediate
   final String
   urgency; // For consult: "Quick" or "Routine"; for medical question: "Routine"
+  final String?
+  appointmentId; // ID for scheduled appointments that are being checked into
 
   const AnimatedConsultationScreen({
     required this.isSynchronous,
     required this.isImmediate,
     required this.urgency,
+    this.appointmentId,
     super.key,
   });
 
@@ -37,7 +40,19 @@ class AnimatedConsultationScreenState
   @override
   void initState() {
     super.initState();
-    if (widget.isSynchronous) {
+    // If this is a checked-in appointment, use specific messaging
+    if (widget.appointmentId != null) {
+      animations = [
+        'assets/animations/doctor_request.json',
+        'assets/animations/doctor_review.json',
+        'assets/animations/doctor_connecting.json',
+      ];
+      messages = [
+        'Processing your check-in',
+        'Provider is reviewing your information',
+        'Connecting you with your provider',
+      ];
+    } else if (widget.isSynchronous) {
       // Consult flow.
       if (widget.urgency.toLowerCase() == 'quick') {
         // Quick Consult immediate flow: 4-stage.
@@ -83,13 +98,19 @@ class AnimatedConsultationScreenState
       ];
     }
     animateStages();
-    if (widget.isImmediate && widget.isSynchronous) {
+    // For immediate consults or checked-in appointments, generate the summary
+    if ((widget.isImmediate && widget.isSynchronous) ||
+        widget.appointmentId != null) {
       _generateSummary();
     }
   }
 
   Future<void> animateStages() async {
-    if (!widget.isImmediate) {
+    // For appointments, always use immediate flow behavior
+    final bool useImmediateFlow =
+        widget.isImmediate || widget.appointmentId != null;
+
+    if (!useImmediateFlow) {
       // Non-immediate flows: auto advance first stage, then remain on final stage.
       setState(() {
         currentStage = 0;
@@ -114,7 +135,11 @@ class AnimatedConsultationScreenState
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => FinalScreen(isSynchronous: widget.isSynchronous),
+          builder:
+              (_) => FinalScreen(
+                isSynchronous: widget.isSynchronous,
+                appointmentId: widget.appointmentId,
+              ),
         ),
       );
     }

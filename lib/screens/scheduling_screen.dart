@@ -2,8 +2,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/patient_request.dart';
 import '../providers/request_provider.dart';
-import 'chat_interface.dart';
+import '../services/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'home_screen.dart';
 
 class SchedulingScreen extends StatefulWidget {
   final String urgency; // Should be "Routine"
@@ -15,6 +18,7 @@ class SchedulingScreen extends StatefulWidget {
 
 class _SchedulingScreenState extends State<SchedulingScreen> {
   late DateTime scheduledDateTime;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -34,6 +38,86 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
       dt = dt.subtract(Duration(minutes: mod)).add(const Duration(minutes: 15));
     }
     return dt;
+  }
+
+  Future<void> _saveScheduledAppointment() async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final requestProvider = Provider.of<RequestProvider>(
+        context,
+        listen: false,
+      );
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please sign in to schedule an appointment'),
+          ),
+        );
+        return;
+      }
+
+      // Create the appointment request
+      final request =
+          requestProvider.currentRequest?.copyWith(
+            status: RequestStatus.scheduled,
+            scheduledDateTime: scheduledDateTime,
+          ) ??
+          PatientRequest(
+            patientId: userId,
+            requestType: RequestType.consult,
+            urgency: widget.urgency,
+            category: requestProvider.selectedCategory ?? 'General',
+            providerType: requestProvider.providerType,
+            status: RequestStatus.scheduled,
+            scheduledDateTime: scheduledDateTime,
+          );
+
+      // Save to Firestore
+      final conversationId = await FirebaseService().savePatientRequest(
+        request,
+        [], // Empty conversation array since no AI triage yet
+        status: RequestStatus.scheduled.name,
+      );
+
+      if (conversationId == null) {
+        throw Exception('Failed to save appointment to database');
+      }
+
+      // Store the appointment ID in the provider for reference
+      requestProvider.lastConversationId = conversationId;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Appointment scheduled successfully')),
+        );
+
+        // Navigate to home screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error scheduling appointment: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -57,26 +141,11 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: () {
-                // Save the selected date/time in RequestProvider.
-                Provider.of<RequestProvider>(
-                  context,
-                  listen: false,
-                ).setScheduledDateTime(scheduledDateTime);
-                // Navigate to ChatInterface so the AI triage assistant can take the patient's history.
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (_) => ChatInterface(
-                          isSynchronous: true,
-                          isImmediate: false,
-                          urgency: widget.urgency,
-                        ),
-                  ),
-                );
-              },
-              child: const Text('Confirm Appointment'),
+              onPressed: _isSubmitting ? null : _saveScheduledAppointment,
+              child:
+                  _isSubmitting
+                      ? const CircularProgressIndicator()
+                      : const Text('Confirm Appointment'),
             ),
           ),
         ],

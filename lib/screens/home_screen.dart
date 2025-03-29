@@ -5,16 +5,35 @@ import 'request_screen.dart';
 import 'profile_edit_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../models/user_model.dart';
+import '../models/patient_request.dart';
 import '../services/firebase_service.dart';
 import 'video_call_home_screen.dart';
+import 'scheduling_screen.dart';
+import 'chat_interface.dart';
+import 'package:intl/intl.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final FirebaseService _firebaseService = FirebaseService();
+  bool _checkedAppointments = false;
 
   Future<UserModel?> _fetchUser() async {
     final String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
     if (uid.isEmpty) return null;
-    final user = await FirebaseService().getUserMedicalInfo(uid);
+    final user = await _firebaseService.getUserMedicalInfo(uid);
+
+    // Check for upcoming appointments
+    if (!_checkedAppointments) {
+      _checkUpcomingAppointments();
+      _checkedAppointments = true;
+    }
+
     return user;
   }
 
@@ -22,6 +41,163 @@ class HomeScreen extends StatelessWidget {
   String _formatListWithBullets(List<String>? items) {
     if (items == null || items.isEmpty) return "None";
     return items.map((item) => "• $item").join("\n");
+  }
+
+  // Check for upcoming appointments
+  Future<void> _checkUpcomingAppointments() async {
+    final String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+    if (uid.isEmpty) return;
+
+    try {
+      // Get appointments within the next 15 minutes
+      final appointments = await _firebaseService.getImmediateAppointments(uid);
+
+      if (appointments.isNotEmpty && mounted) {
+        // We have an upcoming appointment, show check-in dialog
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showAppointmentCheckInDialog(appointments.first);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking appointments: $e');
+    }
+  }
+
+  // Show the check-in dialog
+  void _showAppointmentCheckInDialog(PatientRequest appointment) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    final timeFormat = DateFormat('h:mm a');
+    final appointmentDate = dateFormat.format(appointment.scheduledDateTime!);
+    final appointmentTime = timeFormat.format(appointment.scheduledDateTime!);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Your appointment is approaching!'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('You have a scheduled appointment on:'),
+                SizedBox(height: 8),
+                Text(
+                  '$appointmentDate at $appointmentTime',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 12),
+                Text('Please select an option:'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel Appointment'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _cancelAppointment(appointment);
+              },
+            ),
+            TextButton(
+              child: Text('Reschedule'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _rescheduleAppointment(appointment);
+              },
+            ),
+            ElevatedButton(
+              child: Text('Check In Now'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _checkInForAppointment(appointment);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Handle appointment cancellation
+  Future<void> _cancelAppointment(PatientRequest appointment) async {
+    try {
+      await _firebaseService.updateAppointmentStatus(
+        appointment.id,
+        RequestStatus.cancelled,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Appointment cancelled successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error cancelling appointment: $e')),
+        );
+      }
+    }
+  }
+
+  // Handle appointment rescheduling
+  Future<void> _rescheduleAppointment(PatientRequest appointment) async {
+    try {
+      // First cancel the current appointment
+      await _firebaseService.updateAppointmentStatus(
+        appointment.id,
+        RequestStatus.cancelled,
+      );
+
+      if (mounted) {
+        // Navigate to scheduling screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SchedulingScreen(urgency: appointment.urgency),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error rescheduling appointment: $e')),
+        );
+      }
+    }
+  }
+
+  // Handle appointment check-in
+  Future<void> _checkInForAppointment(PatientRequest appointment) async {
+    try {
+      // Update status to checked in
+      await _firebaseService.updateAppointmentStatus(
+        appointment.id,
+        RequestStatus.checkedIn,
+      );
+
+      if (mounted) {
+        // Navigate to chat interface for AI triage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => ChatInterface(
+                  isSynchronous: true,
+                  isImmediate: true,
+                  urgency: appointment.urgency,
+                  appointmentId: appointment.id,
+                ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error checking in: $e')));
+      }
+    }
   }
 
   @override

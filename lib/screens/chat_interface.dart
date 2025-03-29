@@ -7,6 +7,7 @@ import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart'; // Should define defaultPrompt, providerPromptConsult, providerPromptQuestion, ptPromptConsult, ptPromptQuestion, and getInitialPrompt.
 import '../widgets/animated_consultation_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/firebase_service.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -14,18 +15,22 @@ class ChatInterface extends StatefulWidget {
   isImmediate; // For consult: Quick = immediate; for medical question, always immediate (or can adjust if needed)
   final String
   urgency; // For consult: "Quick" or "Routine"; for medical question: "Routine"
+  final String?
+  appointmentId; // ID for scheduled appointments that are being checked into
+
   const ChatInterface({
     required this.isSynchronous,
     required this.isImmediate,
     required this.urgency,
+    this.appointmentId,
     super.key,
   });
 
   @override
-  _ChatInterfaceState createState() => _ChatInterfaceState();
+  ChatInterfaceState createState() => ChatInterfaceState();
 }
 
-class _ChatInterfaceState extends State<ChatInterface> {
+class ChatInterfaceState extends State<ChatInterface> {
   final TextEditingController _textController = TextEditingController();
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
@@ -190,6 +195,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
       }
 
       // Save the summary and wait for the operation to complete
+      if (!mounted) return;
       final requestProvider = Provider.of<RequestProvider>(
         context,
         listen: false,
@@ -201,22 +207,39 @@ class _ChatInterfaceState extends State<ChatInterface> {
         await requestProvider.updateConversation(_messages);
       }
 
-      final conversationId = await requestProvider
-          .updateConversationWithSummary(summary, {});
+      // If this is an appointment check-in, update the existing appointment
+      if (widget.appointmentId != null) {
+        final firebaseService = FirebaseService();
 
-      if (conversationId == null) {
-        throw Exception(
-          "Failed to save summary - returned conversation ID is null",
+        // Update the appointment with the AI triage summary
+        await firebaseService.updatePatientRequest(widget.appointmentId!, {
+          'aiTriageSummary': summary,
+          'status': 'triaged',
+        });
+
+        debugPrint(
+          "Updated appointment with ID: ${widget.appointmentId} with AI triage summary",
         );
-      }
+      } else {
+        // Regular flow for non-appointments
+        final conversationId = await requestProvider
+            .updateConversationWithSummary(summary, {});
 
-      debugPrint("Summary saved successfully with ID: $conversationId");
+        if (conversationId == null) {
+          throw Exception(
+            "Failed to save summary - returned conversation ID is null",
+          );
+        }
+
+        debugPrint("Summary saved successfully with ID: $conversationId");
+      }
 
       setState(() {
         _isGeneratingSummary = false;
       });
 
       // Now navigate after the save is complete
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -225,6 +248,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
                 isSynchronous: widget.isSynchronous,
                 isImmediate: widget.isImmediate,
                 urgency: widget.urgency,
+                appointmentId: widget.appointmentId,
               ),
         ),
       );
@@ -233,6 +257,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
       setState(() {
         _isGeneratingSummary = false;
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));

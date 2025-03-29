@@ -43,6 +43,13 @@ class FirebaseService {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
+      // Add scheduled date/time if available
+      if (request.scheduledDateTime != null) {
+        data['scheduledDateTime'] = Timestamp.fromDate(
+          request.scheduledDateTime!,
+        );
+      }
+
       // Only add non-null fields
       if (aiTriageSummary != null) {
         data['aiTriageSummary'] = aiTriageSummary;
@@ -83,6 +90,81 @@ class FirebaseService {
       return true;
     } catch (e) {
       debugPrint('ERROR updating patient request: $e');
+      return false;
+    }
+  }
+
+  // Fetches upcoming appointments for a patient
+  Future<List<PatientRequest>> getUpcomingAppointments(String patientId) async {
+    try {
+      final now = DateTime.now();
+
+      final snapshot =
+          await _firestore
+              .collection('conversations')
+              .where('patientId', isEqualTo: patientId)
+              .where('status', isEqualTo: RequestStatus.scheduled.name)
+              .where(
+                'scheduledDateTime',
+                isGreaterThan: Timestamp.fromDate(now),
+              )
+              .orderBy('scheduledDateTime')
+              .get();
+
+      return snapshot.docs.map((doc) {
+        return PatientRequest.fromMap(doc.data(), docId: doc.id);
+      }).toList();
+    } catch (e) {
+      debugPrint('ERROR fetching upcoming appointments: $e');
+      return [];
+    }
+  }
+
+  // Check for appointments that are about to start (within 15 minutes)
+  Future<List<PatientRequest>> getImmediateAppointments(
+    String patientId,
+  ) async {
+    try {
+      final now = DateTime.now();
+      final cutoff = now.add(const Duration(minutes: 15));
+
+      final snapshot =
+          await _firestore
+              .collection('conversations')
+              .where('patientId', isEqualTo: patientId)
+              .where('status', isEqualTo: RequestStatus.scheduled.name)
+              .where(
+                'scheduledDateTime',
+                isGreaterThan: Timestamp.fromDate(now),
+              )
+              .where(
+                'scheduledDateTime',
+                isLessThanOrEqualTo: Timestamp.fromDate(cutoff),
+              )
+              .get();
+
+      return snapshot.docs.map((doc) {
+        return PatientRequest.fromMap(doc.data(), docId: doc.id);
+      }).toList();
+    } catch (e) {
+      debugPrint('ERROR fetching immediate appointments: $e');
+      return [];
+    }
+  }
+
+  // Update appointment status
+  Future<bool> updateAppointmentStatus(
+    String docId,
+    RequestStatus status,
+  ) async {
+    try {
+      await _firestore.collection('conversations').doc(docId).update({
+        'status': status.name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      debugPrint('ERROR updating appointment status: $e');
       return false;
     }
   }

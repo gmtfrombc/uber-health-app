@@ -16,7 +16,7 @@ class CategorySelectionScreen extends StatelessWidget {
   const CategorySelectionScreen({
     super.key,
     required this.urgency,
-    required this.chatMode,
+    this.chatMode = ChatMode.regular,
   });
 
   @override
