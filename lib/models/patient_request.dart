@@ -1,5 +1,6 @@
 // patient_request.dart
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum RequestType { consult, medicalQuestion }
 
@@ -79,25 +80,13 @@ class PatientRequest {
       urgency: map['urgency'] ?? 'Routine',
       category: map['category'] ?? 'General',
       providerType: _parseProviderType(map['providerType']),
-      timestamp:
-          map['timestamp'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(map['timestamp'])
-              : DateTime.now(),
+      timestamp: _parseDateTime(map['timestamp']),
       status: _parseRequestStatus(map['status']),
       assignedProviderId: map['assignedProviderId'],
       triageSummaryId: map['triageSummaryId'],
-      startTime:
-          map['startTime'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(map['startTime'])
-              : null,
-      endTime:
-          map['endTime'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(map['endTime'])
-              : null,
-      scheduledDateTime:
-          map['scheduledDateTime'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(map['scheduledDateTime'])
-              : null,
+      startTime: _parseDateTime(map['startTime']),
+      endTime: _parseDateTime(map['endTime']),
+      scheduledDateTime: _parseDateTime(map['scheduledDateTime']),
     );
   }
 
@@ -137,6 +126,24 @@ class PatientRequest {
     }
 
     return RequestStatus.pending;
+  }
+
+  // Helper method to parse DateTime from different types
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+
+    // Handle Firestore Timestamp objects
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    // Handle integer timestamps (milliseconds since epoch)
+    if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
+
+    // Default fallback
+    return null;
   }
 
   // Create a copy of this request with updated fields

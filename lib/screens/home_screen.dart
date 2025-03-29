@@ -228,38 +228,47 @@ class _HomeScreenState extends State<HomeScreen> {
           final greeting =
               firstName.isEmpty ? "Welcome!" : "Welcome, $firstName!";
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header image.
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Image.asset(
-                  'assets/images/welcome.jpg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: 200,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Greeting text, centered horizontally.
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  greeting,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header image.
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Image.asset(
+                    'assets/images/welcome.jpg',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 200,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Health Information Card with edit icon.
-              Expanded(
-                child: Padding(
+                const SizedBox(height: 16),
+                // Greeting text, centered horizontally.
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    greeting,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Upcoming Appointments Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _buildUpcomingAppointmentsCard(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Health Information Card with edit icon.
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Card(
                     elevation: 2,
@@ -311,74 +320,74 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              ),
-              // Bottom buttons row
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                child: Row(
-                  children: [
-                    // Consult button
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 2,
-                          backgroundColor: Colors.teal,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RequestScreen(),
+                // Bottom buttons row
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  child: Row(
+                    children: [
+                      // Consult button
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          );
-                        },
-                        child: const Text(
-                          'Request a Consult',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            elevation: 2,
+                            backgroundColor: Colors.teal,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RequestScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Request a Consult',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Video call button
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 2,
-                          backgroundColor: Colors.blueAccent,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const VideoCallHomeScreen(),
+                      const SizedBox(width: 12),
+                      // Video call button
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.video_call),
-                        label: const Text(
-                          'Video Call',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            elevation: 2,
+                            backgroundColor: Colors.blueAccent,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const VideoCallHomeScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.video_call),
+                          label: const Text(
+                            'Video Call',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -408,6 +417,174 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // Build the upcoming appointments card
+  Widget _buildUpcomingAppointmentsCard() {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    final timeFormat = DateFormat('h:mm a');
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Upcoming Appointments",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal[600],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // TODO: Navigate to all appointments screen
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('View all appointments - Coming soon!'),
+                      ),
+                    );
+                  },
+                  child: const Text('See All', style: TextStyle(fontSize: 16)),
+                ),
+              ],
+            ),
+            const Divider(),
+            FutureBuilder<List<PatientRequest>>(
+              future: _firebaseService.getUpcomingAppointments(
+                FirebaseAuth.instance.currentUser?.uid ?? "",
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Text(
+                        "No upcoming appointments",
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                    ),
+                  );
+                }
+
+                // Display the next appointment
+                final appointments = snapshot.data!;
+                final nextAppointment = appointments.first;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        "Next Appointment",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.teal[800],
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          Text(
+                            "${nextAppointment.category} (${nextAppointment.urgency})",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                nextAppointment.scheduledDateTime != null
+                                    ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
+                                    : "Date not specified",
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.person_outline, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                "Provider: ${nextAppointment.providerType.name}",
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed:
+                                      () => _rescheduleAppointment(
+                                        nextAppointment,
+                                      ),
+                                  child: const Text('Reschedule'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed:
+                                      () => _checkInForAppointment(
+                                        nextAppointment,
+                                      ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.teal,
+                                  ),
+                                  child: const Text('Start Now'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (appointments.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          "You have ${appointments.length - 1} more upcoming appointment${appointments.length > 2 ? 's' : ''}",
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black54,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
