@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 import '../models/user_model.dart';
 import '../models/message.dart';
 
@@ -154,6 +155,7 @@ class ProviderDashboardProvider with ChangeNotifier {
   // Dashboard state
   bool isLoading = false;
   String? errorMessage;
+  String? successMessage;
 
   // Initialize provider data
   Future<void> initialize() async {
@@ -218,8 +220,29 @@ class ProviderDashboardProvider with ChangeNotifier {
       _scheduledRequests = [];
       _pendingRequests = [];
 
+      final now = DateTime.now();
+
       for (var doc in querySnapshot.docs) {
         final consultation = ConsultationRequest.fromFirestore(doc);
+
+        // Skip any consultations with status 'cancelled'
+        if (consultation.status.toLowerCase() == 'cancelled') {
+          debugPrint('Skipping cancelled consultation: ${doc.id}');
+          continue;
+        }
+
+        // Check if scheduled appointment is expired (past the scheduled time)
+        if (consultation.status.toLowerCase() == 'scheduled' &&
+            consultation.scheduledDateTime != null &&
+            consultation.scheduledDateTime!.isBefore(now)) {
+          // Auto-cancel expired appointments
+          await _firestore.collection('conversations').doc(doc.id).update({
+            'status': 'cancelled',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          debugPrint('Auto-cancelled expired appointment: ${doc.id}');
+          continue; // Skip adding this to any list
+        }
 
         // Sort consultations by type and status
         if (consultation.status.toLowerCase() == 'scheduled' ||
@@ -267,6 +290,7 @@ class ProviderDashboardProvider with ChangeNotifier {
   // Select a patient to view details
   Future<void> selectPatient(String patientId, String requestId) async {
     isLoading = true;
+    clearMessages(); // Clear any success or error messages when selecting a patient
     notifyListeners();
 
     try {
@@ -319,9 +343,10 @@ class ProviderDashboardProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Refresh dashboard data
+  // Method to refresh all dashboard data
   Future<void> refreshDashboard() async {
     isLoading = true;
+    errorMessage = null;
     notifyListeners();
 
     try {
@@ -336,6 +361,118 @@ class ProviderDashboardProvider with ChangeNotifier {
     } catch (e) {
       isLoading = false;
       errorMessage = 'Error refreshing dashboard: $e';
+      debugPrint(errorMessage);
+      notifyListeners();
+    }
+  }
+
+  // Method to delete a consultation
+  Future<bool> deleteConsultation(String consultationId) async {
+    try {
+      // Clear any messages from previous operations
+      clearMessages();
+
+      // First update in Firebase - do this BEFORE updating local state
+      await _firestore.collection('conversations').doc(consultationId).update({
+        'status': 'cancelled',
+        'deletedBy': 'provider',
+        'deletedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Firebase update succeeded, now update local state
+      _updateLocalListsAfterDeletion(consultationId);
+
+      // Set success message
+      successMessage = 'Consultation removed successfully';
+
+      // Clear selection if the deleted consultation was selected
+      if (selectedRequest?.id == consultationId) {
+        clearSelectedPatient();
+      }
+
+      // Notify of the changes
+      notifyListeners();
+
+      // Log success for debugging
+      debugPrint(
+        'Consultation $consultationId successfully marked as cancelled in Firebase',
+      );
+
+      return true;
+    } catch (e) {
+      // Log the detailed error for debugging
+      debugPrint('Error deleting consultation $consultationId: $e');
+      errorMessage = 'Error deleting consultation: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Helper to update the local lists when a consultation is deleted
+  void _updateLocalListsAfterDeletion(String consultationId) {
+    // Remove from all lists to ensure it's gone regardless of which list it was in
+    _urgentRequests.removeWhere((req) => req.id == consultationId);
+    _scheduledRequests.removeWhere((req) => req.id == consultationId);
+    _pendingRequests.removeWhere((req) => req.id == consultationId);
+  }
+
+  // Clear messages
+  void clearMessages() {
+    errorMessage = null;
+    successMessage = null;
+  }
+
+  // Debug method to check a consultation's status in Firebase
+  Future<void> checkConsultationStatus(String consultationId) async {
+    try {
+      final doc =
+          await _firestore
+              .collection('conversations')
+              .doc(consultationId)
+              .get();
+      if (!doc.exists) {
+        debugPrint('Consultation $consultationId does not exist in Firebase');
+        return;
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      debugPrint('Consultation $consultationId status: ${data['status']}');
+      debugPrint(
+        'Consultation details: ${data.toString().substring(0, min(100, data.toString().length))}...',
+      );
+    } catch (e) {
+      debugPrint('Error checking consultation $consultationId: $e');
+    }
+  }
+
+  // Method to actually refresh from server - this clears local lists and refetches everything
+  Future<void> refreshFromServer() async {
+    isLoading = true;
+    clearMessages();
+    notifyListeners();
+
+    try {
+      // Clear all local lists to ensure we get fresh data
+      _urgentRequests = [];
+      _scheduledRequests = [];
+      _pendingRequests = [];
+
+      debugPrint('Refreshing data from server...');
+
+      // Fetch fresh data from server
+      await Future.wait([
+        _fetchConsultations(),
+        _fetchMessages(),
+        _fetchCompletedNotes(),
+      ]);
+
+      isLoading = false;
+      successMessage = 'Dashboard refreshed from server';
+      notifyListeners();
+    } catch (e) {
+      isLoading = false;
+      errorMessage = 'Error refreshing from server: $e';
       debugPrint(errorMessage);
       notifyListeners();
     }

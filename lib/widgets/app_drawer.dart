@@ -1,8 +1,8 @@
 // lib/widgets/app_drawer.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../screens/sign_in_screen.dart';
-import '../screens/summary_list_screen.dart';
+import '../screens/auth/sign_in_screen.dart';
+import '../screens/consultation/summary_list_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});

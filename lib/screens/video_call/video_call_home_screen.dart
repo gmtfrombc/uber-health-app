@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../providers/video_call_provider.dart';
+import '../../providers/video_call_provider.dart';
 import 'video_call_screen.dart';
 
 class VideoCallHomeScreen extends StatefulWidget {

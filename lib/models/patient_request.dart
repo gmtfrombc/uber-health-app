@@ -31,6 +31,7 @@ class PatientRequest {
   final DateTime? startTime;
   final DateTime? endTime;
   final DateTime? scheduledDateTime; // Time when appointment is scheduled
+  final String? providerId; // ID of the provider selected for this request
 
   PatientRequest({
     this.id = '', // Allow empty string for new requests
@@ -46,6 +47,7 @@ class PatientRequest {
     this.startTime,
     this.endTime,
     this.scheduledDateTime,
+    this.providerId,
   }) : timestamp = timestamp ?? DateTime.now() {
     if (patientId.isEmpty) {
       debugPrint('WARNING: Creating PatientRequest with empty patientId');
@@ -66,6 +68,7 @@ class PatientRequest {
       'startTime': startTime?.millisecondsSinceEpoch,
       'endTime': endTime?.millisecondsSinceEpoch,
       'scheduledDateTime': scheduledDateTime?.millisecondsSinceEpoch,
+      'providerId': providerId,
     };
   }
 
@@ -87,6 +90,7 @@ class PatientRequest {
       startTime: _parseDateTime(map['startTime']),
       endTime: _parseDateTime(map['endTime']),
       scheduledDateTime: _parseDateTime(map['scheduledDateTime']),
+      providerId: map['providerId'],
     );
   }
 
@@ -161,6 +165,7 @@ class PatientRequest {
     DateTime? startTime,
     DateTime? endTime,
     DateTime? scheduledDateTime,
+    String? providerId,
   }) {
     return PatientRequest(
       id: id ?? this.id,
@@ -176,6 +181,7 @@ class PatientRequest {
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       scheduledDateTime: scheduledDateTime ?? this.scheduledDateTime,
+      providerId: providerId ?? this.providerId,
     );
   }
 

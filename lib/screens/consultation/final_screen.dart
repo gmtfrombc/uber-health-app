@@ -1,9 +1,9 @@
-// lib/screens/final_screen.dart
+// lib/screens/consultation/final_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'home_screen.dart'; // Import HomeScreen
-import '../services/firebase_service.dart';
-import '../models/patient_request.dart';
+import '../patient/home_screen.dart'; // Updated import path
+import '../../services/firebase_service.dart';
+import '../../models/patient_request.dart';
 
 class FinalScreen extends StatelessWidget {
   final bool isSynchronous;
@@ -76,7 +76,10 @@ class FinalScreen extends StatelessWidget {
   ) async {
     try {
       final firebaseService = FirebaseService();
-      await firebaseService.updateAppointmentStatus(appointmentId, status);
+      // Using updatePatientRequest instead of updateAppointmentStatus
+      await firebaseService.updatePatientRequest(appointmentId, {
+        'status': status.name,
+      });
     } catch (e) {
       debugPrint('Error updating appointment status: $e');
     }

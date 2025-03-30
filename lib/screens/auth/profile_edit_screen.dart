@@ -1,9 +1,9 @@
-// lib/screens/profile_edit_screen.dart
-import 'package:firebase_auth/firebase_auth.dart';
+// lib/screens/auth/profile_edit_screen.dart
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
-import '../services/firebase_service.dart';
-import 'home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../models/user_model.dart';
+import '../../services/firebase_service.dart';
+import '../patient/home_screen.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   const ProfileEditScreen({super.key});

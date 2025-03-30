@@ -9,7 +9,7 @@ import 'providers/request_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/provider_provider.dart'; // New provider state management for provider list flow
 import 'providers/provider_dashboard_provider.dart'; // Provider dashboard state
-import 'screens/auth_wrapper.dart';
+import 'screens/auth/auth_wrapper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'theme.dart'; // Import our custom theme

@@ -1,12 +1,12 @@
-// lib/screens/auth_wrapper.dart
+// lib/screens/auth/auth_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_in_screen.dart';
-import 'home_screen.dart';
+import '../patient/home_screen.dart';
 import 'onboarding_screen.dart';
-import 'provider_dashboard_screen.dart';
-import '../models/user_model.dart';
-import '../services/firebase_service.dart';
+import '../provider/provider_dashboard_screen.dart';
+import '../../models/user_model.dart';
+import '../../services/firebase_service.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});

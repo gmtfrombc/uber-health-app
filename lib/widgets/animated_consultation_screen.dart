@@ -1,13 +1,12 @@
 // lib/widgets/animated_consultation_screen.dart
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 import '../providers/request_provider.dart';
 import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart';
-import '../screens/home_screen.dart';
-import '../screens/final_screen.dart';
+import '../screens/patient/home_screen.dart';
+import '../screens/consultation/final_screen.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question

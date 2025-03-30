@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/user_model.dart';
-import '../providers/provider_dashboard_provider.dart';
-import '../providers/user_provider.dart';
-import '../screens/auth_wrapper.dart';
+import '../../providers/provider_dashboard_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../models/user_model.dart';
+import '../auth/auth_wrapper.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -35,6 +35,37 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       listen: false,
     );
     await dashboardProvider.initialize();
+
+    // Set up a listener for the provider to show feedback
+    dashboardProvider.addListener(() {
+      if (!mounted) return;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Check if we need to show an error message
+        if (dashboardProvider.errorMessage != null) {
+          final errorMsg = dashboardProvider.errorMessage!;
+
+          // Clear the message first to avoid showing it multiple times
+          dashboardProvider.clearMessages();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+          );
+        }
+        // Check if we need to show a success message
+        else if (dashboardProvider.successMessage != null) {
+          final successMsg = dashboardProvider.successMessage!;
+
+          // Clear the message first to avoid showing it multiple times
+          dashboardProvider.clearMessages();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(successMsg), backgroundColor: Colors.green),
+          );
+        }
+      });
+    });
+
     if (!mounted) return;
     setState(() {
       _initializing = false;
@@ -94,9 +125,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              dashboardProvider.refreshDashboard();
+              dashboardProvider.refreshFromServer();
             },
-            tooltip: 'Refresh Dashboard',
+            tooltip: 'Refresh From Server',
           ),
           Builder(
             builder:
@@ -171,17 +202,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 NavigationRailDestination(
                   icon: Badge(
                     label: Text(
-                      dashboardProvider.pendingRequests.length.toString(),
-                    ),
-                    isLabelVisible:
-                        dashboardProvider.pendingRequests.isNotEmpty,
-                    child: const Icon(Icons.pending_actions),
-                  ),
-                  label: const Text('Pending Consults'),
-                ),
-                NavigationRailDestination(
-                  icon: Badge(
-                    label: Text(
                       dashboardProvider.scheduledRequests.length.toString(),
                     ),
                     isLabelVisible:
@@ -239,27 +259,20 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           listTitle: 'Urgent Consults',
         );
 
-      case 2: // Pending Consults
-        return _buildConsultationList(
-          dashboardProvider.pendingRequests,
-          emptyMessage: 'No pending consults',
-          listTitle: 'Pending Consults',
-        );
-
-      case 3: // Scheduled Patients
+      case 2: // Scheduled Patients
         return _buildConsultationList(
           dashboardProvider.scheduledRequests,
           emptyMessage: 'No scheduled patients',
           listTitle: 'Scheduled Patients',
         );
 
-      case 4: // Messages
+      case 3: // Messages
         return const Center(child: Text('Messages coming soon'));
 
-      case 5: // Notes
+      case 4: // Notes
         return const Center(child: Text('Notes coming soon'));
 
-      case 6: // Settings
+      case 5: // Settings
         return const Center(child: Text('Settings coming soon'));
 
       default: // Dashboard
@@ -276,10 +289,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               _buildQuickAccessItem(
                 'Urgent Consults',
                 dashboardProvider.urgentRequests.length,
-              ),
-              _buildQuickAccessItem(
-                'Pending Consults',
-                dashboardProvider.pendingRequests.length,
               ),
               _buildQuickAccessItem(
                 'Scheduled Patients',
@@ -311,9 +320,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 title == 'Urgent Consults'
                     ? 1
                     : title == 'Scheduled Patients'
-                    ? 3
+                    ? 2
                     : title == 'New Messages'
-                    ? 4
+                    ? 3
                     : 0;
           });
         },
@@ -334,13 +343,16 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
     if (consultations.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person_off, size: 48, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(emptyMessage, style: TextStyle(color: Colors.grey)),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.person_off, size: 48, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(emptyMessage, style: TextStyle(color: Colors.grey)),
+            ],
+          ),
         ),
       );
     }
@@ -360,59 +372,207 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             itemCount: consultations.length,
             itemBuilder: (context, index) {
               final consultation = consultations[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: ListTile(
-                  title: FutureBuilder<UserModel?>(
-                    future: _fetchPatientName(consultation.patientId),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Text('Loading patient...');
-                      }
-                      final patient = snapshot.data;
-                      return Text(
-                        patient != null
-                            ? '${patient.firstname} ${patient.lastname}'
-                            : 'Unknown Patient',
+              return Dismissible(
+                key: Key(consultation.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 20.0),
+                  color: Colors.red,
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                confirmDismiss: (direction) async {
+                  // Store the BuildContext before showing dialog
+                  final scaffoldContext = context;
+
+                  try {
+                    return await showDialog<bool>(
+                          context: scaffoldContext,
+                          barrierDismissible:
+                              false, // Prevent dismissing by tapping outside
+                          builder: (BuildContext dialogContext) {
+                            return AlertDialog(
+                              title: Text("Confirm Deletion"),
+                              content: Text(
+                                "Are you sure you want to remove this consultation? This will also cancel it for the patient.",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.of(
+                                        dialogContext,
+                                      ).pop(false),
+                                  child: Text("Cancel"),
+                                ),
+                                TextButton(
+                                  onPressed:
+                                      () =>
+                                          Navigator.of(dialogContext).pop(true),
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            );
+                          },
+                        ) ??
+                        false;
+                  } catch (e) {
+                    debugPrint('Error showing confirmation dialog: $e');
+                    return false;
+                  }
+                },
+                onDismissed: (direction) async {
+                  // Just delete the consultation, don't do any UI operations here
+                  final consultationId = consultation.id;
+                  debugPrint(
+                    'Deleting consultation via swipe: $consultationId',
+                  );
+                  try {
+                    final result = await dashboardProvider.deleteConsultation(
+                      consultationId,
+                    );
+                    debugPrint('Deletion result: $result');
+
+                    // Debug check consultation status after deletion attempt
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      debugPrint(
+                        'Checking consultation status after deletion...',
+                      );
+                      await dashboardProvider.checkConsultationStatus(
+                        consultationId,
+                      );
+                    });
+                  } catch (e) {
+                    debugPrint('Error in dismiss handler: $e');
+                  }
+                },
+                child: Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: ListTile(
+                    title: FutureBuilder<UserModel?>(
+                      future: _fetchPatientName(consultation.patientId),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Text('Loading patient...');
+                        }
+                        final patient = snapshot.data;
+                        return Text(
+                          patient != null
+                              ? '${patient.firstname} ${patient.lastname}'
+                              : 'Unknown Patient',
+                        );
+                      },
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${consultation.category} • ${consultation.urgency}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (consultation.scheduledDateTime != null)
+                          Text(
+                            'Scheduled: ${consultation.formattedScheduledDateTime}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal,
+                            ),
+                          ),
+                        Text(
+                          'Requested: ${_formatTimestamp(consultation.createdAt)}',
+                        ),
+                        if (consultation.aiTriageSummary != null)
+                          Text(
+                            _truncateText(consultation.aiTriageSummary!, 50),
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                          ),
+                      ],
+                    ),
+                    isThreeLine: true,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            // Store context locally for confirmation dialog
+                            final localContext = context;
+
+                            try {
+                              // Show confirmation dialog
+                              final shouldDelete =
+                                  await showDialog<bool>(
+                                    context: localContext,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext dialogContext) {
+                                      return AlertDialog(
+                                        title: Text("Confirm Deletion"),
+                                        content: Text(
+                                          "Are you sure you want to remove this consultation? This will also cancel it for the patient.",
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed:
+                                                () => Navigator.of(
+                                                  dialogContext,
+                                                ).pop(false),
+                                            child: Text("Cancel"),
+                                          ),
+                                          TextButton(
+                                            onPressed:
+                                                () => Navigator.of(
+                                                  dialogContext,
+                                                ).pop(true),
+                                            child: Text("Delete"),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ) ??
+                                  false;
+
+                              // Delete if confirmed
+                              if (shouldDelete) {
+                                debugPrint(
+                                  'Deleting consultation via button: ${consultation.id}',
+                                );
+                                final result = await dashboardProvider
+                                    .deleteConsultation(consultation.id);
+                                debugPrint('Deletion result: $result');
+
+                                // Debug check consultation status after deletion attempt
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) async {
+                                  debugPrint(
+                                    'Checking consultation status after deletion...',
+                                  );
+                                  await dashboardProvider
+                                      .checkConsultationStatus(consultation.id);
+                                });
+                              }
+                            } catch (e) {
+                              debugPrint('Error handling delete: $e');
+                            }
+                          },
+                        ),
+                        Icon(Icons.chevron_right),
+                      ],
+                    ),
+                    onTap: () {
+                      dashboardProvider.selectPatient(
+                        consultation.patientId,
+                        consultation.id,
                       );
                     },
+                    selected:
+                        dashboardProvider.selectedRequest?.id ==
+                        consultation.id,
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${consultation.category} • ${consultation.urgency}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (consultation.scheduledDateTime != null)
-                        Text(
-                          'Scheduled: ${consultation.formattedScheduledDateTime}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.teal,
-                          ),
-                        ),
-                      Text(
-                        'Requested: ${_formatTimestamp(consultation.createdAt)}',
-                      ),
-                      if (consultation.aiTriageSummary != null)
-                        Text(
-                          _truncateText(consultation.aiTriageSummary!, 50),
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                    ],
-                  ),
-                  isThreeLine: true,
-                  trailing: Icon(Icons.chevron_right),
-                  onTap: () {
-                    dashboardProvider.selectPatient(
-                      consultation.patientId,
-                      consultation.id,
-                    );
-                  },
-                  selected:
-                      dashboardProvider.selectedRequest?.id == consultation.id,
                 ),
               );
             },

@@ -1,11 +1,11 @@
-// lib/screens/request_screen.dart
+// lib/screens/patient/request_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../models/patient_request.dart';
-import '../providers/request_provider.dart';
-import 'chat_interface.dart';
+import '../../providers/request_provider.dart';
+import '../../models/patient_request.dart';
 import 'category_selection_screen.dart';
+import '../consultation/chat_interface.dart';
 
 class RequestScreen extends StatefulWidget {
   const RequestScreen({super.key});

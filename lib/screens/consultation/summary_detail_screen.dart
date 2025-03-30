@@ -1,7 +1,7 @@
-// lib/screens/summary_detail_screen.dart
+// lib/screens/consultation/summary_detail_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'home_screen.dart'; // Ensure you have this import to navigate to HomeScreen
+import '../patient/home_screen.dart'; // Updated import path
 
 class SummaryDetailScreen extends StatelessWidget {
   final String conversationId;

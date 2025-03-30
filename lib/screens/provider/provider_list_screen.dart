@@ -1,9 +1,9 @@
-// lib/screens/provider_list_screen.dart
+// lib/screens/provider/provider_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/provider_model.dart';
-import '../providers/provider_provider.dart';
-import 'chat_interface.dart';
+import '../../models/provider_model.dart';
+import '../../providers/provider_provider.dart';
+import '../consultation/chat_interface.dart';
 
 class ProviderListScreen extends StatelessWidget {
   final String urgency; // "Quick" or "Routine"

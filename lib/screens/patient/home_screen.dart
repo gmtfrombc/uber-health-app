@@ -1,15 +1,16 @@
-// lib/screens/home_screen.dart
+// lib/screens/patient/home_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'request_screen.dart';
-import 'profile_edit_screen.dart';
-import '../widgets/app_drawer.dart';
-import '../models/user_model.dart';
-import '../models/patient_request.dart';
-import '../services/firebase_service.dart';
-import 'video_call_home_screen.dart';
+import '../auth/profile_edit_screen.dart';
+import '../../widgets/app_drawer.dart';
+import '../../models/user_model.dart';
+import '../../models/patient_request.dart';
+import '../../models/chat_mode.dart';
+import '../../services/firebase_service.dart';
+import '../video_call/video_call_home_screen.dart';
 import 'scheduling_screen.dart';
-import 'chat_interface.dart';
+import 'category_selection_screen.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -154,7 +155,12 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => SchedulingScreen(urgency: appointment.urgency),
+            builder:
+                (_) => SchedulingScreen(
+                  category: appointment.category,
+                  isUrgent: appointment.urgency.toLowerCase() == 'urgent',
+                  selectedProvider: null, // We don't have provider info here
+                ),
           ),
         );
       }
@@ -177,16 +183,19 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (mounted) {
-        // Navigate to chat interface for AI triage
+        // Navigate to category selection screen first to ensure consistent flow
+        // This will allow the AI prompt to be based on the selected category
         Navigator.push(
           context,
           MaterialPageRoute(
             builder:
-                (_) => ChatInterface(
-                  isSynchronous: true,
-                  isImmediate: true,
+                (_) => CategorySelectionScreen(
                   urgency: appointment.urgency,
-                  appointmentId: appointment.id,
+                  chatMode:
+                      ChatMode
+                          .immediate, // Add a new mode to indicate immediate start
+                  appointmentId:
+                      appointment.id, // Pass the appointment ID for context
                 ),
           ),
         );

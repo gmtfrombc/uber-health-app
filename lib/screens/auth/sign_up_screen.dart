@@ -1,11 +1,11 @@
-// lib/screens/sign_up_screen.dart
+// lib/screens/auth/sign_up_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../providers/user_provider.dart';
-import '../models/user_model.dart';
+import '../../providers/user_provider.dart';
+import '../../models/user_model.dart';
 import 'onboarding_screen.dart';
-import 'provider_dashboard_screen.dart';
+import '../provider/provider_dashboard_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

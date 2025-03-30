@@ -1,16 +1,25 @@
-// lib/screens/scheduling_screen.dart
+// lib/screens/patient/scheduling_screen.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/patient_request.dart';
-import '../providers/request_provider.dart';
-import '../services/firebase_service.dart';
+import '../../providers/request_provider.dart';
+import '../../models/patient_request.dart';
+import '../../services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
+import '../../models/provider_model.dart';
 
 class SchedulingScreen extends StatefulWidget {
-  final String urgency; // Should be "Routine"
-  const SchedulingScreen({super.key, required this.urgency});
+  final String category;
+  final bool isUrgent;
+  final ProviderModel? selectedProvider;
+
+  const SchedulingScreen({
+    super.key,
+    required this.category,
+    required this.isUrgent,
+    this.selectedProvider,
+  });
 
   @override
   State<SchedulingScreen> createState() => _SchedulingScreenState();
@@ -72,11 +81,12 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
           PatientRequest(
             patientId: userId,
             requestType: RequestType.consult,
-            urgency: widget.urgency,
-            category: requestProvider.selectedCategory ?? 'General',
+            urgency: widget.isUrgent ? 'Urgent' : 'Routine',
+            category: widget.category,
             providerType: requestProvider.providerType,
             status: RequestStatus.scheduled,
             scheduledDateTime: scheduledDateTime,
+            providerId: widget.selectedProvider?.id,
           );
 
       // Save to Firestore

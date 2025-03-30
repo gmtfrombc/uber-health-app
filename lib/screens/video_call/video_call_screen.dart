@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
-import '../providers/video_call_provider.dart';
+import '../../providers/video_call_provider.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String? roomId;

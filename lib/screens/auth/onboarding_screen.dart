@@ -1,9 +1,9 @@
-// lib/screens/onboarding_screen.dart
+// lib/screens/auth/onboarding_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/user_model.dart';
-import '../services/firebase_service.dart';
-import 'home_screen.dart';
+import '../../models/user_model.dart';
+import '../../services/firebase_service.dart';
+import '../patient/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

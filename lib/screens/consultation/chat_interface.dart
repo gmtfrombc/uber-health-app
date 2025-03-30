@@ -1,13 +1,14 @@
-// lib/screens/chat_interface.dart
+// lib/screens/consultation/chat_interface.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/message.dart';
-import '../providers/request_provider.dart';
-import '../services/chatgpt_service.dart';
-import '../utils/prompts.dart'; // Should define defaultPrompt, providerPromptConsult, providerPromptQuestion, ptPromptConsult, ptPromptQuestion, and getInitialPrompt.
-import '../widgets/animated_consultation_screen.dart';
+import '../../models/message.dart';
+import '../../providers/request_provider.dart';
+import '../../models/patient_request.dart';
+import '../../services/chatgpt_service.dart';
+import '../../utils/prompts.dart';
+import '../../widgets/animated_consultation_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/firebase_service.dart';
+import '../../services/firebase_service.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -17,12 +18,15 @@ class ChatInterface extends StatefulWidget {
   urgency; // For consult: "Quick" or "Routine"; for medical question: "Routine"
   final String?
   appointmentId; // ID for scheduled appointments that are being checked into
+  final String?
+  category; // Category of the consult, used to set the correct prompt
 
   const ChatInterface({
     required this.isSynchronous,
     required this.isImmediate,
     required this.urgency,
     this.appointmentId,
+    this.category,
     super.key,
   });
 
@@ -38,6 +42,7 @@ class ChatInterfaceState extends State<ChatInterface> {
   bool _triageComplete = false;
   bool _isGeneratingSummary = false; // New flag for summary generation
   final ChatGPTService _chatGPTService = ChatGPTService();
+  String _systemPrompt = ""; // Store the system prompt for consistent use
 
   @override
   void initState() {
@@ -48,16 +53,48 @@ class ChatInterfaceState extends State<ChatInterface> {
       listen: false,
     );
     final currentRequest = requestProvider.currentRequest;
-    // Determine the initial prompt based on provider and request type.
+
+    // Determine the initial prompt shown to the user (welcome message)
     String initialPrompt;
-    if (currentRequest != null) {
+
+    // Determine the system prompt to send to ChatGPT (more detailed instructions)
+    // This prompt will be used in all subsequent ChatGPT calls
+    String category = "";
+
+    if (widget.category != null) {
+      // If category is explicitly provided (via parameter)
+      category = widget.category!;
+      initialPrompt = getInitialPrompt(
+        requestProvider.providerType,
+        currentRequest?.requestType ?? RequestType.consult,
+      );
+    } else if (requestProvider.selectedCategory != null) {
+      // If category is in the request provider
+      category = requestProvider.selectedCategory!;
+      initialPrompt = getInitialPrompt(
+        requestProvider.providerType,
+        currentRequest?.requestType ?? RequestType.consult,
+      );
+    } else if (currentRequest != null) {
+      // If we have a current request but no category yet
+      category = currentRequest.category;
       initialPrompt = getInitialPrompt(
         currentRequest.providerType,
         currentRequest.requestType,
       );
     } else {
-      initialPrompt = defaultPrompt; // Fallback prompt.
+      // Fallback case
+      initialPrompt = defaultPrompt;
+      category = "Other"; // Default category
     }
+
+    // Set the system prompt that will be used for all ChatGPT calls
+    _systemPrompt = getComplaintPrompt(requestProvider.providerType, category);
+
+    debugPrint("Using category: $category for system prompt");
+    debugPrint("System prompt: $_systemPrompt");
+
+    // Add the welcome message to the UI
     _messages.add(
       Message(sender: 'ai', content: initialPrompt, timestamp: DateTime.now()),
     );
@@ -95,6 +132,8 @@ class ChatInterfaceState extends State<ChatInterface> {
       _isLoadingAI = true;
     });
     _scrollToBottom();
+
+    // Create the conversation history for ChatGPT
     List<Map<String, String>> conversation =
         _messages.map((m) {
           return {
@@ -102,18 +141,10 @@ class ChatInterfaceState extends State<ChatInterface> {
             "content": m.content,
           };
         }).toList();
-    final requestProvider = Provider.of<RequestProvider>(
-      context,
-      listen: false,
-    );
-    String promptToUse = defaultPrompt;
-    if (requestProvider.selectedCategory != null) {
-      promptToUse = getComplaintPrompt(
-        requestProvider.providerType,
-        requestProvider.selectedCategory!,
-      );
-    }
-    conversation.insert(0, {"role": "system", "content": promptToUse});
+
+    // Use the stored system prompt for all ChatGPT interactions
+    conversation.insert(0, {"role": "system", "content": _systemPrompt});
+
     int patientCount = _messages.where((m) => m.sender == 'patient').length;
     if (patientCount >= 10) {
       setState(() {
