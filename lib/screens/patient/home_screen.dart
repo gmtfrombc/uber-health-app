@@ -1,6 +1,7 @@
 // lib/screens/patient/home_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'request_screen.dart';
 import '../auth/profile_edit_screen.dart';
 import '../../widgets/app_drawer.dart';
@@ -11,6 +12,10 @@ import '../../services/firebase_service.dart';
 import 'scheduling_screen.dart';
 import 'category_selection_screen.dart';
 import 'package:intl/intl.dart';
+import '../../providers/appointment_provider.dart';
+import '../../providers/provider_data_provider.dart';
+import '../../providers/user_provider.dart';
+import '../video_call/video_call_home_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,39 +28,55 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   bool _checkedAppointments = false;
 
-  Future<UserModel?> _fetchUser() async {
-    final String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    if (uid.isEmpty) return null;
-    final user = await _firebaseService.getUserMedicalInfo(uid);
+  @override
+  void initState() {
+    super.initState();
+    // Initialize providers and check for appointments
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeProviders();
+    });
+  }
+
+  // Initialize providers and check for appointments
+  Future<void> _initializeProviders() async {
+    // Get appointment provider and refresh data
+    final appointmentProvider = Provider.of<AppointmentProvider>(
+      context,
+      listen: false,
+    );
+    await appointmentProvider.refreshAppointments();
 
     // Check for upcoming appointments
     if (!_checkedAppointments) {
       _checkUpcomingAppointments();
       _checkedAppointments = true;
     }
-
-    return user;
   }
 
-  // Helper method to format a list of items with bullets.
-  String _formatListWithBullets(List<String>? items) {
-    if (items == null || items.isEmpty) return "None";
-    return items.map((item) => "• $item").join("\n");
+  Future<UserModel?> _fetchUser() async {
+    // Use the UserProvider to get user profile
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (!userProvider.isProfileLoaded) {
+      await userProvider.fetchUserProfile();
+    }
+    return userProvider.userProfile;
   }
 
   // Check for upcoming appointments
   Future<void> _checkUpcomingAppointments() async {
-    final String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    if (uid.isEmpty) return;
-
     try {
-      // Get appointments within the next 15 minutes
-      final appointments = await _firebaseService.getImmediateAppointments(uid);
+      // Use AppointmentProvider to check for immediate appointments
+      final appointmentProvider = Provider.of<AppointmentProvider>(
+        context,
+        listen: false,
+      );
+      final appointment =
+          await appointmentProvider.checkForImmediateAppointments();
 
-      if (appointments.isNotEmpty && mounted) {
+      if (appointment != null && mounted) {
         // We have an upcoming appointment, show check-in dialog
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showAppointmentCheckInDialog(appointments.first);
+          _showAppointmentCheckInDialog(appointment);
         });
       }
     } catch (e) {
@@ -121,19 +142,22 @@ class _HomeScreenState extends State<HomeScreen> {
   // Handle appointment cancellation
   Future<void> _cancelAppointment(PatientRequest appointment) async {
     try {
-      await _firebaseService.updateAppointmentStatus(
-        appointment.id,
-        RequestStatus.cancelled,
+      // Use AppointmentProvider to cancel appointment
+      final appointmentProvider = Provider.of<AppointmentProvider>(
+        context,
+        listen: false,
       );
+      final success = await appointmentProvider.cancelAppointment(appointment);
 
-      // Refresh the UI to remove the cancelled appointment
       if (mounted) {
-        setState(() {
-          // Trigger a rebuild
-        });
-
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Appointment cancelled successfully')),
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Appointment cancelled successfully'
+                  : 'Error cancelling appointment',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -379,13 +403,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Helper method to build an info section.
   Widget _buildInfoSection(String title, List<String>? items) {
+    // Use UserProvider to format list with bullets
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
-          _formatListWithBullets(items),
+          userProvider.formatListWithBullets(items),
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
@@ -411,25 +438,18 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_month,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Upcoming Appointments",
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ],
+                    Icon(
+                      Icons.calendar_month,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Upcoming Appointments",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -460,12 +480,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Divider(),
               ],
             ),
-            FutureBuilder<List<PatientRequest>>(
-              future: _firebaseService.getUpcomingAppointments(
-                FirebaseAuth.instance.currentUser?.uid ?? "",
-              ),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            // Use Consumer with AppointmentProvider
+            Consumer<AppointmentProvider>(
+              builder: (context, appointmentProvider, child) {
+                if (appointmentProvider.isLoading) {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
@@ -474,7 +492,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                final appointments = appointmentProvider.upcomingAppointments;
+
+                if (appointments.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Center(
@@ -486,7 +506,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                final appointments = snapshot.data!;
                 final nextAppointment = appointments.first;
 
                 return Column(
@@ -558,55 +577,37 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 4),
-                        FutureBuilder<Map<String, dynamic>?>(
-                          future:
-                              nextAppointment.providerId != null &&
-                                      nextAppointment.providerId!.isNotEmpty
-                                  ? _firebaseService.getProviderDetails(
-                                    nextAppointment.providerId!,
-                                  )
-                                  : Future.value(null),
-                          builder: (context, providerSnapshot) {
-                            if (providerSnapshot.connectionState ==
-                                ConnectionState.waiting) {
+                        // Use Consumer with ProviderDataProvider
+                        Consumer<ProviderDataProvider>(
+                          builder: (context, providerDataProvider, child) {
+                            if (nextAppointment.providerId == null ||
+                                nextAppointment.providerId!.isEmpty) {
                               return Text(
-                                "Provider: Loading...",
+                                "Provider: ${nextAppointment.urgency.toLowerCase() == 'routine' ? 'TBD' : nextAppointment.providerType.name}",
                                 style: Theme.of(context).textTheme.bodyMedium,
                               );
                             }
 
-                            String providerText = "Provider: ";
-
-                            if (providerSnapshot.hasData &&
-                                providerSnapshot.data != null) {
-                              final providerData = providerSnapshot.data!;
-                              final firstName = providerData['firstname'] ?? '';
-                              final lastName = providerData['lastname'] ?? '';
-                              final credentials = providerData['credentials'];
-
-                              if (firstName.isNotEmpty || lastName.isNotEmpty) {
-                                providerText += "$firstName $lastName";
-                                if (credentials != null &&
-                                    credentials.toString().isNotEmpty) {
-                                  providerText += ", $credentials";
+                            return FutureBuilder<String>(
+                              future: providerDataProvider
+                                  .getFormattedProviderName(
+                                    nextAppointment.providerId!,
+                                  ),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text(
+                                    "Provider: Loading...",
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  );
                                 }
-                              } else {
-                                // Fallback if no name data is available
-                                providerText +=
-                                    nextAppointment.providerType.name;
-                              }
-                            } else {
-                              // No provider selected yet
-                              providerText +=
-                                  nextAppointment.urgency.toLowerCase() ==
-                                          'routine'
-                                      ? 'TBD'
-                                      : nextAppointment.providerType.name;
-                            }
 
-                            return Text(
-                              providerText,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                                return Text(
+                                  "Provider: ${snapshot.data ?? 'Unknown'}",
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                );
+                              },
                             );
                           },
                         ),

@@ -9,6 +9,8 @@ import 'providers/request_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/provider_provider.dart'; // New provider state management for provider list flow
 import 'providers/provider_dashboard_provider.dart'; // Provider dashboard state
+import 'providers/appointment_provider.dart'; // Import new appointment provider
+import 'providers/provider_data_provider.dart'; // Import new provider data provider
 import 'screens/auth/auth_wrapper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -128,13 +130,58 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ProviderProvider()),
         ChangeNotifierProvider(create: (_) => ProviderDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+        ChangeNotifierProvider(create: (_) => ProviderDataProvider()),
       ],
-      child: MaterialApp(
-        title: 'Uber Health Prototype',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme, // Use our custom theme
-        home: const AuthWrapper(),
+      child: ProviderInitializer(
+        child: MaterialApp(
+          title: 'Uber Health Prototype',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme, // Use our custom theme
+          home: const AuthWrapper(),
+        ),
       ),
     );
+  }
+}
+
+// Add a provider initializer widget to initialize providers when the app starts
+class ProviderInitializer extends StatefulWidget {
+  final Widget child;
+
+  const ProviderInitializer({super.key, required this.child});
+
+  @override
+  _ProviderInitializerState createState() => _ProviderInitializerState();
+}
+
+class _ProviderInitializerState extends State<ProviderInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeProviders();
+  }
+
+  Future<void> _initializeProviders() async {
+    // Initialize providers after user authentication
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        // User is logged in, initialize providers
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final appointmentProvider = Provider.of<AppointmentProvider>(
+          context,
+          listen: false,
+        );
+
+        // Initialize user profile and appointments
+        userProvider.initialize();
+        appointmentProvider.initialize();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
