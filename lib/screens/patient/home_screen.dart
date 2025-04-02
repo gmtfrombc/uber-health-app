@@ -8,7 +8,6 @@ import '../../models/user_model.dart';
 import '../../models/patient_request.dart';
 import '../../models/chat_mode.dart';
 import '../../services/firebase_service.dart';
-import '../video_call/video_call_home_screen.dart';
 import 'scheduling_screen.dart';
 import 'category_selection_screen.dart';
 import 'package:intl/intl.dart';
@@ -212,18 +211,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Uber Health'),
-        backgroundColor: Colors.teal,
-      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(title: const Text('Uber Health')),
       endDrawer: const AppDrawer(),
       body: FutureBuilder<UserModel?>(
         future: _fetchUser(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.teal),
+            return Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             );
           }
           if (!snapshot.hasData || snapshot.data == null) {
@@ -258,11 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     greeting,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                    style: Theme.of(context).textTheme.displaySmall,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -295,10 +289,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Text(
                                 "Your Health Information",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal[600],
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               IconButton(
@@ -337,14 +331,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Consult button
                       Expanded(
                         child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            elevation: 2,
-                            backgroundColor: Colors.teal,
-                          ),
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -353,43 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          child: const Text(
-                            'Request a Consult',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Video call button
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            elevation: 2,
-                            backgroundColor: Colors.blueAccent,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const VideoCallHomeScreen(),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.video_call),
-                          label: const Text(
-                            'Video Call',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: const Text('Request a Consult'),
                         ),
                       ),
                     ],
@@ -408,22 +358,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
           _formatListWithBullets(items),
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black54,
-            height: 1.4,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
@@ -445,12 +384,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Upcoming Appointments",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal[600],
+                Flexible(
+                  child: Text(
+                    "Upcoming Appointments",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 TextButton(
@@ -462,7 +402,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
-                  child: const Text('See All', style: TextStyle(fontSize: 16)),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    minimumSize: Size(60, 36),
+                  ),
+                  child: const Text('See All', style: TextStyle(fontSize: 14)),
                 ),
               ],
             ),
@@ -504,44 +448,59 @@ class _HomeScreenState extends State<HomeScreen> {
                       contentPadding: EdgeInsets.zero,
                       title: Text(
                         "Next Appointment",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.teal[800],
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 8),
-                          Text(
-                            "${nextAppointment.category} (${nextAppointment.urgency})",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                          Flexible(
+                            child: Text(
+                              "${nextAppointment.category} (${nextAppointment.urgency})",
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(fontWeight: FontWeight.w500),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.calendar_today, size: 16),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                               const SizedBox(width: 4),
-                              Text(
-                                nextAppointment.scheduledDateTime != null
-                                    ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
-                                    : "Date not specified",
-                                style: const TextStyle(fontSize: 15),
+                              Flexible(
+                                child: Text(
+                                  nextAppointment.scheduledDateTime != null
+                                      ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
+                                      : "Date not specified",
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.person_outline, size: 16),
+                              Icon(
+                                Icons.person_outline,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                               const SizedBox(width: 4),
-                              Text(
-                                "Provider: ${nextAppointment.providerType.name}",
-                                style: const TextStyle(fontSize: 15),
+                              Flexible(
+                                child: Text(
+                                  "Provider: ${nextAppointment.providerType.name}",
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
@@ -564,9 +523,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                       () => _checkInForAppointment(
                                         nextAppointment,
                                       ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.teal,
-                                  ),
                                   child: const Text('Start Now'),
                                 ),
                               ),
@@ -580,11 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           "You have ${appointments.length - 1} more upcoming appointment${appointments.length > 2 ? 's' : ''}",
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.black54,
-                            fontStyle: FontStyle.italic,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
                   ],

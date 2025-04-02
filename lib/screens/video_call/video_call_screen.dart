@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../../providers/video_call_provider.dart';
+import '../patient/home_screen.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String? roomId;
@@ -72,6 +73,17 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         title: const Text('Video Call'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            final provider = Provider.of<VideoCallProvider>(
+              context,
+              listen: false,
+            );
+            provider.endCall();
+            Navigator.of(context).pop();
+          },
+        ),
         actions: [
           Consumer<VideoCallProvider>(
             builder: (context, provider, _) {
@@ -220,36 +232,66 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       bottom: 30,
       child: Container(
         alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
           children: [
-            // Mute/Unmute Audio
-            ControlButton(
-              icon: provider.isMicMuted ? Icons.mic_off : Icons.mic,
-              onPressed: provider.toggleMicrophone,
-              backgroundColor:
-                  provider.isMicMuted ? Colors.red : Colors.blueGrey,
-            ),
-            const SizedBox(width: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Mute/Unmute Audio
+                ControlButton(
+                  icon: provider.isMicMuted ? Icons.mic_off : Icons.mic,
+                  onPressed: provider.toggleMicrophone,
+                  backgroundColor:
+                      provider.isMicMuted ? Colors.red : Colors.blueGrey,
+                ),
+                const SizedBox(width: 16),
 
-            // End Call (red button)
-            ControlButton(
-              icon: Icons.call_end,
+                // End Call (red button)
+                ControlButton(
+                  icon: Icons.call_end,
+                  onPressed: () {
+                    provider.endCall();
+                    Navigator.of(context).pop();
+                  },
+                  backgroundColor: Colors.red,
+                  size: 64,
+                ),
+                const SizedBox(width: 16),
+
+                // Toggle Camera
+                ControlButton(
+                  icon:
+                      provider.isCameraOff
+                          ? Icons.videocam_off
+                          : Icons.videocam,
+                  onPressed: provider.toggleCamera,
+                  backgroundColor:
+                      provider.isCameraOff ? Colors.red : Colors.blueGrey,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextButton.icon(
               onPressed: () {
                 provider.endCall();
-                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  (route) => false,
+                );
               },
-              backgroundColor: Colors.red,
-              size: 64,
-            ),
-            const SizedBox(width: 16),
-
-            // Toggle Camera
-            ControlButton(
-              icon: provider.isCameraOff ? Icons.videocam_off : Icons.videocam,
-              onPressed: provider.toggleCamera,
-              backgroundColor:
-                  provider.isCameraOff ? Colors.red : Colors.blueGrey,
+              icon: const Icon(Icons.home, color: Colors.white),
+              label: const Text(
+                'Return Home',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.black54,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
             ),
           ],
         ),

@@ -6,6 +6,7 @@ import '../../providers/provider_dashboard_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 import '../auth/auth_wrapper.dart';
+import '../video_call/video_call_home_screen.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -747,27 +748,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       : const Text('No triage summary available'),
             ),
           ),
-
-          // Call to action
-          const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                icon: const Icon(Icons.videocam),
-                label: const Text('Start Video Consultation'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                ),
-                onPressed: () {
-                  provider.startVideoCall();
-                },
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -937,35 +917,89 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   // Video panel for consultations
   Widget _buildVideoPanel(ProviderDashboardProvider provider) {
     final bool hasSelectedPatient = provider.selectedPatient != null;
+    final patientName =
+        hasSelectedPatient ? provider.selectedPatient!.firstname : '';
 
     return Card(
       margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.videocam, size: 48),
-          const SizedBox(height: 16),
-          const Text('Video Call Panel', style: TextStyle(fontSize: 18)),
-          const SizedBox(height: 8),
-          Text(
-            hasSelectedPatient
-                ? 'Ready to start call with ${provider.selectedPatient!.firstname}'
-                : 'No patient selected',
-            style: TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.call),
-            label: const Text('Join Video Call'),
-            onPressed:
-                hasSelectedPatient
-                    ? () {
-                      provider.startVideoCall();
-                    }
-                    : null,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Video call icon and title
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.videocam,
+                size: 64,
+                color: Colors.blue.shade700,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Video Consultation',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              hasSelectedPatient
+                  ? 'Start a video call with $patientName'
+                  : 'Please select a patient to start a video call',
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+
+            // Video call button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.video_call, size: 28),
+                label: const Text(
+                  'Start Video Call',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 3,
+                ),
+                onPressed:
+                    hasSelectedPatient
+                        ? () {
+                          // Navigate to video call screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const VideoCallHomeScreen(),
+                            ),
+                          );
+                        }
+                        : null,
+              ),
+            ),
+
+            // Instructions
+            if (hasSelectedPatient) ...[
+              const SizedBox(height: 24),
+              const Text(
+                'The video call will open in a new window. You can return to this dashboard at any time.',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/video_call_provider.dart';
 import 'video_call_screen.dart';
+import '../patient/home_screen.dart';
 
 class VideoCallHomeScreen extends StatefulWidget {
   const VideoCallHomeScreen({super.key});
@@ -74,7 +75,13 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Video Call')),
+      appBar: AppBar(
+        title: const Text('Video Call'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -160,6 +167,21 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Return home button
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.home),
+                label: const Text('Return to Home'),
               ),
             ],
           ),

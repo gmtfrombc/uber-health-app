@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import '../patient/home_screen.dart'; // Updated import path
 import '../../services/firebase_service.dart';
 import '../../models/patient_request.dart';
+import '../video_call/video_call_home_screen.dart'; // Add import for VideoCallHomeScreen
 
 class FinalScreen extends StatelessWidget {
   final bool isSynchronous;
@@ -22,7 +23,7 @@ class FinalScreen extends StatelessWidget {
 
     if (appointmentId != null) {
       finalMessage = 'Your appointment check-in is complete';
-      buttonText = 'Return to Home';
+      buttonText = 'Start Consultation';
 
       // Update appointment status to inProgress
       _updateAppointmentStatus(appointmentId!, RequestStatus.inProgress);
@@ -55,11 +56,23 @@ class FinalScreen extends StatelessWidget {
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  (route) => false,
-                );
+                if (isSynchronous) {
+                  // Navigate to video call screen for synchronous consultations
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const VideoCallHomeScreen(),
+                    ),
+                    (route) => false,
+                  );
+                } else {
+                  // Return to home for all other cases
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    (route) => false,
+                  );
+                }
               },
               child: Text(buttonText),
             ),

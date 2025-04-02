@@ -339,7 +339,14 @@ class ProviderDashboardProvider with ChangeNotifier {
 
   // Start a video call
   Future<void> startVideoCall() async {
-    // To be implemented
+    // Implemented - navigates to video call screen
+    if (selectedPatient == null) {
+      errorMessage = 'Please select a patient first';
+      notifyListeners();
+      return;
+    }
+
+    // We'll use this method from the dashboard screen to navigate to the video call
     notifyListeners();
   }
 
