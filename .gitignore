@@ -71,3 +71,5 @@ functions/lib/ functions/.env.local
 *firebase-adminsdk*.json
 lib/add_providers/uber-health-app-firebase-adminsdk*.json
 **/firebase-adminsdk*.json
+*uber-health-app-*.json
+lib/add_providers/*-*.json
