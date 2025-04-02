@@ -66,3 +66,8 @@ lib/firebase_options.dart
 # Build outputs
 functions/lib/ functions/.env.local
 .env.local
+
+# Firebase service account keys
+*firebase-adminsdk*.json
+lib/add_providers/uber-health-app-firebase-adminsdk*.json
+**/firebase-adminsdk*.json
