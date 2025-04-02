@@ -11,6 +11,7 @@ import 'providers/provider_provider.dart'; // New provider state management for 
 import 'providers/provider_dashboard_provider.dart'; // Provider dashboard state
 import 'providers/appointment_provider.dart'; // Import new appointment provider
 import 'providers/provider_data_provider.dart'; // Import new provider data provider
+import 'providers/medical_questions_provider.dart'; // Import medical questions provider
 import 'screens/auth/auth_wrapper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -144,6 +145,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProviderDashboardProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => ProviderDataProvider()),
+        ChangeNotifierProvider(create: (_) => MedicalQuestionsProvider()),
       ],
       child: ProviderInitializer(
         child: MaterialApp(
@@ -184,10 +186,17 @@ class _ProviderInitializerState extends State<ProviderInitializer> {
           context,
           listen: false,
         );
+        // Initialize medical questions provider
+        final medicalQuestionsProvider = Provider.of<MedicalQuestionsProvider>(
+          context,
+          listen: false,
+        );
 
         // Initialize user profile and appointments
         userProvider.initialize();
         appointmentProvider.initialize();
+        // Load medical questions
+        medicalQuestionsProvider.refreshQuestions();
       }
     });
   }

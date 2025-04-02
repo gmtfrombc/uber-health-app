@@ -14,6 +14,8 @@ import 'package:intl/intl.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/provider_data_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/medical_questions_provider.dart';
+import 'medical_question_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,6 +37,26 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh medical questions data whenever the screen gains focus
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<MedicalQuestionsProvider>(
+        context,
+        listen: false,
+      ).refreshQuestions();
+    });
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    // Refresh when the app is hot reloaded
+    debugPrint("HomeScreen reassembled - refreshing data");
+    _initializeProviders();
+  }
+
   // Initialize providers and check for appointments
   Future<void> _initializeProviders() async {
     // Get appointment provider and refresh data
@@ -43,6 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
       listen: false,
     );
     await appointmentProvider.refreshAppointments();
+
+    // Also refresh medical questions
+    final medicalQuestionsProvider = Provider.of<MedicalQuestionsProvider>(
+      context,
+      listen: false,
+    );
+    await medicalQuestionsProvider.refreshQuestions();
 
     // Check for upcoming appointments using the safer method
     if (!_checkedAppointments && mounted) {
@@ -275,6 +304,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: _buildUpcomingAppointmentsCard(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Medical Questions Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _buildMedicalQuestionsCard(),
                 ),
 
                 const SizedBox(height: 16),
@@ -692,5 +729,236 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  // Build the medical questions card
+  Widget _buildMedicalQuestionsCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.healing,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        "Medical Questions",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                // "See All" button in a separate row, aligned left
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('View all questions - Coming soon!'),
+                        ),
+                      );
+                    },
+                    icon: const Text('See All', style: TextStyle(fontSize: 14)),
+                    label: const Icon(Icons.chevron_right, size: 16),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.only(
+                        left: 0,
+                        top: 0,
+                        bottom: 8,
+                      ),
+                      minimumSize: const Size(60, 24),
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                ),
+                const Divider(),
+              ],
+            ),
+            // Use Consumer with MedicalQuestionsProvider
+            Consumer<MedicalQuestionsProvider>(
+              builder: (context, questionsProvider, child) {
+                if (questionsProvider.isLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                final pendingQuestions = questionsProvider.pendingQuestions;
+                final answeredQuestions = questionsProvider.answeredQuestions;
+                final allQuestions = [
+                  ...pendingQuestions,
+                  ...answeredQuestions,
+                ];
+
+                if (allQuestions.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Text(
+                        "No medical questions",
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                    ),
+                  );
+                }
+
+                // Show up to 3 most recent questions
+                final displayQuestions = allQuestions.take(3).toList();
+
+                return Column(
+                  children: [
+                    ...displayQuestions.map(
+                      (question) => _buildQuestionItem(question),
+                    ),
+                    if (allQuestions.length > 3)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          "You have ${allQuestions.length - 3} more question${allQuestions.length - 3 > 1 ? 's' : ''}",
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionItem(MedicalQuestion question) {
+    final theme = Theme.of(context);
+
+    // Truncate question text if too long
+    final displayText =
+        question.question.length > 60
+            ? '${question.question.substring(0, 60)}...'
+            : question.question;
+
+    // Format the date
+    final dateFormat = DateFormat('MMM d, yyyy');
+    final formattedDate = dateFormat.format(question.timestamp);
+
+    return InkWell(
+      onTap: () async {
+        debugPrint('Navigating to question details for id: ${question.id}');
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => MedicalQuestionDetailsScreen(questionId: question.id),
+          ),
+        );
+
+        debugPrint('Returned from question details with result: $result');
+
+        // Always refresh when returning, regardless of result
+        if (mounted) {
+          debugPrint(
+            'Refreshing questions after returning from details screen',
+          );
+          await Provider.of<MedicalQuestionsProvider>(
+            context,
+            listen: false,
+          ).refreshQuestions();
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Status indicator
+            Container(
+              width: 12,
+              height: 12,
+              margin: const EdgeInsets.only(top: 4, right: 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color:
+                    question.status == 'pending' ? Colors.orange : Colors.green,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayText,
+                    style: theme.textTheme.bodyLarge,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(formattedDate, style: theme.textTheme.bodySmall),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              question.status == 'pending'
+                                  ? Colors.orange.shade100
+                                  : Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          question.status == 'pending' ? 'Pending' : 'Answered',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                question.status == 'pending'
+                                    ? Colors.orange.shade800
+                                    : Colors.green.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.primary,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

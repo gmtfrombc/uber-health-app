@@ -9,6 +9,7 @@ import '../../utils/prompts.dart';
 import '../../widgets/animated_consultation_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
+import '../../providers/medical_questions_provider.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -61,35 +62,53 @@ class ChatInterfaceState extends State<ChatInterface> {
     // This prompt will be used in all subsequent ChatGPT calls
     String category = "";
 
-    if (widget.category != null) {
-      // If category is explicitly provided (via parameter)
-      category = widget.category!;
-      initialPrompt = getInitialPrompt(
-        requestProvider.providerType,
-        currentRequest?.requestType ?? RequestType.consult,
-      );
-    } else if (requestProvider.selectedCategory != null) {
-      // If category is in the request provider
-      category = requestProvider.selectedCategory!;
-      initialPrompt = getInitialPrompt(
-        requestProvider.providerType,
-        currentRequest?.requestType ?? RequestType.consult,
-      );
-    } else if (currentRequest != null) {
-      // If we have a current request but no category yet
-      category = currentRequest.category;
-      initialPrompt = getInitialPrompt(
-        currentRequest.providerType,
-        currentRequest.requestType,
-      );
-    } else {
-      // Fallback case
-      initialPrompt = defaultPrompt;
-      category = "Other"; // Default category
-    }
+    // Check if this is a medical question type request
+    final RequestType requestType =
+        currentRequest?.requestType ??
+        (widget.isSynchronous
+            ? RequestType.consult
+            : RequestType.medicalQuestion);
 
-    // Set the system prompt that will be used for all ChatGPT calls
-    _systemPrompt = getComplaintPrompt(requestProvider.providerType, category);
+    // For medical questions, use the specific medical question prompt
+    if (requestType == RequestType.medicalQuestion) {
+      debugPrint("Using medical question prompt");
+      _systemPrompt = medicalQuestionPrompt;
+      initialPrompt = providerPromptQuestion;
+    } else {
+      // Regular consultation flow
+      if (widget.category != null) {
+        // If category is explicitly provided (via parameter)
+        category = widget.category!;
+        initialPrompt = getInitialPrompt(
+          requestProvider.providerType,
+          requestType,
+        );
+      } else if (requestProvider.selectedCategory != null) {
+        // If category is in the request provider
+        category = requestProvider.selectedCategory!;
+        initialPrompt = getInitialPrompt(
+          requestProvider.providerType,
+          requestType,
+        );
+      } else if (currentRequest != null) {
+        // If we have a current request but no category yet
+        category = currentRequest.category;
+        initialPrompt = getInitialPrompt(
+          currentRequest.providerType,
+          currentRequest.requestType,
+        );
+      } else {
+        // Fallback case
+        initialPrompt = defaultPrompt;
+        category = "Other"; // Default category
+      }
+
+      // Set the system prompt for consultations
+      _systemPrompt = getComplaintPrompt(
+        requestProvider.providerType,
+        category,
+      );
+    }
 
     debugPrint("Using category: $category for system prompt");
     debugPrint("System prompt: $_systemPrompt");
@@ -145,8 +164,19 @@ class ChatInterfaceState extends State<ChatInterface> {
     // Use the stored system prompt for all ChatGPT interactions
     conversation.insert(0, {"role": "system", "content": _systemPrompt});
 
+    // Check if we've reached the maximum number of exchanges
     int patientCount = _messages.where((m) => m.sender == 'patient').length;
+    debugPrint("Patient message count: $patientCount");
+
+    // Log if we're in a medical question flow
+    bool isMedicalQuestion = _systemPrompt.contains('[TRIAGE_COMPLETE]');
+    debugPrint("Is medical question: $isMedicalQuestion");
+    debugPrint(
+      "Current message sequence: ${patientCount == 1 ? 'Initial question' : 'Follow-up response'}",
+    );
+
     if (patientCount >= 10) {
+      debugPrint("Maximum message count reached, marking triage as complete");
       setState(() {
         _messages.add(
           Message(
@@ -162,33 +192,86 @@ class ChatInterfaceState extends State<ChatInterface> {
       _scrollToBottom();
       return;
     }
+
     try {
+      // Get response from AI
+      debugPrint("Sending conversation to ChatGPT");
       final aiResponse = await _chatGPTService.getAIResponse(conversation);
-      setState(() {
-        _messages.add(
-          Message(sender: 'ai', content: aiResponse, timestamp: DateTime.now()),
+      debugPrint(
+        "Received response from ChatGPT: ${aiResponse.substring(0, aiResponse.length > 50 ? 50 : aiResponse.length)}...",
+      );
+
+      // Check for the triage complete token
+      final bool containsTriageComplete = aiResponse.contains(
+        "[TRIAGE_COMPLETE]",
+      );
+      debugPrint("Contains TRIAGE_COMPLETE token: $containsTriageComplete");
+
+      // For medical questions, the first response (to the initial question) should not have the TRIAGE_COMPLETE token
+      // unless it's a simple question that doesn't need clarification
+      if (isMedicalQuestion && patientCount == 1 && containsTriageComplete) {
+        debugPrint(
+          "Medical question first response with TRIAGE_COMPLETE - simple question that doesn't need clarification",
         );
-        _isLoadingAI = false;
-      });
-      _scrollToBottom();
-      if (aiResponse.contains("[TRIAGE_COMPLETE]")) {
+      } else if (isMedicalQuestion &&
+          patientCount == 1 &&
+          !containsTriageComplete) {
+        debugPrint(
+          "Medical question first response without TRIAGE_COMPLETE - expecting clarifying question",
+        );
+      } else if (isMedicalQuestion &&
+          patientCount == 2 &&
+          containsTriageComplete) {
+        debugPrint(
+          "Medical question second response with TRIAGE_COMPLETE - completing triage after clarification",
+        );
+      }
+
+      if (containsTriageComplete) {
+        // Remove the token from the displayed message
+        final cleanedResponse =
+            aiResponse.replaceAll("[TRIAGE_COMPLETE]", "").trim();
+
+        debugPrint("Triage complete token found, marking triage as complete");
         setState(() {
-          _messages.removeLast();
           _messages.add(
             Message(
               sender: 'ai',
               content:
-                  "Okay, I have all the information that I need. Please click 'Done' to continue.",
+                  cleanedResponse.isEmpty
+                      ? "Okay, I have all the information that I need. Please click 'Done' to continue."
+                      : cleanedResponse,
               timestamp: DateTime.now(),
             ),
           );
+          _isLoadingAI = false;
           _triageComplete = true;
         });
-        _scrollToBottom();
+      } else {
+        // Regular message, no complete token
+        setState(() {
+          _messages.add(
+            Message(
+              sender: 'ai',
+              content: aiResponse,
+              timestamp: DateTime.now(),
+            ),
+          );
+          _isLoadingAI = false;
+        });
       }
+      _scrollToBottom();
     } catch (e) {
       setState(() {
         _isLoadingAI = false;
+        _messages.add(
+          Message(
+            sender: 'ai',
+            content:
+                "Sorry, there was an error processing your message. Please try again.",
+            timestamp: DateTime.now(),
+          ),
+        );
       });
       debugPrint("Error getting AI response: $e");
     }
@@ -238,6 +321,14 @@ class ChatInterfaceState extends State<ChatInterface> {
         await requestProvider.updateConversation(_messages);
       }
 
+      // Determine if this is a medical question
+      final isMedicalQuestion =
+          widget.isSynchronous != true &&
+          (requestProvider.currentRequest?.requestType ==
+              RequestType.medicalQuestion);
+
+      debugPrint("Is this a medical question? $isMedicalQuestion");
+
       // If this is an appointment check-in, update the existing appointment
       if (widget.appointmentId != null) {
         final firebaseService = FirebaseService();
@@ -252,9 +343,13 @@ class ChatInterfaceState extends State<ChatInterface> {
           "Updated appointment with ID: ${widget.appointmentId} with AI triage summary",
         );
       } else {
-        // Regular flow for non-appointments
+        // For medical questions, set the status to pending
+        final Map<String, dynamic> additionalData =
+            isMedicalQuestion ? {'status': 'pending'} : {};
+
+        // Save the conversation with the summary
         final conversationId = await requestProvider
-            .updateConversationWithSummary(summary, {});
+            .updateConversationWithSummary(summary, additionalData);
 
         if (conversationId == null) {
           throw Exception(
@@ -263,26 +358,50 @@ class ChatInterfaceState extends State<ChatInterface> {
         }
 
         debugPrint("Summary saved successfully with ID: $conversationId");
+
+        // For medical questions, refresh the questions provider
+        if (isMedicalQuestion && mounted) {
+          final medicalQuestionsProvider =
+              Provider.of<MedicalQuestionsProvider>(context, listen: false);
+          medicalQuestionsProvider.refreshQuestions();
+        }
       }
 
       setState(() {
         _isGeneratingSummary = false;
       });
 
-      // Now navigate after the save is complete
+      // Navigate based on the type of request
       if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder:
-              (_) => AnimatedConsultationScreen(
-                isSynchronous: widget.isSynchronous,
-                isImmediate: widget.isImmediate,
-                urgency: widget.urgency,
-                appointmentId: widget.appointmentId,
-              ),
-        ),
-      );
+
+      if (isMedicalQuestion) {
+        // For medical questions, show success message and navigate back to home
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Your question has been submitted. A provider will respond soon.",
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        // Pop back to the home screen
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } else {
+        // For consultations, navigate to the animation screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => AnimatedConsultationScreen(
+                  isSynchronous: widget.isSynchronous,
+                  isImmediate: widget.isImmediate,
+                  urgency: widget.urgency,
+                  appointmentId: widget.appointmentId,
+                ),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint("Error generating or saving summary: $e");
       setState(() {

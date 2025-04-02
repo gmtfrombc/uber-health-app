@@ -225,9 +225,17 @@ class ProviderDashboardProvider with ChangeNotifier {
       for (var doc in querySnapshot.docs) {
         final consultation = ConsultationRequest.fromFirestore(doc);
 
-        // Skip any consultations with status 'cancelled'
-        if (consultation.status.toLowerCase() == 'cancelled') {
-          debugPrint('Skipping cancelled consultation: ${doc.id}');
+        // Debug log for medical questions
+        if (consultation.requestType.toLowerCase() == 'medicalquestion') {
+          debugPrint(
+            'Found medical question with ID: ${doc.id}, status: ${consultation.status}',
+          );
+        }
+
+        // Skip any consultations with status 'cancelled' or 'resolved'
+        if (consultation.status.toLowerCase() == 'cancelled' ||
+            consultation.status.toLowerCase() == 'resolved') {
+          debugPrint('Skipping cancelled/resolved consultation: ${doc.id}');
           continue;
         }
 
@@ -253,7 +261,9 @@ class ProviderDashboardProvider with ChangeNotifier {
             consultation.urgency.toLowerCase() == 'quick') {
           _urgentRequests.add(consultation);
         } else if (consultation.status.toLowerCase() == 'pending' ||
-            consultation.status.toLowerCase() == 'triaged') {
+            consultation.status.toLowerCase() == 'triaged' ||
+            consultation.requestType.toLowerCase() == 'medicalquestion') {
+          // Add medical questions to pending requests
           _pendingRequests.add(consultation);
         }
       }

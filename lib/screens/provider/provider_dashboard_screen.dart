@@ -5,8 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/provider_dashboard_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
+import '../../models/message.dart';
 import '../auth/auth_wrapper.dart';
 import '../video_call/video_call_home_screen.dart';
+import 'package:intl/intl.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -213,6 +215,17 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 ),
                 NavigationRailDestination(
                   icon: Badge(
+                    label: Text(
+                      dashboardProvider.pendingRequests.length.toString(),
+                    ),
+                    isLabelVisible:
+                        dashboardProvider.pendingRequests.isNotEmpty,
+                    child: const Icon(Icons.help_outline),
+                  ),
+                  label: const Text('Medical Questions'),
+                ),
+                NavigationRailDestination(
+                  icon: Badge(
                     label: Text(dashboardProvider.messages.length.toString()),
                     isLabelVisible: dashboardProvider.messages.isNotEmpty,
                     child: const Icon(Icons.message),
@@ -267,13 +280,24 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           listTitle: 'Scheduled Patients',
         );
 
-      case 3: // Messages
+      case 3: // Medical Questions
+        return _buildConsultationList(
+          dashboardProvider.pendingRequests
+              .where(
+                (req) => req.requestType.toLowerCase() == 'medicalquestion',
+              )
+              .toList(),
+          emptyMessage: 'No medical questions',
+          listTitle: 'Medical Questions',
+        );
+
+      case 4: // Messages
         return const Center(child: Text('Messages coming soon'));
 
-      case 4: // Notes
+      case 5: // Notes
         return const Center(child: Text('Notes coming soon'));
 
-      case 5: // Settings
+      case 6: // Settings
         return const Center(child: Text('Settings coming soon'));
 
       default: // Dashboard
@@ -294,6 +318,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               _buildQuickAccessItem(
                 'Scheduled Patients',
                 dashboardProvider.scheduledRequests.length,
+              ),
+              _buildQuickAccessItem(
+                'Medical Questions',
+                dashboardProvider.pendingRequests
+                    .where(
+                      (req) =>
+                          req.requestType.toLowerCase() == 'medicalquestion',
+                    )
+                    .length,
               ),
               _buildQuickAccessItem(
                 'New Messages',
@@ -322,8 +355,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ? 1
                     : title == 'Scheduled Patients'
                     ? 2
-                    : title == 'New Messages'
+                    : title == 'Medical Questions'
                     ? 3
+                    : title == 'New Messages'
+                    ? 4
                     : 0;
           });
         },
@@ -630,127 +665,372 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     return '${text.substring(0, maxLength)}...';
   }
 
-  // Patient details content
-  Widget _buildPatientDetails(ProviderDashboardProvider provider) {
-    final patient = provider.selectedPatient;
-    final request = provider.selectedRequest;
-    final triageSummary = provider.selectedTriageSummary;
+  // Build patient details panel
+  Widget _buildPatientDetails(ProviderDashboardProvider dashboardProvider) {
+    final request = dashboardProvider.selectedRequest;
+    final patient = dashboardProvider.selectedPatient;
+    final isMedicalQuestion =
+        request?.requestType.toLowerCase() == 'medicalquestion';
 
     if (patient == null || request == null) {
-      return const Center(child: Text('Select a patient to view details'));
+      return Center(child: Text('Select a patient to view details'));
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Patient header with action buttons
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${patient.firstname} ${patient.lastname}',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  provider.clearSelectedPatient();
-                },
-                tooltip: 'Close patient details',
-              ),
-            ],
+          // Back button
+          TextButton.icon(
+            icon: Icon(Icons.arrow_back),
+            label: Text('Back to list'),
+            onPressed: () => dashboardProvider.clearSelectedPatient(),
           ),
-
-          // Demographic info
           const SizedBox(height: 16),
-          Text(
-            'Patient Information',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildInfoRow('Date of Birth', patient.dob ?? 'Not provided'),
-                  _buildInfoRow('Gender', patient.gender ?? 'Not provided'),
-                  _buildInfoRow(
-                    'Ethnicity',
-                    patient.ethnicity ?? 'Not provided',
-                  ),
-                  _buildInfoRow('Email', patient.email),
-                ],
-              ),
-            ),
-          ),
 
-          // Medical info
-          const SizedBox(height: 24),
-          Text(
-            'Medical Information',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          // Patient info card
           Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'Patient Information',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    'Name',
+                    '${patient.firstname} ${patient.lastname}',
+                  ),
+                  _buildInfoRow('DOB', patient.dob ?? 'N/A'),
+                  _buildInfoRow('Gender', patient.gender ?? 'N/A'),
+                  _buildInfoRow('Email', patient.email),
+                  const Divider(),
                   _buildListSection('Medications', patient.medications),
                   _buildListSection('Allergies', patient.allergies),
-                  _buildListSection('Medical Conditions', patient.conditions),
+                  _buildListSection('Conditions', patient.conditions),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 16),
 
-          // AI Triage Summary
-          const SizedBox(height: 24),
-          Text(
-            'AI Triage Summary',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          // Request details card
           Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child:
-                  triageSummary != null
-                      ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Add a visual urgency indicator at the top
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getUrgencyColor(request.urgency),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Urgency: ${request.urgency}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Text(triageSummary),
-                        ],
-                      )
-                      : const Text('No triage summary available'),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isMedicalQuestion
+                        ? 'Medical Question'
+                        : 'Consultation Request',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow('Type', request.requestType),
+                  _buildInfoRow('Category', request.category),
+                  _buildInfoRow('Urgency', request.urgency),
+                  _buildInfoRow('Status', request.status),
+                  _buildInfoRow(
+                    'Requested',
+                    _formatTimestamp(request.createdAt),
+                  ),
+                  if (request.scheduledDateTime != null)
+                    _buildInfoRow(
+                      'Scheduled',
+                      request.formattedScheduledDateTime,
+                    ),
+                  const Divider(),
+                  if (request.aiTriageSummary != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'AI Triage Summary:',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(request.aiTriageSummary!),
+                    ),
+                  ],
+                ],
+              ),
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // Medical Question Response Section (only for medical questions)
+          if (isMedicalQuestion)
+            _buildMedicalQuestionResponseSection(dashboardProvider),
+
+          // Conversation messages display
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Patient Messages',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  if (request.messages.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text('No messages available'),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: request.messages.length,
+                      itemBuilder: (context, index) {
+                        final message = request.messages[index];
+                        return _buildMessageBubble(message);
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Action buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!isMedicalQuestion) ...[
+                // Video call button for consultations, not for medical questions
+                ElevatedButton.icon(
+                  icon: Icon(Icons.video_call),
+                  label: Text('Start Video Call'),
+                  onPressed: () {
+                    _startVideoCall(request, patient);
+                  },
+                ),
+                const SizedBox(width: 16),
+              ],
+              // Cancel button
+              OutlinedButton.icon(
+                icon: Icon(Icons.cancel),
+                label: Text('Cancel Request'),
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: Text('Cancel Request'),
+                          content: Text(
+                            'Are you sure you want to cancel this request?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: Text('No'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: Text('Yes'),
+                            ),
+                          ],
+                        ),
+                  );
+
+                  if (confirm == true) {
+                    await dashboardProvider.deleteConsultation(request.id);
+                  }
+                },
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  // Build the medical question response section
+  Widget _buildMedicalQuestionResponseSection(
+    ProviderDashboardProvider dashboardProvider,
+  ) {
+    final request = dashboardProvider.selectedRequest;
+    if (request == null) return SizedBox.shrink();
+
+    final bool hasResponse =
+        request.providerResponse != null &&
+        request.providerResponse!.isNotEmpty;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Provider Response',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            if (hasResponse) ...[
+              // Display the existing response
+              Container(
+                padding: const EdgeInsets.all(12),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.teal.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your response:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(request.providerResponse!),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Option to update response
+              ElevatedButton.icon(
+                icon: Icon(Icons.edit),
+                label: Text('Update Response'),
+                onPressed: () {
+                  _showResponseDialog(
+                    dashboardProvider,
+                    initialResponse: request.providerResponse,
+                  );
+                },
+              ),
+            ] else ...[
+              // Response form for new responses
+              Text(
+                'Provide a response to this medical question:',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                icon: Icon(Icons.message),
+                label: Text('Respond to Question'),
+                onPressed: () {
+                  _showResponseDialog(dashboardProvider);
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showResponseDialog(
+    ProviderDashboardProvider dashboardProvider, {
+    String? initialResponse,
+  }) {
+    final TextEditingController responseController = TextEditingController(
+      text: initialResponse,
+    );
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              initialResponse != null
+                  ? 'Update Response'
+                  : 'Respond to Question',
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Enter your response to the patient\'s question:'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: responseController,
+                  decoration: InputDecoration(
+                    hintText: 'Your medical advice...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 5,
+                  minLines: 3,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final response = responseController.text.trim();
+                  if (response.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please enter a response')),
+                    );
+                    return;
+                  }
+
+                  Navigator.of(context).pop();
+                  await _submitProviderResponse(dashboardProvider, response);
+                },
+                child: Text('Submit'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _submitProviderResponse(
+    ProviderDashboardProvider dashboardProvider,
+    String response,
+  ) async {
+    final request = dashboardProvider.selectedRequest;
+    if (request == null) return;
+
+    try {
+      // Update Firestore document
+      await FirebaseFirestore.instance
+          .collection('conversations')
+          .doc(request.id)
+          .update({
+            'providerResponse': response,
+            'status': 'answered',
+            'updatedAt': FieldValue.serverTimestamp(),
+            'providerId': FirebaseAuth.instance.currentUser?.uid,
+          });
+
+      // Refresh dashboard data
+      await dashboardProvider.refreshFromServer();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Response submitted successfully')),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error submitting response: $e')));
+    }
   }
 
   // Helper for info rows
@@ -798,22 +1078,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // Get color for urgency level
-  Color _getUrgencyColor(String urgencyLevel) {
-    switch (urgencyLevel.toLowerCase()) {
-      case 'low':
-        return Colors.green;
-      case 'medium':
-        return Colors.orange;
-      case 'high':
-        return Colors.red;
-      case 'emergency':
-        return Colors.red.shade900;
-      default:
-        return Colors.orange;
-    }
-  }
-
   // Dashboard overview - Shown when no patient is selected
   Widget _buildDashboardOverview(ProviderDashboardProvider provider) {
     return Padding(
@@ -850,11 +1114,40 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSummaryCard(
+                  'Medical Questions',
+                  provider.pendingRequests
+                      .where(
+                        (req) =>
+                            req.requestType.toLowerCase() == 'medicalquestion',
+                      )
+                      .length
+                      .toString(),
+                  Icons.help_outline,
+                  Colors.orange.shade100,
+                ),
+              ),
+            ],
+          ),
+
+          // Second row of summary cards
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
                   'Messages',
                   provider.messages.length.toString(),
                   Icons.message,
                   Colors.green.shade100,
                 ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: SizedBox(), // Empty space for balance
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: SizedBox(), // Empty space for balance
               ),
             ],
           ),
@@ -1062,6 +1355,52 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Build a message bubble
+  Widget _buildMessageBubble(Message message) {
+    final isPatient = message.sender == 'patient';
+    return Align(
+      alignment: isPatient ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(12),
+        constraints: BoxConstraints(maxWidth: 300),
+        decoration: BoxDecoration(
+          color: isPatient ? Colors.teal.shade100 : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isPatient ? 'Patient' : 'System',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isPatient ? Colors.teal.shade700 : Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(message.content),
+            const SizedBox(height: 2),
+            Text(
+              DateFormat('MM/dd/yyyy h:mm a').format(message.timestamp),
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Video call button action
+  void _startVideoCall(ConsultationRequest request, UserModel patient) {
+    // Simply navigate to the video call screen without additional params
+    // The VideoCallHomeScreen will handle creating a new call
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => VideoCallHomeScreen()),
     );
   }
 }

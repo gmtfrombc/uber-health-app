@@ -26,6 +26,29 @@ class ChatGPTService {
         return 'Please sign in to use this feature.';
       }
 
+      // Check if this is likely a medical question (look for the prompt)
+      bool isMedicalQuestion = false;
+      if (conversation.isNotEmpty && conversation[0]['role'] == 'system') {
+        final systemPrompt = conversation[0]['content'] ?? '';
+        isMedicalQuestion =
+            systemPrompt.contains('clarifying question') &&
+            systemPrompt.contains('[TRIAGE_COMPLETE]');
+      }
+
+      // Log the conversation type
+      debugPrint(
+        'Processing ${isMedicalQuestion ? "medical question" : "standard consultation"}',
+      );
+
+      // Count user messages to determine where we are in the conversation flow
+      int userMessageCount = 0;
+      for (var msg in conversation) {
+        if (msg['role'] == 'user') {
+          userMessageCount++;
+        }
+      }
+      debugPrint('User message count: $userMessageCount');
+
       // Convert conversation to a format that Firebase Functions can handle
       final List<Map<String, dynamic>> formattedMessages =
           conversation.map((msg) {
@@ -34,8 +57,12 @@ class ChatGPTService {
 
       final requestData = {
         'messages': formattedMessages,
-        'maxTokens': 150,
-        'temperature': 0.7,
+        'maxTokens':
+            isMedicalQuestion ? 300 : 150, // More tokens for medical questions
+        'temperature':
+            isMedicalQuestion
+                ? 0.5
+                : 0.7, // Lower temperature for more consistent medical responses
       };
 
       debugPrint('Sending request: $requestData');
@@ -52,7 +79,33 @@ class ChatGPTService {
       final data = result.data;
 
       if (data['success'] == true && data['content'] != null) {
-        return data['content'] as String;
+        final response = data['content'] as String;
+
+        // For medical questions, manage the TRIAGE_COMPLETE token appropriately
+        if (isMedicalQuestion) {
+          // If the response already contains the token, check if it's appropriate timing
+          if (response.contains("[TRIAGE_COMPLETE]")) {
+            // Only keep the token if this is a follow-up to the patient's answer to the clarifying question
+            // or if it's a direct response that doesn't require clarification
+            if (userMessageCount < 2) {
+              // First question from patient - we expect AI to ask a clarifying question
+              // Remove the token if it was added too early
+              debugPrint('Removing premature TRIAGE_COMPLETE token');
+              return response.replaceAll("[TRIAGE_COMPLETE]", "").trim();
+            } else {
+              // Second or later message from patient - appropriate to complete triage
+              debugPrint('Keeping appropriate TRIAGE_COMPLETE token');
+              return response;
+            }
+          }
+          // If we need to add the token (only for second user message onwards)
+          else if (userMessageCount >= 2) {
+            debugPrint('Adding missing TRIAGE_COMPLETE token after follow-up');
+            return "$response [TRIAGE_COMPLETE]";
+          }
+        }
+
+        return response;
       }
 
       throw Exception(data['error'] ?? 'Unknown error');
