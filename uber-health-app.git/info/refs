@@ -1,0 +1,7 @@
+f6db496ccef6358aeea4afc5d9e85ca4356b2800	refs/heads/dev-environment
+4c453021ca0fc135ed31872bb4858380e9dcacf6	refs/heads/feature/provider-list
+be9cdab6bc92fc6378623f9dad14620a430253ef	refs/heads/feature/provider-state-management
+76b06477756efb9ddc864d6133e693377bbe1fb2	refs/heads/firebase_functions
+4c453021ca0fc135ed31872bb4858380e9dcacf6	refs/heads/main
+926b42b8ea98a4325ffa63b681258003595af5d1	refs/heads/production-dev
+e8d9d74d5b22485c9a707bca7aafe83e36b7f221	refs/heads/video-call-feature
