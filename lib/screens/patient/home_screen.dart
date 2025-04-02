@@ -1,5 +1,4 @@
 // lib/screens/patient/home_screen.dart
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'request_screen.dart';
@@ -15,7 +14,6 @@ import 'package:intl/intl.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/provider_data_provider.dart';
 import '../../providers/user_provider.dart';
-import '../video_call/video_call_home_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,9 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     await appointmentProvider.refreshAppointments();
 
-    // Check for upcoming appointments
-    if (!_checkedAppointments) {
-      _checkUpcomingAppointments();
+    // Check for upcoming appointments using the safer method
+    if (!_checkedAppointments && mounted) {
+      appointmentProvider.showAppointmentNotification((appointment) {
+        if (mounted) {
+          _showAppointmentCheckInDialog(appointment);
+        }
+      });
       _checkedAppointments = true;
     }
   }
@@ -60,28 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
       await userProvider.fetchUserProfile();
     }
     return userProvider.userProfile;
-  }
-
-  // Check for upcoming appointments
-  Future<void> _checkUpcomingAppointments() async {
-    try {
-      // Use AppointmentProvider to check for immediate appointments
-      final appointmentProvider = Provider.of<AppointmentProvider>(
-        context,
-        listen: false,
-      );
-      final appointment =
-          await appointmentProvider.checkForImmediateAppointments();
-
-      if (appointment != null && mounted) {
-        // We have an upcoming appointment, show check-in dialog
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showAppointmentCheckInDialog(appointment);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error checking appointments: $e');
-    }
   }
 
   // Show the check-in dialog
@@ -445,10 +425,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      "Upcoming Appointments",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+                    Flexible(
+                      child: Text(
+                        "Upcoming Appointments",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -560,11 +543,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          nextAppointment.scheduledDateTime != null
-                              ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
-                              : "Date not specified",
-                          style: Theme.of(context).textTheme.bodyMedium,
+                        Flexible(
+                          child: Text(
+                            nextAppointment.scheduledDateTime != null
+                                ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
+                                : "Date not specified",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -578,38 +564,64 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 4),
                         // Use Consumer with ProviderDataProvider
-                        Consumer<ProviderDataProvider>(
-                          builder: (context, providerDataProvider, child) {
-                            if (nextAppointment.providerId == null ||
-                                nextAppointment.providerId!.isEmpty) {
-                              return Text(
-                                "Provider: ${nextAppointment.urgency.toLowerCase() == 'routine' ? 'TBD' : nextAppointment.providerType.name}",
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              );
-                            }
+                        Flexible(
+                          child: Consumer<ProviderDataProvider>(
+                            builder: (context, providerDataProvider, child) {
+                              if (nextAppointment.providerId == null ||
+                                  nextAppointment.providerId!.isEmpty) {
+                                debugPrint(
+                                  'Provider ID is null or empty for appointment: ${nextAppointment.id}',
+                                );
+                                return Text(
+                                  "Provider: TBD",
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              }
 
-                            return FutureBuilder<String>(
-                              future: providerDataProvider
-                                  .getFormattedProviderName(
-                                    nextAppointment.providerId!,
-                                  ),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
+                              debugPrint(
+                                'Found provider ID: ${nextAppointment.providerId}',
+                              );
+                              return FutureBuilder<String>(
+                                future: providerDataProvider
+                                    .getFormattedProviderName(
+                                      nextAppointment.providerId!,
+                                    ),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text(
+                                      "Provider: Loading...",
+                                      style:
+                                          Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                                  }
+
+                                  if (snapshot.hasData &&
+                                      snapshot.data != "TBD") {
+                                    return Text(
+                                      "Provider: ${snapshot.data}",
+                                      style:
+                                          Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                                  }
+
                                   return Text(
-                                    "Provider: Loading...",
+                                    "Provider: TBD",
                                     style:
                                         Theme.of(context).textTheme.bodyMedium,
+                                    overflow: TextOverflow.ellipsis,
                                   );
-                                }
-
-                                return Text(
-                                  "Provider: ${snapshot.data ?? 'Unknown'}",
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                );
-                              },
-                            );
-                          },
+                                },
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),

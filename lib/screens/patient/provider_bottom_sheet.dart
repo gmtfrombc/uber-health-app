@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import '../../providers/provider_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../models/provider_model.dart';
+import '../../models/patient_request.dart';
 import './scheduling_screen.dart';
 import '../consultation/chat_interface.dart';
 import '../../theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProviderBottomSheet extends StatefulWidget {
   final String category;
@@ -349,6 +351,12 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
       context,
       listen: false,
     );
+
+    // Add debug information
+    debugPrint(
+      'Selecting provider in bottom sheet: ${provider.id}, ${provider.fullName}',
+    );
+
     providerProvider.selectProvider(provider);
 
     // Update the request with the selected provider
@@ -357,7 +365,21 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
       final updatedRequest = requestProvider.currentRequest!.copyWith(
         providerId: provider.id,
       );
+      debugPrint('Updated request with provider ID: ${provider.id}');
       requestProvider.createRequest(updatedRequest);
+    } else {
+      debugPrint('Creating new request with provider ID: ${provider.id}');
+      // Create a new request if one doesn't exist yet
+      requestProvider.createRequest(
+        PatientRequest(
+          patientId: FirebaseAuth.instance.currentUser?.uid ?? '',
+          requestType: RequestType.consult,
+          urgency: widget.isUrgent ? 'Urgent' : 'Routine',
+          category: widget.category,
+          providerId: provider.id,
+          providerType: provider.providerType,
+        ),
+      );
     }
 
     // Close the bottom sheet

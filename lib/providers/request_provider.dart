@@ -4,6 +4,7 @@ import '../models/patient_request.dart';
 import '../services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class RequestProvider with ChangeNotifier {
   PatientRequest? currentRequest;
@@ -75,6 +76,13 @@ class RequestProvider with ChangeNotifier {
   ) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     debugPrint('Attempting to save summary for user: $userId');
+
+    // Skip document creation if this is a hot reload or the app is in development mode
+    if (kDebugMode &&
+        (additionalData['isTestMode'] == true || summary.isEmpty)) {
+      debugPrint('Skipping document creation in development/test mode');
+      return "test-document-id";
+    }
 
     // Initialize currentRequest if it's null
     if (currentRequest == null && userId != null) {

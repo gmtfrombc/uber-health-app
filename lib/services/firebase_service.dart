@@ -43,6 +43,12 @@ class FirebaseService {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
+      // Add provider ID if available
+      if (request.providerId != null && request.providerId!.isNotEmpty) {
+        data['providerId'] = request.providerId;
+        debugPrint('Adding providerId to request: ${request.providerId}');
+      }
+
       // Add scheduled date/time if available
       if (request.scheduledDateTime != null) {
         data['scheduledDateTime'] = Timestamp.fromDate(
@@ -84,6 +90,13 @@ class FirebaseService {
     try {
       debugPrint('Updating conversation document: $docId');
       data['updatedAt'] = FieldValue.serverTimestamp();
+
+      // Debug log for provider ID
+      if (data.containsKey('providerId')) {
+        debugPrint(
+          'Updating conversation with provider ID: ${data['providerId']}',
+        );
+      }
 
       await _firestore.collection('conversations').doc(docId).update(data);
       debugPrint('Document successfully updated');
@@ -197,18 +210,67 @@ class FirebaseService {
     try {
       if (providerId.isEmpty) return null;
 
+      debugPrint('Fetching provider details for ID: $providerId');
       final doc =
           await _firestore.collection('providers').doc(providerId).get();
 
+      // If not found in providers collection, try to query by id
       if (!doc.exists) {
+        debugPrint(
+          'Provider document not found by direct ID, trying query: $providerId',
+        );
+        final querySnapshot =
+            await _firestore
+                .collection('providers')
+                .where('id', isEqualTo: providerId)
+                .limit(1)
+                .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          debugPrint('Found provider via query for ID: $providerId');
+          return querySnapshot.docs.first.data();
+        }
+
         debugPrint('Provider document not found for ID: $providerId');
         return null;
       }
 
+      debugPrint('Provider document found for ID: $providerId');
       return doc.data();
     } catch (e) {
       debugPrint('ERROR fetching provider details: $e');
       return null;
+    }
+  }
+
+  // Fetch all providers of a specific type
+  Future<List<Map<String, dynamic>>> getAllProviders(
+    String providerType,
+  ) async {
+    try {
+      debugPrint('Fetching all providers of type: $providerType');
+      final snapshot =
+          await _firestore
+              .collection('providers')
+              .where('providerType', isEqualTo: providerType)
+              .get();
+
+      if (snapshot.docs.isEmpty) {
+        debugPrint('No providers found of type: $providerType');
+        return [];
+      }
+
+      debugPrint(
+        'Found ${snapshot.docs.length} providers of type: $providerType',
+      );
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        // Add the document ID to the data
+        return {...data, 'id': doc.id};
+      }).toList();
+    } catch (e) {
+      debugPrint('ERROR fetching providers: $e');
+      return [];
     }
   }
 }

@@ -47,15 +47,27 @@ Future<void> checkFirebaseAvailability() async {
       'firebaseio.com',
     ];
 
+    Map<String, bool> reachabilityResults = {};
+
     for (var host in firebaseHosts) {
       try {
         final result = await InternetAddress.lookup(host);
-        if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-          debugPrint('$host is reachable');
-        }
+        final isReachable =
+            result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+        reachabilityResults[host] = isReachable;
+        debugPrint('$host is ${isReachable ? 'reachable' : 'unreachable'}');
       } on SocketException {
+        reachabilityResults[host] = false;
         debugPrint('Cannot reach $host');
       }
+    }
+
+    // Handle specific service unavailability
+    if (!reachabilityResults['firebaseio.com']!) {
+      debugPrint(
+        'Warning: Realtime Database (firebaseio.com) is unreachable. Some features may be limited.',
+      );
+      // You could set a global flag here to indicate limited functionality
     }
   } catch (e) {
     debugPrint('Error checking Firebase availability: $e');

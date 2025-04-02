@@ -77,5 +77,9 @@
       "enabled": true,
       "port": 4002
     }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }

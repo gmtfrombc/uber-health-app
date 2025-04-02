@@ -72,6 +72,21 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
         return;
       }
 
+      // Debug logging for provider ID
+      if (widget.selectedProvider != null) {
+        debugPrint(
+          'Using selected provider: ${widget.selectedProvider!.id}, ${widget.selectedProvider!.fullName}',
+        );
+      } else {
+        debugPrint('No provider selected in scheduling screen');
+      }
+
+      if (requestProvider.currentRequest != null) {
+        debugPrint(
+          'Current request provider ID: ${requestProvider.currentRequest!.providerId}',
+        );
+      }
+
       // Create the appointment request
       final request =
           requestProvider.currentRequest?.copyWith(
@@ -88,6 +103,8 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
             scheduledDateTime: scheduledDateTime,
             providerId: widget.selectedProvider?.id,
           );
+
+      debugPrint('Final request provider ID: ${request.providerId}');
 
       // Save to Firestore
       final conversationId = await FirebaseService().savePatientRequest(

@@ -98,13 +98,22 @@ class AppointmentProvider with ChangeNotifier {
     try {
       final immediateAppointments = await _firebaseService
           .getImmediateAppointments(userId);
-      if (immediateAppointments.isNotEmpty) {
-        return immediateAppointments.first;
-      }
-      return null;
+      return immediateAppointments.isNotEmpty
+          ? immediateAppointments.first
+          : null;
     } catch (e) {
       debugPrint('Error checking immediate appointments: $e');
       return null;
     }
+  }
+
+  // Add a method to handle appointment notifications safely (to be called from a mounted widget)
+  void showAppointmentNotification(Function(PatientRequest) showDialog) {
+    // Check if there's an immediate appointment that needs attention
+    checkForImmediateAppointments().then((appointment) {
+      if (appointment != null) {
+        showDialog(appointment);
+      }
+    });
   }
 }

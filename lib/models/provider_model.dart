@@ -1,5 +1,6 @@
 // lib/models/provider_model.dart
 import 'patient_request.dart'; // For ProviderType
+import 'package:cloud_firestore/cloud_firestore.dart'; // For Timestamp
 
 class ProviderModel {
   final String id;
@@ -77,6 +78,38 @@ class ProviderModel {
       }
     }
 
+    // Parse createdAt field from various formats
+    DateTime createdAt = DateTime.now();
+    if (map['createdAt'] != null) {
+      if (map['createdAt'] is Timestamp) {
+        // Handle Firestore Timestamp
+        createdAt = (map['createdAt'] as Timestamp).toDate();
+      } else if (map['createdAt'] is String) {
+        // Handle ISO string
+        try {
+          createdAt = DateTime.parse(map['createdAt'] as String);
+        } catch (e) {
+          // Silently use current time if parsing fails
+        }
+      }
+    }
+
+    // Parse updatedAt field from various formats
+    DateTime? updatedAt;
+    if (map['updatedAt'] != null) {
+      if (map['updatedAt'] is Timestamp) {
+        // Handle Firestore Timestamp
+        updatedAt = (map['updatedAt'] as Timestamp).toDate();
+      } else if (map['updatedAt'] is String) {
+        // Handle ISO string
+        try {
+          updatedAt = DateTime.parse(map['updatedAt'] as String);
+        } catch (e) {
+          // Silently ignore invalid date
+        }
+      }
+    }
+
     return ProviderModel(
       id: docId,
       uid: map['uid'] as String? ?? '',
@@ -94,14 +127,8 @@ class ProviderModel {
       providerType: providerType,
       cost: map['cost'] != null ? (map['cost'] as num).toDouble() : null,
       waitTime: map['waitTime'] as String?,
-      createdAt:
-          map['createdAt'] != null
-              ? DateTime.parse(map['createdAt'] as String)
-              : DateTime.now(),
-      updatedAt:
-          map['updatedAt'] != null
-              ? DateTime.parse(map['updatedAt'] as String)
-              : null,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 
