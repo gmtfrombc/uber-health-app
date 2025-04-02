@@ -191,4 +191,24 @@ class FirebaseService {
       throw Exception("User document not found for UID: $uid");
     }
   }
+
+  // Fetch provider details by provider ID
+  Future<Map<String, dynamic>?> getProviderDetails(String providerId) async {
+    try {
+      if (providerId.isEmpty) return null;
+
+      final doc =
+          await _firestore.collection('providers').doc(providerId).get();
+
+      if (!doc.exists) {
+        debugPrint('Provider document not found for ID: $providerId');
+        return null;
+      }
+
+      return doc.data();
+    } catch (e) {
+      debugPrint('ERROR fetching provider details: $e');
+      return null;
+    }
+  }
 }

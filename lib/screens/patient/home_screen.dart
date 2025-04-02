@@ -126,7 +126,12 @@ class _HomeScreenState extends State<HomeScreen> {
         RequestStatus.cancelled,
       );
 
+      // Refresh the UI to remove the cancelled appointment
       if (mounted) {
+        setState(() {
+          // Trigger a rebuild
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Appointment cancelled successfully')),
         );
@@ -212,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: const Text('Uber Health')),
+      appBar: AppBar(title: const Text('XUBER Health')),
       endDrawer: const AppDrawer(),
       body: FutureBuilder<UserModel?>(
         future: _fetchUser(),
@@ -287,12 +292,31 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "Your Health Information",
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
+                              Flexible(
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.medical_information,
+                                      size: 20,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        "Your Health Information",
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleLarge?.copyWith(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               IconButton(
@@ -339,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          child: const Text('Request a Consult'),
+                          child: const Text('Request a New Consult'),
                         ),
                       ),
                     ],
@@ -379,38 +403,63 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  child: Text(
-                    "Upcoming Appointments",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_month,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Upcoming Appointments",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to all appointments screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('View all appointments - Coming soon!'),
+                // "See All" button in a separate row, aligned left
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('View all appointments - Coming soon!'),
+                        ),
+                      );
+                    },
+                    icon: const Text('See All', style: TextStyle(fontSize: 14)),
+                    label: const Icon(Icons.chevron_right, size: 16),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.only(
+                        left: 0,
+                        top: 0,
+                        bottom: 8,
                       ),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    minimumSize: Size(60, 36),
+                      minimumSize: const Size(60, 24),
+                      alignment: Alignment.centerLeft,
+                    ),
                   ),
-                  child: const Text('See All', style: TextStyle(fontSize: 14)),
                 ),
+                const Divider(),
               ],
             ),
-            const Divider(),
             FutureBuilder<List<PatientRequest>>(
               future: _firebaseService.getUpcomingAppointments(
                 FirebaseAuth.instance.currentUser?.uid ?? "",
@@ -437,99 +486,151 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                // Display the next appointment
                 final appointments = snapshot.data!;
                 final nextAppointment = appointments.first;
 
                 return Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        "Next Appointment",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            "Next Appointment",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Cancel button moved to top row
+                        TextButton.icon(
+                          onPressed:
+                              () => _showCancelConfirmation(nextAppointment),
+                          icon: const Icon(Icons.cancel_outlined, size: 14),
+                          label: const Text(
+                            'Cancel',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor:
+                                Theme.of(context).colorScheme.error,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            minimumSize: const Size(30, 30),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "${nextAppointment.category} (${nextAppointment.urgency})",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 16,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Flexible(
-                            child: Text(
-                              "${nextAppointment.category} (${nextAppointment.urgency})",
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.w500),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                        const SizedBox(width: 4),
+                        Text(
+                          nextAppointment.scheduledDateTime != null
+                              ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
+                              : "Date not specified",
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        FutureBuilder<Map<String, dynamic>?>(
+                          future:
+                              nextAppointment.providerId != null &&
+                                      nextAppointment.providerId!.isNotEmpty
+                                  ? _firebaseService.getProviderDetails(
+                                    nextAppointment.providerId!,
+                                  )
+                                  : Future.value(null),
+                          builder: (context, providerSnapshot) {
+                            if (providerSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Text(
+                                "Provider: Loading...",
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              );
+                            }
+
+                            String providerText = "Provider: ";
+
+                            if (providerSnapshot.hasData &&
+                                providerSnapshot.data != null) {
+                              final providerData = providerSnapshot.data!;
+                              final firstName = providerData['firstname'] ?? '';
+                              final lastName = providerData['lastname'] ?? '';
+                              final credentials = providerData['credentials'];
+
+                              if (firstName.isNotEmpty || lastName.isNotEmpty) {
+                                providerText += "$firstName $lastName";
+                                if (credentials != null &&
+                                    credentials.toString().isNotEmpty) {
+                                  providerText += ", $credentials";
+                                }
+                              } else {
+                                // Fallback if no name data is available
+                                providerText +=
+                                    nextAppointment.providerType.name;
+                              }
+                            } else {
+                              // No provider selected yet
+                              providerText +=
+                                  nextAppointment.urgency.toLowerCase() ==
+                                          'routine'
+                                      ? 'TBD'
+                                      : nextAppointment.providerType.name;
+                            }
+
+                            return Text(
+                              providerText,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed:
+                                () => _rescheduleAppointment(nextAppointment),
+                            child: const Text('Reschedule'),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  nextAppointment.scheduledDateTime != null
-                                      ? "${dateFormat.format(nextAppointment.scheduledDateTime!)} at ${timeFormat.format(nextAppointment.scheduledDateTime!)}"
-                                      : "Date not specified",
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed:
+                                () => _checkInForAppointment(nextAppointment),
+                            child: const Text('Start Now'),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  "Provider: ${nextAppointment.providerType.name}",
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed:
-                                      () => _rescheduleAppointment(
-                                        nextAppointment,
-                                      ),
-                                  child: const Text('Reschedule'),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed:
-                                      () => _checkInForAppointment(
-                                        nextAppointment,
-                                      ),
-                                  child: const Text('Start Now'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     if (appointments.length > 1)
                       Padding(
@@ -546,6 +647,37 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // Show confirmation dialog before cancelling an appointment
+  void _showCancelConfirmation(PatientRequest appointment) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cancel Upcoming Appointment?'),
+          content: const Text(
+            'This will permanently cancel your appointment. This action cannot be undone.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('No, Keep It'),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _cancelAppointment(appointment);
+              },
+              child: const Text('Yes, Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
