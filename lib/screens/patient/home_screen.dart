@@ -1,6 +1,7 @@
 // lib/screens/patient/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../theme.dart';
 import 'request_screen.dart';
 import '../auth/profile_edit_screen.dart';
 import '../../widgets/app_drawer.dart';
@@ -249,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(title: const Text('XUBER Health')),
       endDrawer: const AppDrawer(),
       body: FutureBuilder<UserModel?>(
@@ -300,23 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Upcoming Appointments Card
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: _buildUpcomingAppointmentsCard(),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Medical Questions Card
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: _buildMedicalQuestionsCard(),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Health Information Card with edit icon.
+                // Health Information Card with edit icon (moved up)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Card(
@@ -388,6 +373,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // Upcoming Appointments Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _buildUpcomingAppointmentsCard(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Medical Questions Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _buildMedicalQuestionsCard(),
+                ),
+
+                const SizedBox(height: 16),
+
                 // Bottom buttons row
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

@@ -45,7 +45,7 @@ class AppTheme {
   // Shadows
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withAlpha(13),
       blurRadius: 8,
       offset: Offset(0, 2),
     ),
@@ -181,11 +181,11 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: textTertiaryColor.withOpacity(0.1), width: 1),
+        side: BorderSide(color: textTertiaryColor.withAlpha(26), width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withAlpha(26),
     ),
 
     // Button styling
@@ -243,14 +243,14 @@ class AppTheme {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: textTertiaryColor.withOpacity(0.3),
+          color: textTertiaryColor.withAlpha(77),
           width: 1,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: textTertiaryColor.withOpacity(0.3),
+          color: textTertiaryColor.withAlpha(77),
           width: 1,
         ),
       ),
@@ -268,17 +268,17 @@ class AppTheme {
 
     // Divider styling
     dividerTheme: DividerThemeData(
-      color: textTertiaryColor.withOpacity(0.2),
+      color: textTertiaryColor.withAlpha(51),
       thickness: 1,
       space: 24,
     ),
 
     // Chip styling
     chipTheme: ChipThemeData(
-      backgroundColor: primaryLightColor.withOpacity(0.15),
-      disabledColor: textTertiaryColor.withOpacity(0.1),
-      selectedColor: primaryColor.withOpacity(0.3),
-      secondarySelectedColor: accentColor.withOpacity(0.3),
+      backgroundColor: primaryLightColor.withAlpha(38),
+      disabledColor: textTertiaryColor.withAlpha(26),
+      selectedColor: primaryColor.withAlpha(77),
+      secondarySelectedColor: accentColor.withAlpha(77),
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       labelStyle: GoogleFonts.poppins(fontSize: 14, color: primaryColor),
       secondaryLabelStyle: GoogleFonts.poppins(
@@ -315,8 +315,8 @@ class AppTheme {
     // Progress indicator styling
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: primaryColor,
-      circularTrackColor: primaryLightColor.withOpacity(0.2),
-      linearTrackColor: primaryLightColor.withOpacity(0.2),
+      circularTrackColor: primaryLightColor.withAlpha(51),
+      linearTrackColor: primaryLightColor.withAlpha(51),
     ),
   );
 

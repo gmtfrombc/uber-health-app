@@ -23,6 +23,10 @@ class ProviderProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint(
+        'Provider Provider: Loading providers of type: ${providerType.name}',
+      );
+
       // First try to load from Firebase
       final providersData = await _firebaseService.getAllProviders(
         providerType.name,
@@ -37,14 +41,23 @@ class ProviderProvider with ChangeNotifier {
                       ProviderModel.fromMap(data, docId: data['id'] ?? ''),
                 )
                 .toList();
+
+        // Log the loaded providers for debugging
+        for (var provider in _providers) {
+          debugPrint(
+            'Loaded provider: ${provider.fullName} (${provider.providerType.name})',
+          );
+        }
       } else {
         // Fallback to hardcoded providers if Firebase is empty
-        debugPrint('No providers found in Firebase, using fallback data');
+        debugPrint(
+          'No providers found in Firebase, using fallback data for type: ${providerType.name}',
+        );
         final fallbackService = _getFallbackProviders(providerType);
         _providers = fallbackService;
       }
     } catch (e) {
-      debugPrint('Error loading providers: $e');
+      debugPrint('Error loading providers of type ${providerType.name}: $e');
       _error = e.toString();
       // Use fallback data on error
       _providers = _getFallbackProviders(providerType);

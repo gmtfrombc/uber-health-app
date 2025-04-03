@@ -2,11 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../models/patient_request.dart';
 import '../../models/chat_mode.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/provider_provider.dart';
 import '../../utils/categories.dart';
+import '../../theme.dart';
 import './provider_bottom_sheet.dart';
 import './scheduling_screen.dart';
 import '../consultation/chat_interface.dart';
@@ -27,36 +29,48 @@ class CategorySelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final providerType =
         Provider.of<RequestProvider>(context, listen: false).providerType;
-    final List<Map<String, String>> categories =
+    final List<Map<String, dynamic>> categories =
         providerType == ProviderType.medicalProvider
             ? medicalProviderCategories
             : physicalTherapistCategories;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: const Text("Choose a Category")),
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        title: const Text("Choose a Category"),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "What brings you in today?",
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               "Select the category that best describes your symptoms",
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.color?.withAlpha(180),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio:
-                    0.9, // Adjust aspect ratio to make cards taller
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
+                padding: const EdgeInsets.only(bottom: 16),
                 children: List.generate(categories.length, (index) {
                   final category = categories[index];
                   return GestureDetector(
@@ -144,43 +158,52 @@ class CategorySelectionScreen extends StatelessWidget {
                       }
                     },
                     child: Card(
-                      elevation: 0,
+                      elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.1),
+                          ).colorScheme.primary.withAlpha(26),
                           width: 1,
                         ),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(12.0),
+                        padding: const EdgeInsets.all(16.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Flexible(
-                              child: Text(
-                                category['title']!,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                            // Icon at the top
+                            FaIcon(
+                              category['icon'],
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 36,
+                            ),
+                            const SizedBox(height: 16),
+                            // Title in the middle
+                            Text(
+                              category['title']!,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
                               ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.visible,
                             ),
                             const SizedBox(height: 8),
-                            Flexible(
-                              child: Text(
-                                category['description']!,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                            // Bottom highlight bar
+                            Container(
+                              height: 4,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withAlpha(77),
+                                borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                           ],

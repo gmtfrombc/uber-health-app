@@ -6,6 +6,7 @@ import '../../providers/request_provider.dart';
 import '../../models/patient_request.dart';
 import '../../services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../theme.dart';
 import 'home_screen.dart';
 import '../../models/provider_model.dart';
 
@@ -150,6 +151,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(title: const Text('Schedule Your Consult')),
       body: Column(
         children: [

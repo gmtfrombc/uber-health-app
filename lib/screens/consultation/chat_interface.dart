@@ -7,9 +7,11 @@ import '../../models/patient_request.dart';
 import '../../services/chatgpt_service.dart';
 import '../../utils/prompts.dart';
 import '../../widgets/animated_consultation_screen.dart';
+import '../../widgets/animated_message_bubble.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
 import '../../providers/medical_questions_provider.dart';
+import '../../theme.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -295,7 +297,29 @@ class ChatInterfaceState extends State<ChatInterface> {
             "content": m.content,
           };
         }).toList();
-    conversation.insert(0, {"role": "system", "content": triagePrompt});
+
+    // Determine if this is a medical question
+    final requestProvider = Provider.of<RequestProvider>(
+      context,
+      listen: false,
+    );
+    final isMedicalQuestion =
+        widget.isSynchronous != true &&
+        (requestProvider.currentRequest?.requestType ==
+            RequestType.medicalQuestion);
+
+    // Use different prompts based on request type
+    if (isMedicalQuestion) {
+      conversation.insert(0, {
+        "role": "system",
+        "content": medicalQuestionSummaryPrompt,
+      });
+      debugPrint("Using medical question summary prompt");
+    } else {
+      conversation.insert(0, {"role": "system", "content": triagePrompt});
+      debugPrint("Using standard triage prompt for consultations");
+    }
+
     String summary = "";
     try {
       summary = await _chatGPTService.getAIResponse(conversation);
@@ -310,22 +334,12 @@ class ChatInterfaceState extends State<ChatInterface> {
 
       // Save the summary and wait for the operation to complete
       if (!mounted) return;
-      final requestProvider = Provider.of<RequestProvider>(
-        context,
-        listen: false,
-      );
 
       // Save conversation messages to provider if not already there
       if (requestProvider.conversation == null) {
         debugPrint("Adding messages to provider before saving summary");
         await requestProvider.updateConversation(_messages);
       }
-
-      // Determine if this is a medical question
-      final isMedicalQuestion =
-          widget.isSynchronous != true &&
-          (requestProvider.currentRequest?.requestType ==
-              RequestType.medicalQuestion);
 
       debugPrint("Is this a medical question? $isMedicalQuestion");
 
@@ -422,25 +436,18 @@ class ChatInterfaceState extends State<ChatInterface> {
   }
 
   Widget _buildMessageBubble(Message message) {
-    bool isPatient = message.sender == 'patient';
-    return Align(
-      alignment: isPatient ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isPatient ? Colors.teal[100] : Colors.grey[300],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(message.content),
-      ),
-    );
+    // Only animate the first AI message
+    bool shouldAnimate =
+        message.sender == 'ai' && _messages.indexOf(message) == 0;
+
+    return AnimatedMessageBubble(message: message, animate: shouldAnimate);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Virtual Assistant')),
+      backgroundColor: AppTheme.backgroundColor,
       body: Column(
         children: [
           Expanded(
@@ -452,17 +459,45 @@ class ChatInterfaceState extends State<ChatInterface> {
                   (context, index) => _buildMessageBubble(_messages[index]),
             ),
           ),
-          if (_isLoadingAI) const LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          if (_isLoadingAI)
+            SizedBox(
+              height: 2,
+              child: LinearProgressIndicator(
+                backgroundColor: AppTheme.backgroundColor,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(10),
+                  blurRadius: 4,
+                  offset: Offset(0, -1),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your medical info here...',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: 'Describe your symptoms...',
+                      hintStyle: TextStyle(color: AppTheme.textTertiaryColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: AppTheme.backgroundColor,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      isDense: true,
                     ),
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
@@ -472,21 +507,64 @@ class ChatInterfaceState extends State<ChatInterface> {
                     enabled: !_triageComplete,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _triageComplete ? null : _handleSend,
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color:
+                        _triageComplete
+                            ? AppTheme.textTertiaryColor
+                            : AppTheme.primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: _triageComplete ? null : _handleSend,
+                  ),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(16),
             child:
                 _isGeneratingSummary
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                      onPressed: _triageComplete ? _handleDone : null,
-                      child: const Text('Done'),
+                    ? Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(
+                            color: AppTheme.primaryColor,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Generating summary...',
+                            style: TextStyle(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _triageComplete ? _handleDone : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Done',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
           ),
         ],

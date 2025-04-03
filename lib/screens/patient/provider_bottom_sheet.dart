@@ -38,8 +38,14 @@ class ProviderBottomSheet extends StatefulWidget {
       listen: false,
     );
 
-    // Start loading the providers
-    providerProvider.loadProviders(requestProvider.providerType);
+    // Get the current provider type from RequestProvider
+    final providerType = requestProvider.providerType;
+    debugPrint(
+      'ProviderBottomSheet: Loading providers of type: ${providerType.name}',
+    );
+
+    // Start loading the providers of the specified type
+    await providerProvider.loadProviders(providerType);
 
     // Show the bottom sheet
     await showModalBottomSheet(
@@ -75,7 +81,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withAlpha(26),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -92,7 +98,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.5),
+                      color: Colors.grey.withAlpha(128),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -127,8 +133,8 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
                       margin: const EdgeInsets.only(bottom: 8),
                       child: Chip(
                         label: Text(widget.category),
-                        backgroundColor: AppTheme.primaryLightColor.withOpacity(
-                          0.15,
+                        backgroundColor: AppTheme.primaryLightColor.withAlpha(
+                          38,
                         ),
                         labelStyle: TextStyle(
                           color: AppTheme.primaryColor,
@@ -140,6 +146,28 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
                         ),
                       ),
                     ),
+
+                    // Provider Type indicator
+                    Consumer<RequestProvider>(
+                      builder: (context, requestProvider, child) {
+                        final providerTypeText =
+                            requestProvider.providerType ==
+                                    ProviderType.medicalProvider
+                                ? 'Medical Providers'
+                                : 'Physical Therapists';
+                        return Text(
+                          providerTypeText,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.accentColor,
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 8),
 
                     Text(
                       widget.isUrgent
@@ -194,7 +222,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
                               color:
                                   isSelected
                                       ? Theme.of(context).colorScheme.primary
-                                      : Colors.grey.withOpacity(0.3),
+                                      : Colors.grey.withAlpha(77),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -223,7 +251,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
                                               : Theme.of(context)
                                                   .colorScheme
                                                   .primary
-                                                  .withOpacity(0.1),
+                                                  .withAlpha(26),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Center(

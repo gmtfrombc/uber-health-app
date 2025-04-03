@@ -37,8 +37,14 @@ class _RequestScreenState extends State<RequestScreen> {
       context,
       listen: false,
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -46,32 +52,149 @@ class _RequestScreenState extends State<RequestScreen> {
             'Choose Provider Type',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          ToggleButtons(
-            isSelected: [
-              requestProvider.providerType == ProviderType.medicalProvider,
-              requestProvider.providerType == ProviderType.physicalTherapist,
-            ],
-            onPressed: (int index) {
-              setState(() {
-                selectedProviderToggleIndex = index;
-                final newType =
-                    index == 0
-                        ? ProviderType.medicalProvider
-                        : ProviderType.physicalTherapist;
-                requestProvider.setProviderType(newType);
-              });
-            },
-            children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Medical Provider'),
+          const SizedBox(height: 12),
+          // Replace ToggleButtons with Column of radio-style buttons
+          Column(
+            children: [
+              // Medical Provider Option
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedProviderToggleIndex = 0;
+                    requestProvider.setProviderType(
+                      ProviderType.medicalProvider,
+                    );
+                    debugPrint(
+                      'Provider type changed to: ${ProviderType.medicalProvider.name}',
+                    );
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        requestProvider.providerType ==
+                                ProviderType.medicalProvider
+                            ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withAlpha(38)
+                            : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          requestProvider.providerType ==
+                                  ProviderType.medicalProvider
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        requestProvider.providerType ==
+                                ProviderType.medicalProvider
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color:
+                            requestProvider.providerType ==
+                                    ProviderType.medicalProvider
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.medical_services),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Medical Provider',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Physical Therapist'),
+
+              const SizedBox(height: 8),
+
+              // Physical Therapist Option
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedProviderToggleIndex = 1;
+                    requestProvider.setProviderType(
+                      ProviderType.physicalTherapist,
+                    );
+                    debugPrint(
+                      'Provider type changed to: ${ProviderType.physicalTherapist.name}',
+                    );
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        requestProvider.providerType ==
+                                ProviderType.physicalTherapist
+                            ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withAlpha(38)
+                            : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          requestProvider.providerType ==
+                                  ProviderType.physicalTherapist
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.shade400,
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        requestProvider.providerType ==
+                                ProviderType.physicalTherapist
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color:
+                            requestProvider.providerType ==
+                                    ProviderType.physicalTherapist
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.fitness_center),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Physical Therapist',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            requestProvider.providerType == ProviderType.medicalProvider
+                ? 'You will see medical providers who can treat general health conditions'
+                : 'You will see physical therapists who specialize in movement and rehabilitation',
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
           ),
         ],
       ),
