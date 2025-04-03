@@ -67,7 +67,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.6, // Initial height (60% of screen)
+      initialChildSize: 0.75, // Changed from 0.6 to 0.75 (3/4 of screen)
       minChildSize: 0.4, // Minimum height (40% of screen)
       maxChildSize: 0.9, // Maximum height (90% of screen)
       builder: (context, scrollController) {

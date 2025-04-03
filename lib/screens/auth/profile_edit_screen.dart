@@ -1,9 +1,10 @@
 // lib/screens/auth/profile_edit_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
-import '../patient/home_screen.dart';
+import '../../providers/user_provider.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   const ProfileEditScreen({super.key});
@@ -25,14 +26,74 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   List<String> _allergies = [];
   List<String> _conditions = [];
 
+  // Original data for checking if changes were made
+  List<String> _originalMedications = [];
+  List<String> _originalAllergies = [];
+  List<String> _originalConditions = [];
+
   // Fetched user data.
   UserModel? _user;
   bool _isLoading = true;
 
+  // Check if user has made changes
+  bool get _hasChanges {
+    if (_medications.length != _originalMedications.length ||
+        _allergies.length != _originalAllergies.length ||
+        _conditions.length != _originalConditions.length) {
+      return true;
+    }
+
+    for (int i = 0; i < _medications.length; i++) {
+      if (i >= _originalMedications.length ||
+          _medications[i] != _originalMedications[i]) {
+        return true;
+      }
+    }
+
+    for (int i = 0; i < _allergies.length; i++) {
+      if (i >= _originalAllergies.length ||
+          _allergies[i] != _originalAllergies[i]) {
+        return true;
+      }
+    }
+
+    for (int i = 0; i < _conditions.length; i++) {
+      if (i >= _originalConditions.length ||
+          _conditions[i] != _originalConditions[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   Future<void> _fetchUserData() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    if (uid.isEmpty) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     try {
+      // Try to use data from provider first if available
+      if (userProvider.userProfile != null) {
+        final user = userProvider.userProfile!;
+        setState(() {
+          _user = user;
+          _medications = user.medications ?? [];
+          _allergies = user.allergies ?? [];
+          _conditions = user.conditions ?? [];
+
+          // Store original values for comparison
+          _originalMedications = List.from(user.medications ?? []);
+          _originalAllergies = List.from(user.allergies ?? []);
+          _originalConditions = List.from(user.conditions ?? []);
+
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Otherwise fetch from Firebase
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+      if (uid.isEmpty) return;
+
       UserModel user = await FirebaseService().getUserMedicalInfo(uid);
       debugPrint(
         "Fetched user data: medications: ${user.medications}, allergies: ${user.allergies}, conditions: ${user.conditions}",
@@ -42,6 +103,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         _medications = user.medications ?? [];
         _allergies = user.allergies ?? [];
         _conditions = user.conditions ?? [];
+
+        // Store original values for comparison
+        _originalMedications = List.from(user.medications ?? []);
+        _originalAllergies = List.from(user.allergies ?? []);
+        _originalConditions = List.from(user.conditions ?? []);
+
         _isLoading = false;
       });
     } catch (e) {
@@ -53,11 +120,28 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 
   Future<void> _saveProfile() async {
+    // Store current context to avoid async gap issues
+    final BuildContext currentContext = context;
+
+    if (!mounted) return;
+
+    final userProvider = Provider.of<UserProvider>(
+      currentContext,
+      listen: false,
+    );
     final uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+    if (_user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(currentContext).showSnackBar(
+        const SnackBar(content: Text("Error: User data not available.")),
+      );
+      return;
+    }
+
     UserModel updatedUser = UserModel(
       uid: uid,
       role: _user?.role ?? "patient",
-      // Use the new fields: firstname and lastname.
       firstname: _user?.firstname ?? "",
       lastname: _user?.lastname ?? "",
       email: _user?.email ?? "",
@@ -72,14 +156,87 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       createdAt: _user?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    await FirebaseService().updateUserMedicalInfo(updatedUser);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Profile updated successfully.")),
-    );
+
+    try {
+      // Update through the UserProvider instead of directly with FirebaseService
+      await userProvider.updateUserProfile(updatedUser);
+
+      // Update original values after saving
+      if (mounted) {
+        setState(() {
+          _originalMedications = List.from(_medications);
+          _originalAllergies = List.from(_allergies);
+          _originalConditions = List.from(_conditions);
+        });
+      }
+
+      // Pop back to previous screen instead of creating a new instance
+      if (mounted) {
+        Navigator.pop(currentContext);
+
+        // Show success message
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          const SnackBar(content: Text("Profile updated successfully.")),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error saving profile: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          currentContext,
+        ).showSnackBar(SnackBar(content: Text("Error updating profile: $e")));
+      }
+    }
+  }
+
+  // Function to handle back button / navigation
+  Future<bool> _onWillPop() async {
+    if (_hasChanges) {
+      // Store the context before the async operation
+      final BuildContext currentContext = context;
+
+      // Only proceed if still mounted
+      if (!mounted) return true;
+
+      final result = await showDialog<bool>(
+        context: currentContext,
+        builder:
+            (dialogContext) => AlertDialog(
+              title: const Text('Unsaved Changes'),
+              content: const Text(
+                'You have unsaved changes. Do you want to save them before leaving?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(false), // Don't save and leave
+                  child: const Text('Discard'),
+                ),
+                TextButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(true), // Save and leave
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+      );
+
+      // Check if we're still mounted after the dialog
+      if (!mounted) return true;
+
+      if (result == true) {
+        // User wants to save before leaving
+        await _saveProfile();
+      }
+
+      return true; // Allow navigation
+    }
+
+    return true; // No unsaved changes, allow navigation
   }
 
   @override
@@ -317,35 +474,77 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Edit Profile"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveProfile,
-            tooltip: "Save Profile",
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+
+        final shouldPop = await _onWillPop();
+        if (shouldPop && mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Edit Profile"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final shouldPop = await _onWillPop();
+              if (shouldPop && mounted) {
+                Navigator.of(context).pop();
+              }
+            },
           ),
-        ],
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Form(
-                key: _formKey,
-                child: CustomScrollView(
-                  slivers: [
-                    SliverList(
-                      delegate: SliverChildListDelegate([
-                        _buildMedicationsCard(),
-                        _buildAllergiesCard(),
-                        _buildConditionsCard(),
-                        const SizedBox(height: 16),
-                      ]),
-                    ),
-                  ],
+        ),
+        body:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Form(
+                  key: _formKey,
+                  child: Stack(
+                    children: [
+                      CustomScrollView(
+                        slivers: [
+                          SliverList(
+                            delegate: SliverChildListDelegate([
+                              _buildMedicationsCard(),
+                              _buildAllergiesCard(),
+                              _buildConditionsCard(),
+                              const SizedBox(height: 100), // Space for the FAB
+                            ]),
+                          ),
+                        ],
+                      ),
+                      // Positioned save button at the bottom
+                      Positioned(
+                        bottom: 20,
+                        left: 20,
+                        right: 20,
+                        child: ElevatedButton(
+                          onPressed: _saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 4,
+                          ),
+                          child: const Text(
+                            'SAVE CHANGES',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+      ),
     );
   }
 }

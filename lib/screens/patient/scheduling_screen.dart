@@ -7,7 +7,6 @@ import '../../models/patient_request.dart';
 import '../../services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme.dart';
-import 'home_screen.dart';
 import '../../models/provider_model.dart';
 
 class SchedulingScreen extends StatefulWidget {
@@ -126,10 +125,10 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
           const SnackBar(content: Text('Appointment scheduled successfully')),
         );
 
-        // Navigate to home screen
-        Navigator.pushAndRemoveUntil(
+        // Navigate to main screen with bottom navigation instead of directly to HomeScreen
+        Navigator.pushNamedAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          '/main', // Use the main route that has the bottom navigation
           (route) => false,
         );
       }

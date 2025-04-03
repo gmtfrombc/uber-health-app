@@ -27,8 +27,18 @@ class CategorySelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final providerType =
-        Provider.of<RequestProvider>(context, listen: false).providerType;
+    // Get provider type directly from the provider
+    final requestProvider = Provider.of<RequestProvider>(
+      context,
+      listen: false,
+    );
+    final providerType = requestProvider.providerType;
+
+    // Log which provider type is being used for clarity
+    debugPrint(
+      'DEBUG: CategorySelectionScreen using provider type: ${providerType.name}',
+    );
+
     final List<Map<String, dynamic>> categories =
         providerType == ProviderType.medicalProvider
             ? medicalProviderCategories

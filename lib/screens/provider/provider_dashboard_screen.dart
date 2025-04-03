@@ -5,10 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/provider_dashboard_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
-import '../../models/message.dart';
 import '../auth/auth_wrapper.dart';
 import '../video_call/video_call_home_screen.dart';
-import 'package:intl/intl.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -771,90 +769,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           // Medical Question Response Section (only for medical questions)
           if (isMedicalQuestion)
             _buildMedicalQuestionResponseSection(dashboardProvider),
-
-          // Conversation messages display
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Patient Messages',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  if (request.messages.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text('No messages available'),
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: request.messages.length,
-                      itemBuilder: (context, index) {
-                        final message = request.messages[index];
-                        return _buildMessageBubble(message);
-                      },
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Action buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (!isMedicalQuestion) ...[
-                // Video call button for consultations, not for medical questions
-                ElevatedButton.icon(
-                  icon: Icon(Icons.video_call),
-                  label: Text('Start Video Call'),
-                  onPressed: () {
-                    _startVideoCall(request, patient);
-                  },
-                ),
-                const SizedBox(width: 16),
-              ],
-              // Cancel button
-              OutlinedButton.icon(
-                icon: Icon(Icons.cancel),
-                label: Text('Cancel Request'),
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder:
-                        (context) => AlertDialog(
-                          title: Text('Cancel Request'),
-                          content: Text(
-                            'Are you sure you want to cancel this request?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: Text('No'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: Text('Yes'),
-                            ),
-                          ],
-                        ),
-                  );
-
-                  if (confirm == true) {
-                    await dashboardProvider.deleteConsultation(request.id);
-                  }
-                },
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -1355,52 +1269,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  // Build a message bubble
-  Widget _buildMessageBubble(Message message) {
-    final isPatient = message.sender == 'patient';
-    return Align(
-      alignment: isPatient ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(maxWidth: 300),
-        decoration: BoxDecoration(
-          color: isPatient ? Colors.teal.shade100 : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isPatient ? 'Patient' : 'System',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isPatient ? Colors.teal.shade700 : Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(message.content),
-            const SizedBox(height: 2),
-            Text(
-              DateFormat('MM/dd/yyyy h:mm a').format(message.timestamp),
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Video call button action
-  void _startVideoCall(ConsultationRequest request, UserModel patient) {
-    // Simply navigate to the video call screen without additional params
-    // The VideoCallHomeScreen will handle creating a new call
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => VideoCallHomeScreen()),
     );
   }
 }

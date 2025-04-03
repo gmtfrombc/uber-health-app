@@ -13,6 +13,7 @@ import 'providers/appointment_provider.dart'; // Import new appointment provider
 import 'providers/provider_data_provider.dart'; // Import new provider data provider
 import 'providers/medical_questions_provider.dart'; // Import medical questions provider
 import 'screens/auth/auth_wrapper.dart';
+import 'screens/main_screen.dart'; // Import the new MainScreen
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'theme.dart'; // Import our custom theme
@@ -152,12 +153,26 @@ class MyApp extends StatelessWidget {
           title: 'Uber Health Prototype',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme, // Use our custom theme
+          // Use AuthWrapper to determine if user is logged in
           home: const AuthWrapper(),
+          // Define routes for navigation after login
+          routes: {
+            '/main': (context) => const MainScreen(),
+            '/account':
+                (context) =>
+                    const MainScreen(initialTab: 2), // Navigate to account tab
+            '/consults':
+                (context) =>
+                    const MainScreen(initialTab: 1), // Navigate to consults tab
+            // Add other routes as needed
+          },
         ),
       ),
     );
   }
 }
+
+// Modify AuthWrapper to navigate to MainScreen after successful login
 
 // Add a provider initializer widget to initialize providers when the app starts
 class ProviderInitializer extends StatefulWidget {
@@ -170,6 +185,8 @@ class ProviderInitializer extends StatefulWidget {
 }
 
 class _ProviderInitializerState extends State<ProviderInitializer> {
+  StreamSubscription<User?>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -178,7 +195,10 @@ class _ProviderInitializerState extends State<ProviderInitializer> {
 
   Future<void> _initializeProviders() async {
     // Initialize providers after user authentication
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      User? user,
+    ) {
+      if (!mounted) return; // Ensure widget is still mounted
       if (user != null) {
         // User is logged in, initialize providers
         final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -197,8 +217,32 @@ class _ProviderInitializerState extends State<ProviderInitializer> {
         appointmentProvider.initialize();
         // Load medical questions
         medicalQuestionsProvider.refreshQuestions();
+
+        // FIXED: Use a post-frame callback for navigation to ensure context is valid
+        // This fixes the "Navigator operation requested with a context that does not include a Navigator" error
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return; // Double-check still mounted
+
+          // Use the BuildContext's Navigator instead of static method
+          final navigator = Navigator.of(context, rootNavigator: true);
+
+          // Check if we're not already on the main screen
+          if (ModalRoute.of(context)?.settings.name != '/main') {
+            navigator.pushNamedAndRemoveUntil('/main', (route) => false);
+          }
+        });
+      } else {
+        // User signed out, clear data if needed (optional)
+        Provider.of<UserProvider>(context, listen: false).clearUserData();
+        // AuthWrapper will handle navigation back to sign-in
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel(); // Cancel the listener
+    super.dispose();
   }
 
   @override

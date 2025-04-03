@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_in_screen.dart';
-import '../patient/home_screen.dart';
+import '../main_screen.dart';
 import 'onboarding_screen.dart';
 import '../provider/provider_dashboard_screen.dart';
 import '../../models/user_model.dart';
@@ -39,9 +39,9 @@ class AuthWrapper extends StatelessWidget {
                   // Providers go to their dashboard
                   return const ProviderDashboardScreen();
                 } else {
-                  // Patients go to home or onboarding depending on status
+                  // Patients go to onboarding or MainScreen
                   return userModel.onboarded
-                      ? const HomeScreen()
+                      ? const MainScreen()
                       : const OnboardingScreen();
                 }
               }

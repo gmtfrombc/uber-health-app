@@ -20,8 +20,17 @@ class RequestProvider with ChangeNotifier {
   }
 
   void setProviderType(ProviderType type) {
-    providerType = type;
-    notifyListeners();
+    if (type != providerType) {
+      debugPrint(
+        'DEBUG: RequestProvider.setProviderType called - changing from ${providerType.name} to ${type.name}',
+      );
+      providerType = type;
+      notifyListeners();
+    } else {
+      debugPrint(
+        'DEBUG: RequestProvider.setProviderType called with same type (${type.name}) - no change needed',
+      );
+    }
   }
 
   void createRequest(PatientRequest request) {
@@ -35,11 +44,21 @@ class RequestProvider with ChangeNotifier {
   }
 
   void clearRequest() {
+    // Store the current provider type before clearing
+    final currentProviderType = providerType;
+
+    // Clear all request data
     currentRequest = null;
     conversation = null;
     lastConversationId = null;
     selectedCategory = null;
-    providerType = ProviderType.medicalProvider;
+
+    // Restore the provider type (don't reset it to default)
+    providerType = currentProviderType;
+
+    debugPrint(
+      'DEBUG: Request cleared, provider type preserved as: ${providerType.name}',
+    );
     notifyListeners();
   }
 
