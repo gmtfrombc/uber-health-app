@@ -76,10 +76,10 @@ class CategorySelectionScreen extends StatelessWidget {
             const SizedBox(height: 32),
             Expanded(
               child: GridView.count(
-                crossAxisCount: 1,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 3.0,
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.0,
                 padding: const EdgeInsets.only(bottom: 16),
                 children: List.generate(categories.length, (index) {
                   final category = categories[index];
@@ -198,7 +198,7 @@ class CategorySelectionScreen extends StatelessWidget {
                                   ),
                                   // Content
                                   Padding(
-                                    padding: const EdgeInsets.all(16.0),
+                                    padding: const EdgeInsets.all(12.0),
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -210,13 +210,13 @@ class CategorySelectionScreen extends StatelessWidget {
                                           category['title']!,
                                           style: Theme.of(
                                             context,
-                                          ).textTheme.titleLarge?.copyWith(
+                                          ).textTheme.titleMedium?.copyWith(
                                             color:
                                                 Theme.of(
                                                   context,
                                                 ).colorScheme.primary,
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 20,
+                                            fontSize: 18,
                                           ),
                                           textAlign: TextAlign.center,
                                           maxLines: 2,
@@ -242,7 +242,7 @@ class CategorySelectionScreen extends StatelessWidget {
                                 ],
                               )
                               : Padding(
-                                padding: const EdgeInsets.all(16.0),
+                                padding: const EdgeInsets.all(12.0),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -252,13 +252,13 @@ class CategorySelectionScreen extends StatelessWidget {
                                       category['title']!,
                                       style: Theme.of(
                                         context,
-                                      ).textTheme.titleLarge?.copyWith(
+                                      ).textTheme.titleMedium?.copyWith(
                                         color:
                                             Theme.of(
                                               context,
                                             ).colorScheme.primary,
                                         fontWeight: FontWeight.w800,
-                                        fontSize: 20,
+                                        fontSize: 18,
                                       ),
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
