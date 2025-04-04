@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../models/patient_request.dart';
 import '../../models/chat_mode.dart';
 import '../../providers/request_provider.dart';
@@ -77,8 +76,8 @@ class CategorySelectionScreen extends StatelessWidget {
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
                 childAspectRatio: 1.0,
                 padding: const EdgeInsets.only(bottom: 16),
                 children: List.generate(categories.length, (index) {
@@ -91,11 +90,7 @@ class CategorySelectionScreen extends StatelessWidget {
                         context,
                         listen: false,
                       );
-                      // Set the selected category.
                       requestProvider.setCategory(category['title']!);
-
-                      // Create a new PatientRequest with the required providerType.
-                      // If we have an appointmentId, we're continuing an existing appointment
                       if (appointmentId == null) {
                         requestProvider.createRequest(
                           PatientRequest(
@@ -107,8 +102,6 @@ class CategorySelectionScreen extends StatelessWidget {
                           ),
                         );
                       }
-
-                      // Check if this is an immediate appointment check-in
                       if (chatMode == ChatMode.immediate &&
                           appointmentId != null) {
                         Navigator.push(
@@ -169,6 +162,7 @@ class CategorySelectionScreen extends StatelessWidget {
                     },
                     child: Card(
                       elevation: 2,
+                      margin: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(

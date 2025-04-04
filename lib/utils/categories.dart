@@ -13,6 +13,7 @@ final List<Map<String, dynamic>> medicalProviderCategories = [
     'title': 'Urinary Issues',
     'description': 'Pain, frequency, or burning during urination.',
     'icon': FontAwesomeIcons.notesMedical,
+    'imagePath': 'assets/images/uti.png',
   },
   {
     'title': 'Allergies',
