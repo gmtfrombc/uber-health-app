@@ -180,7 +180,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                   children: [
                     Icon(
                       Icons.calendar_today,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withAlpha(230),
                       size: 20,
                     ),
                     const SizedBox(width: 10),
@@ -205,16 +205,16 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                 Text(
                   'at ${timeFormat.format(scheduledDateTime)}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withAlpha(230),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Card(
                   elevation: 0,
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withAlpha(38),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    side: BorderSide(color: Colors.white.withAlpha(51)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -225,7 +225,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                       children: [
                         Icon(
                           Icons.medical_services,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withAlpha(230),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -247,7 +247,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                                   style: Theme.of(
                                     context,
                                   ).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withAlpha(230),
                                   ),
                                 ),
                             ],
@@ -261,8 +261,8 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                           decoration: BoxDecoration(
                             color:
                                 widget.isUrgent
-                                    ? AppTheme.highUrgencyColor.withOpacity(0.3)
-                                    : AppTheme.lowUrgencyColor.withOpacity(0.3),
+                                    ? AppTheme.highUrgencyColor.withAlpha(77)
+                                    : AppTheme.lowUrgencyColor.withAlpha(77),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -341,9 +341,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  disabledBackgroundColor: AppTheme.primaryColor.withOpacity(
-                    0.5,
-                  ),
+                  disabledBackgroundColor: AppTheme.primaryColor.withAlpha(128),
                 ),
                 child:
                     _isSubmitting

@@ -6,6 +6,7 @@ import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 import 'onboarding_screen.dart';
 import '../provider/provider_dashboard_screen.dart';
+import '../../theme.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -28,12 +29,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _ethnicityController = TextEditingController();
 
-  // Role selection
+  // Role selection - default to patient for now
   String _selectedRole = 'patient';
   String? _selectedCredentials;
 
   bool _isLoading = false;
   String? _errorMessage;
+
+  // Toggle to control if provider sign-up is enabled
+  final bool _providerSignupEnabled =
+      false; // Set to false to disable provider signup
 
   // List of available credentials
   final List<String> _credentials = ['MD', 'DO', 'NP', 'PA'];
@@ -52,7 +57,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (credential.user != null) {
         // Create user model based on role
         UserModel newUser;
-        if (_selectedRole == 'provider') {
+
+        // Only check role if provider signup is enabled
+        if (_providerSignupEnabled && _selectedRole == 'provider') {
           newUser = UserModel(
             uid: credential.user!.uid,
             role: 'provider',
@@ -81,7 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await userProvider.saveUser(newUser);
 
         // Navigate based on role
-        if (_selectedRole == 'provider') {
+        if (_providerSignupEnabled && _selectedRole == 'provider') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -118,26 +125,108 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Role selection dropdown
-            DropdownButtonFormField<String>(
-              value: _selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Role',
-                border: OutlineInputBorder(),
+            // Role section with patient option and disabled provider option
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Account Type',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Patient option - selectable
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedRole = 'patient';
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color:
+                              _selectedRole == 'patient'
+                                  ? AppTheme.primaryColor
+                                  : Colors.grey.shade300,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Radio<String>(
+                            value: 'patient',
+                            groupValue: _selectedRole,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedRole = value!;
+                              });
+                            },
+                            activeColor: AppTheme.primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Text('Patient')),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Provider option - disabled with coming soon message
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey.shade100,
+                    ),
+                    child: Row(
+                      children: [
+                        Radio<String>(
+                          value: 'provider',
+                          groupValue:
+                              _providerSignupEnabled ? _selectedRole : null,
+                          onChanged:
+                              _providerSignupEnabled
+                                  ? (value) {
+                                    setState(() {
+                                      _selectedRole = value!;
+                                    });
+                                  }
+                                  : null, // Disabled if provider signup is not enabled
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Healthcare Provider',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              if (!_providerSignupEnabled)
+                                Text(
+                                  'Coming soon',
+                                  style: TextStyle(
+                                    color: AppTheme.accentColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              items: const [
-                DropdownMenuItem(value: 'patient', child: Text('Patient')),
-                DropdownMenuItem(
-                  value: 'provider',
-                  child: Text('Healthcare Provider'),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedRole = value!;
-                });
-              },
             ),
+
             const SizedBox(height: 16),
 
             // Common fields
@@ -177,7 +266,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SizedBox(height: 16),
 
             // Role-specific fields
-            if (_selectedRole == 'provider') ...[
+            if (_providerSignupEnabled && _selectedRole == 'provider') ...[
+              // Provider fields only shown when provider is selected AND provider signup is enabled
               DropdownButtonFormField<String>(
                 value: _selectedCredentials,
                 decoration: const InputDecoration(
@@ -198,6 +288,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 },
               ),
             ] else ...[
+              // Patient fields shown when patient is selected or provider signup is disabled
               TextField(
                 controller: _dobController,
                 decoration: const InputDecoration(

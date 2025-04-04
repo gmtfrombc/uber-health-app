@@ -28,6 +28,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.4.0
 
 flutter:
   uses-material-design: true
@@ -50,3 +51,9 @@ flutter:
     - assets/images/hip.png
     - assets/images/knee.png
     - assets/images/foot.png
+
+flutter_native_splash:
+  color: "#1565C0"
+  image: assets/images/welcome.png
+  android: true
+  ios: true

@@ -99,7 +99,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: ElevatedButton.icon(
-                      icon: const Icon(Icons.medical_services_outlined),
+                      icon: const Icon(
+                        Icons.medical_services_outlined,
+                        color: Colors.white,
+                      ),
                       label: const Text('Request a Consult or Ask Question'),
                       onPressed: () {
                         Navigator.push(
@@ -262,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (item) => Chip(
                         label: Text(item),
                         backgroundColor: AppTheme.backgroundColor,
-                        side: BorderSide(color: iconColor.withOpacity(0.3)),
+                        side: BorderSide(color: iconColor.withAlpha(77)),
                         labelStyle: TextStyle(color: AppTheme.textPrimaryColor),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,

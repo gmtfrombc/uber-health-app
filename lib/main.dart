@@ -12,8 +12,8 @@ import 'providers/provider_dashboard_provider.dart'; // Provider dashboard state
 import 'providers/appointment_provider.dart'; // Import new appointment provider
 import 'providers/provider_data_provider.dart'; // Import new provider data provider
 import 'providers/medical_questions_provider.dart'; // Import medical questions provider
-import 'screens/auth/auth_wrapper.dart';
 import 'screens/main_screen.dart'; // Import the new MainScreen
+import 'screens/splash_screen.dart'; // Import the new SplashScreen
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'theme.dart'; // Import our custom theme
@@ -153,8 +153,8 @@ class MyApp extends StatelessWidget {
           title: 'Uber Health Prototype',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme, // Use our custom theme
-          // Use AuthWrapper to determine if user is logged in
-          home: const AuthWrapper(),
+          // Use SplashScreen as the initial screen
+          home: const SplashScreen(),
           // Define routes for navigation after login
           routes: {
             '/main': (context) => const MainScreen(),
