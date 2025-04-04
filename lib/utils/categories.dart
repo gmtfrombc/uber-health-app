@@ -25,26 +25,31 @@ final List<Map<String, dynamic>> medicalProviderCategories = [
     'title': 'Digestive Issues',
     'description': 'Abdominal pain, diarrhea, or constipation.',
     'icon': FontAwesomeIcons.pills,
+    'imagePath': 'assets/images/gi.png',
   },
   {
     'title': 'Skin Problems',
     'description': 'Skin irritation, redness, or rashes.',
     'icon': FontAwesomeIcons.allergies,
+    'imagePath': 'assets/images/skin.png',
   },
   {
     'title': 'Joint/Muscle',
     'description': 'Joint pain, muscle aches, or stiffness.',
     'icon': FontAwesomeIcons.bone,
+    'imagePath': 'assets/images/msk.png',
   },
   {
     'title': 'General Health',
     'description': 'General health checkup and routine concerns.',
     'icon': FontAwesomeIcons.heartPulse,
+    'imagePath': 'assets/images/general.png',
   },
   {
     'title': 'Other',
     'description': 'Other symptoms not categorized above.',
     'icon': FontAwesomeIcons.plus,
+    'imagePath': 'assets/images/other.png',
   },
 ];
 

@@ -70,14 +70,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Welcome image at the top
                   Container(
                     padding: const EdgeInsets.only(top: 16.0),
-                    height: 220, // Increased height to show full image
+                    height: 250, // Increased height to show full image
                     child: Image.asset(
                       'assets/images/welcome.png',
                       fit: BoxFit.contain, // Changed from cover to contain
                       width: double.infinity,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
 
                   // Centered Greeting
                   Padding(
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16.0,
-                      vertical: 8.0,
+                      vertical: 4.0,
                     ),
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.medical_services_outlined),
