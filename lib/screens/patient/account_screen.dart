@@ -191,6 +191,19 @@ class _AccountScreenState extends State<AccountScreen> {
               );
             },
           ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.payment_outlined),
+            title: const Text('Subscriptions & Payments'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Coming Soon: Subscriptions & Payments'),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

@@ -97,10 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // "Request Consult" Button at the top
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 4.0,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.medical_services_outlined),
                       label: const Text('Request a Consult or Ask Question'),
@@ -114,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
+                        minimumSize: const Size.fromHeight(50),
                         textStyle: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -123,10 +121,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Health Information Section - remove the section title and update the card title
+                  // Health Information Section
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Card(
+                      margin: EdgeInsets.zero, // Remove default Card margin
                       elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -169,9 +168,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const Divider(height: 20),
                             _buildInfoSection("Medications", user.medications),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
+                            Divider(
+                              color: AppTheme.textTertiaryColor.withAlpha(100),
+                              thickness: 0.8,
+                            ),
+                            const SizedBox(height: 8),
                             _buildInfoSection("Allergies", user.allergies),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
+                            Divider(
+                              color: AppTheme.textTertiaryColor.withAlpha(100),
+                              thickness: 0.8,
+                            ),
+                            const SizedBox(height: 8),
                             _buildInfoSection("Conditions", user.conditions),
                           ],
                         ),
@@ -191,21 +200,79 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Helper method to build an info section.
   Widget _buildInfoSection(String title, List<String>? items) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    // Choose appropriate icon based on section title
+    IconData sectionIcon;
+    Color iconColor;
+
+    switch (title) {
+      case "Medications":
+        sectionIcon = Icons.medication;
+        iconColor = Colors.blue;
+        break;
+      case "Allergies":
+        sectionIcon = Icons.health_and_safety;
+        iconColor = Colors.orange;
+        break;
+      case "Conditions":
+        sectionIcon = Icons.medical_services;
+        iconColor = Colors.green;
+        break;
+      default:
+        sectionIcon = Icons.info_outline;
+        iconColor = Colors.grey;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        // Section title with icon
+        Row(
+          children: [
+            Icon(sectionIcon, color: iconColor, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimaryColor,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          userProvider.formatListWithBullets(items),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
-        ),
+        const SizedBox(height: 12),
+        // Display items as chips for better visual appeal
+        if (items == null || items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 32),
+            child: Text(
+              "None",
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontStyle: FontStyle.italic,
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children:
+                items
+                    .map(
+                      (item) => Chip(
+                        label: Text(item),
+                        backgroundColor: AppTheme.backgroundColor,
+                        side: BorderSide(color: iconColor.withOpacity(0.3)),
+                        labelStyle: TextStyle(color: AppTheme.textPrimaryColor),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 0,
+                        ),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    )
+                    .toList(),
+          ),
       ],
     );
   }

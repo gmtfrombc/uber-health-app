@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/request_provider.dart';
 import '../../models/patient_request.dart';
 import '../../services/firebase_service.dart';
@@ -28,6 +29,7 @@ class SchedulingScreen extends StatefulWidget {
 class _SchedulingScreenState extends State<SchedulingScreen> {
   late DateTime scheduledDateTime;
   bool _isSubmitting = false;
+  final DateTime _minimumDate = DateTime.now().add(const Duration(minutes: 30));
 
   @override
   void initState() {
@@ -149,31 +151,227 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final DateFormat dateFormat = DateFormat('EEEE, MMMM d, yyyy');
+    final DateFormat timeFormat = DateFormat('h:mm a');
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(title: const Text('Schedule Your Consult')),
+      appBar: AppBar(
+        title: const Text('Schedule Your Consult'),
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Column(
         children: [
-          Expanded(
-            child: CupertinoDatePicker(
-              initialDateTime: scheduledDateTime,
-              mode: CupertinoDatePickerMode.dateAndTime,
-              minuteInterval: 15,
-              onDateTimeChanged: (newDateTime) {
-                setState(() {
-                  scheduledDateTime = newDateTime;
-                });
-              },
+          // Header with selected date time info
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: Colors.white.withOpacity(0.9),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Your Appointment',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  dateFormat.format(scheduledDateTime),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'at ${timeFormat.format(scheduledDateTime)}',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  color: Colors.white.withOpacity(0.15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.medical_services,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.category,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (widget.selectedProvider != null)
+                                Text(
+                                  'with Dr. ${widget.selectedProvider!.lastname}',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                widget.isUrgent
+                                    ? AppTheme.highUrgencyColor.withOpacity(0.3)
+                                    : AppTheme.lowUrgencyColor.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            widget.isUrgent ? 'Urgent' : 'Routine',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+
+          // Instructions
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _saveScheduledAppointment,
-              child:
-                  _isSubmitting
-                      ? const CircularProgressIndicator()
-                      : const Text('Confirm Appointment'),
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              'Select a date and time for your appointment',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: AppTheme.textSecondaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Date picker with shadow
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppTheme.softShadow,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: CupertinoDatePicker(
+                  initialDateTime: scheduledDateTime,
+                  minimumDate: _minimumDate,
+                  mode: CupertinoDatePickerMode.dateAndTime,
+                  minuteInterval: 15,
+                  backgroundColor: Colors.white,
+                  onDateTimeChanged: (newDateTime) {
+                    // Ensure the date is not in the past
+                    if (newDateTime.isBefore(_minimumDate)) {
+                      newDateTime = _minimumDate;
+                    }
+                    setState(() {
+                      scheduledDateTime = newDateTime;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          // Confirm button
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _saveScheduledAppointment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  disabledBackgroundColor: AppTheme.primaryColor.withOpacity(
+                    0.5,
+                  ),
+                ),
+                child:
+                    _isSubmitting
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                        : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle_outline, size: 20),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Confirm Appointment',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+              ),
             ),
           ),
         ],

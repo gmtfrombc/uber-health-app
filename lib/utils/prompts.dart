@@ -143,7 +143,7 @@ You: "Thank you for providing that information. I'll make sure to forward your q
 ''';
 
 const String medicalQuestionSummaryPrompt = '''
-ou are an highly experienced triage nurse who has worked in an urgent care for many years. You are providing a patient case summary to an attending physician. Based on the following conversation between a patient and an AI triage nurse, provide a summary, titled 'Patient Summary' that highlights the patient's history in bullet form. 
+You are an highly experienced triage nurse who has worked in an urgent care for many years. You are providing a patient case summary to an attending physician. Based on the following conversation between a patient and an AI triage nurse, provide a summary, titled 'Patient Summary' that highlights the patient's history in bullet form. 
 ''';
 
 // Original triage prompt for consultations
@@ -156,19 +156,18 @@ const String defaultPrompt =
     "Hi there, I'm your virtual medical assistant.\nPlease detail your concern below and I'll make sure it get to your provider before your visit";
 
 const String providerPromptConsult =
-    '''Hi there, I'm your virtual medical assistant.\nLet's start with some basic information. You can enter your main symptomsbelow (e.g., 'I've had a sore throat for two weeks').\nI'll ask you a few questions and then forward the summary to your healthcare provider.''';
+    '''Hi there, I'm your virtual medical assistant.\nLet's start You can enter your main symptoms below (e.g., 'I've had a sore throat for two weeks').\nI'll ask you a few questions and then forward the summary to your healthcare provider.''';
 
 /// Prompt for Medical Question.
 const String providerPromptQuestion =
-    '''Hi there, I'm your virtual medical assistant.\nYou can ask your question below (for example, 'How much Vitamin D should I take?').\nI might ask a couple of clarifying questions and then I'll forward the summary to your healthcare provider.''';
+    '''Hi there, I'm your virtual medical assistant.\nYou can ask your question below.\nI might ask a couple of clarifying questions and then I'll forward the summary to your healthcare provider.''';
 
 /// Prompt for Physical Therapy Consult (both urgent and routine).
 const String ptPromptConsult =
-    '''Hi there, I'm your virtual physical therapy assistant.\n
-    Let's start with some basic information. You can enter your main symptoms below (for example, 'I've had a sore knee for two weeks').\nI'll ask you a few questions and then I'll forward the summary to your PT.''';
+    '''Hi there, I'm your virtual physical therapy assistant.\nYou can enter your main symptoms below (for example, 'I've had a sore knee for two weeks').\nI'll ask you a few questions and then I'll forward the summary to your PT.''';
 
 /// Prompt for Physical Therapy Question.
 const String ptPromptQuestion =
-    '''Hi there, I'm your virtual physical therapy assistant.\nYou can ask your question below (for example, 'How much Vitamin D should I take?').\nI might ask a couple of clarifying questions and then I'll forward the summary to your PT.''';
+    '''Hi there, I'm your virtual physical therapy assistant.\nYou can ask your question below.\nI might ask a couple of clarifying questions and then I'll forward the question to your PT.''';
 
 /// Returns

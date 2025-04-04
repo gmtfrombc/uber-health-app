@@ -191,34 +191,83 @@ class CategorySelectionScreen extends StatelessWidget {
                                     ),
                                   ),
                                   // Content
-                                  Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        // Remove icon and just show larger text
-                                        Text(
-                                          category['title']!,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium?.copyWith(
-                                            color:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 24,
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          // Remove icon and just show larger text
+                                          Text(
+                                            category['title']!,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleMedium?.copyWith(
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 24,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.visible,
                                           ),
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.visible,
+                                          const SizedBox(height: 8),
+                                          // Bottom highlight bar
+                                          Center(
+                                            child: Container(
+                                              height: 4,
+                                              width: 40,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withAlpha(77),
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      // Remove icon and just show larger text
+                                      Text(
+                                        category['title']!,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium?.copyWith(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 18,
                                         ),
-                                        const SizedBox(height: 8),
-                                        // Bottom highlight bar
-                                        Container(
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.visible,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Bottom highlight bar
+                                      Center(
+                                        child: Container(
                                           height: 4,
                                           width: 40,
                                           decoration: BoxDecoration(
@@ -230,47 +279,9 @@ class CategorySelectionScreen extends StatelessWidget {
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              )
-                              : Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    // Remove icon and just show larger text
-                                    Text(
-                                      category['title']!,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium?.copyWith(
-                                        color:
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 18,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.visible,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    // Bottom highlight bar
-                                    Container(
-                                      height: 4,
-                                      width: 40,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary.withAlpha(77),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
                     ),

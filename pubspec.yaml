@@ -42,3 +42,11 @@ flutter:
     - assets/images/msk.png
     - assets/images/general.png
     - assets/images/other.png
+    - assets/images/neck.png
+    - assets/images/back.png
+    - assets/images/shoulder.png
+    - assets/images/elbow.png
+    - assets/images/wrist.png
+    - assets/images/hip.png
+    - assets/images/knee.png
+    - assets/images/foot.png

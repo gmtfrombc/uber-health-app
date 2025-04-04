@@ -222,8 +222,8 @@ class _RequestScreenState extends State<RequestScreen> {
               const SizedBox(height: 12),
               Text(
                 requestProvider.providerType == ProviderType.medicalProvider
-                    ? 'You will see medical providers who can treat general health conditions'
-                    : 'You will see physical therapists who specialize in movement and rehabilitation',
+                    ? 'Consult with a medical providers who can treat general health conditions'
+                    : 'Consult with a physical therapists who specialize in acute injuries',
                 style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
               ),
             ],
@@ -322,8 +322,8 @@ class _RequestScreenState extends State<RequestScreen> {
               type: RequestType.consult,
               urgency: 'Quick',
               title: 'Quick Consult',
-              timing: 'Less than 5 minutes',
-              price: '\$90',
+              timing: 'Available now',
+              price: '\$70',
             ),
             // Routine Consult Option
             buildTile(
@@ -331,8 +331,8 @@ class _RequestScreenState extends State<RequestScreen> {
               type: RequestType.consult,
               urgency: 'Routine',
               title: 'Routine Consult',
-              timing: '12-24 hours',
-              price: '\$70',
+              timing: 'Schedule an appointment',
+              price: '\$50',
             ),
             const Divider(height: 40, thickness: 2),
             const Padding(
@@ -348,8 +348,8 @@ class _RequestScreenState extends State<RequestScreen> {
               type: RequestType.medicalQuestion,
               urgency: 'Routine',
               title: 'Routine Medical Question',
-              timing: '12-24 hours',
-              price: '\$70',
+              timing: 'Response time: less than 1 hour',
+              price: '\$30',
             ),
             const SizedBox(height: 20),
           ],
