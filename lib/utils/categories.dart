@@ -19,6 +19,7 @@ final List<Map<String, dynamic>> medicalProviderCategories = [
     'title': 'Allergies',
     'description': 'Itchy eyes, sneezing, and rashes.',
     'icon': FontAwesomeIcons.wind,
+    'imagePath': 'assets/images/allergies.png',
   },
   {
     'title': 'Digestive Issues',
