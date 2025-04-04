@@ -33,7 +33,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/animations/
-    - assets/images/welcome.jpg
+    - assets/images/welcome.png
     - assets/images/cough_cold.png
     - assets/images/uti.png
     - assets/images/allergies.png

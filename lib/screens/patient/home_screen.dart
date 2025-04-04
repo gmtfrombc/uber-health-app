@@ -68,13 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Welcome image at the top
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                  Container(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    height: 220, // Increased height to show full image
                     child: Image.asset(
-                      'assets/images/welcome.jpg',
-                      fit: BoxFit.cover,
+                      'assets/images/welcome.png',
+                      fit: BoxFit.contain, // Changed from cover to contain
                       width: double.infinity,
-                      height: 200,
                     ),
                   ),
                   const SizedBox(height: 16),
