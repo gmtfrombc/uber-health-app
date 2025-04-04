@@ -7,6 +7,7 @@ final List<Map<String, dynamic>> medicalProviderCategories = [
     'title': 'Cough & Cold',
     'description': 'Sneezing, coughing, sore throat, etc.',
     'icon': FontAwesomeIcons.virus,
+    'imagePath': 'assets/images/cough_cold.png',
   },
   {
     'title': 'Urinary Issues',

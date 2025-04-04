@@ -34,3 +34,4 @@ flutter:
   assets:
     - assets/animations/
     - assets/images/welcome.jpg
+    - assets/images/cough_cold.png
