@@ -4,15 +4,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
 import '../patient/home_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
+import '../../theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  _OnboardingScreenState createState() => _OnboardingScreenState();
+  OnboardingScreenState createState() => OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class OnboardingScreenState extends State<OnboardingScreen> {
   int _currentStep = 0;
 
   // Controllers for text inputs.
@@ -33,6 +36,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // Store the existing user profile from sign-up.
   UserModel? _user;
   bool _isLoading = true;
+
+  // Define step colors for better visual distinction
+  final List<Color> _stepColors = [
+    AppTheme.primaryColor, // Welcome
+    Colors.blue, // Medications
+    Colors.orange, // Allergies
+    Colors.green, // Conditions
+    AppTheme.primaryColor, // Review
+  ];
 
   Future<void> _fetchUserData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? "";
@@ -60,12 +72,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return [
       // Step 0: Welcome Screen.
       Step(
-        title: const Text('Welcome'),
+        title: Text('Welcome', style: TextStyle(color: _stepColors[0])),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              "Welcome to Uber Health!\n\nWe'll gather some basic medical information to personalize your care. You can update or correct this information later.",
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _stepColors[0].withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "Welcome to XUBER Health!\n\nWe'll gather some basic medical information to personalize your care. You can update or correct this information later.",
+                style: TextStyle(fontSize: 16),
+              ),
             ),
           ],
         ),
@@ -74,13 +94,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       // Step 1: Prescription Medications.
       Step(
-        title: const Text('Medications'),
+        title: Text('Medications', style: TextStyle(color: _stepColors[1])),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _stepColors[1].withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "Please list any prescription medications you are currently taking.",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Checkbox(
+                  activeColor: _stepColors[1],
                   value: _medicationsNone,
                   onChanged: (value) {
                     setState(() {
@@ -91,22 +124,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     });
                   },
                 ),
-                const Text('None'),
+                const Text('I don\'t take any medications'),
               ],
             ),
             if (!_medicationsNone)
               TextFormField(
                 controller: _medicationsController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Enter a medication',
                   hintText: 'e.g., Lisinopril',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: _stepColors[1], width: 2),
+                  ),
                 ),
                 maxLines: null,
               ),
             const SizedBox(height: 8),
             if (!_medicationsNone)
-              ElevatedButton(
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Medication'),
                 onPressed: () {
                   if (_medicationsController.text.trim().isNotEmpty) {
                     setState(() {
@@ -115,16 +153,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     });
                   }
                 },
-                child: const Text('Add Medication'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _stepColors[1],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Wrap(
-              spacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children:
                   _medications
                       .map(
                         (med) => Chip(
                           label: Text(med),
+                          deleteIconColor: _stepColors[1],
+                          backgroundColor: _stepColors[1].withAlpha(40),
                           onDeleted: () {
                             setState(() {
                               _medications.remove(med);
@@ -141,13 +189,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       // Step 2: Drug Allergies.
       Step(
-        title: const Text('Drug Allergies'),
+        title: Text('Drug Allergies', style: TextStyle(color: _stepColors[2])),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _stepColors[2].withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "Please list any drug allergies you have.",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Checkbox(
+                  activeColor: _stepColors[2],
                   value: _allergiesNone,
                   onChanged: (value) {
                     setState(() {
@@ -158,22 +219,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     });
                   },
                 ),
-                const Text('None'),
+                const Text('I don\'t have any drug allergies'),
               ],
             ),
             if (!_allergiesNone)
               TextFormField(
                 controller: _allergiesController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Enter a drug allergy',
                   hintText: 'e.g., Penicillin',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: _stepColors[2], width: 2),
+                  ),
                 ),
                 maxLines: null,
               ),
             const SizedBox(height: 8),
             if (!_allergiesNone)
-              ElevatedButton(
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Allergy'),
                 onPressed: () {
                   if (_allergiesController.text.trim().isNotEmpty) {
                     setState(() {
@@ -182,16 +248,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     });
                   }
                 },
-                child: const Text('Add Allergy'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _stepColors[2],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Wrap(
-              spacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children:
                   _allergies
                       .map(
                         (allergy) => Chip(
                           label: Text(allergy),
+                          deleteIconColor: _stepColors[2],
+                          backgroundColor: _stepColors[2].withAlpha(40),
                           onDeleted: () {
                             setState(() {
                               _allergies.remove(allergy);
@@ -208,13 +284,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       // Step 3: Active Medical Conditions.
       Step(
-        title: const Text('Active Conditions'),
+        title: Text(
+          'Active Conditions',
+          style: TextStyle(color: _stepColors[3]),
+        ),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _stepColors[3].withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "Please list any active medical conditions you have.",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Checkbox(
+                  activeColor: _stepColors[3],
                   value: _conditionsNone,
                   onChanged: (value) {
                     setState(() {
@@ -225,22 +317,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     });
                   },
                 ),
-                const Text('None'),
+                const Text('I don\'t have any active conditions'),
               ],
             ),
             if (!_conditionsNone)
               TextFormField(
                 controller: _conditionsController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Enter an active condition',
                   hintText: 'e.g., Hypertension',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: _stepColors[3], width: 2),
+                  ),
                 ),
                 maxLines: null,
               ),
             const SizedBox(height: 8),
             if (!_conditionsNone)
-              ElevatedButton(
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Condition'),
                 onPressed: () {
                   if (_conditionsController.text.trim().isNotEmpty) {
                     setState(() {
@@ -249,16 +346,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     });
                   }
                 },
-                child: const Text('Add Condition'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _stepColors[3],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Wrap(
-              spacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children:
                   _conditions
                       .map(
                         (condition) => Chip(
                           label: Text(condition),
+                          deleteIconColor: _stepColors[3],
+                          backgroundColor: _stepColors[3].withAlpha(40),
                           onDeleted: () {
                             setState(() {
                               _conditions.remove(condition);
@@ -275,31 +382,75 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       // Step 4: Summary and Review.
       Step(
-        title: const Text('Review Your Information'),
+        title: Text(
+          'Review Your Information',
+          style: TextStyle(color: _stepColors[4]),
+        ),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Please review your information. If changes are needed, tap on a step above to edit it.",
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _stepColors[4].withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _stepColors[4].withAlpha(100)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Please review your information. If changes are needed, tap on a step above to edit it.",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Medications:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _stepColors[1],
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _medications.isEmpty
+                        ? "None"
+                        : "• ${_medications.join('\n• ')}",
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Drug Allergies:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _stepColors[2],
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _allergies.isEmpty
+                        ? "None"
+                        : "• ${_allergies.join('\n• ')}",
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Active Conditions:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _stepColors[3],
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _conditions.isEmpty
+                        ? "None"
+                        : "• ${_conditions.join('\n• ')}",
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            const Text(
-              "Medications:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(_medications.isEmpty ? "None" : _medications.join(', ')),
-            const SizedBox(height: 10),
-            const Text(
-              "Drug Allergies:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(_allergies.isEmpty ? "None" : _allergies.join(', ')),
-            const SizedBox(height: 10),
-            const Text(
-              "Active Conditions:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(_conditions.isEmpty ? "None" : _conditions.join(', ')),
           ],
         ),
         isActive: _currentStep >= 4,
@@ -308,7 +459,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ];
   }
 
-  void _onStepContinue() async {
+  Future<void> _onStepContinue() async {
     if (_currentStep < _buildSteps().length - 1) {
       setState(() {
         _currentStep += 1;
@@ -334,14 +485,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         createdAt: _user?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      await FirebaseService().updateUserMedicalInfo(updatedUser);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Onboarding complete!")));
+
+      // Save user data and ensure context is available before using it
+      try {
+        setState(() {
+          _isLoading = true; // Show loading indicator
+        });
+
+        await FirebaseService().updateUserMedicalInfo(updatedUser);
+
+        // Check if widget is still mounted before using context
+        if (!mounted) return;
+
+        // Explicitly fetch and update the UserProvider before navigating
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.fetchUserProfile();
+
+        // Check again if still mounted before navigation
+        if (!mounted) return;
+
+        // Wait for the next frame before navigating
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+
+          // Show snackbar after navigation
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Onboarding complete!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        });
+      } catch (e) {
+        // Handle errors and check if mounted
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error saving data: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -372,34 +566,80 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // Use _isLoading to show a loader during Firebase interactions.
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text("Onboarding")),
+        appBar: AppBar(
+          title: const Text("Health Information"),
+          centerTitle: true,
+        ),
         body: const Center(
-          child: CircularProgressIndicator(color: Colors.teal),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.teal),
+              SizedBox(height: 16),
+              Text("Loading your profile..."),
+            ],
+          ),
         ),
       );
     }
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Onboarding")),
-      body: Stepper(
-        currentStep: _currentStep,
-        onStepContinue: _onStepContinue,
-        onStepCancel: _onStepCancel,
-        controlsBuilder: (BuildContext context, ControlsDetails details) {
-          return Row(
-            children: <Widget>[
-              ElevatedButton(
-                onPressed: details.onStepContinue,
-                child: const Text('Continue'),
+      appBar: AppBar(
+        title: const Text("Health Information"),
+        centerTitle: true,
+      ),
+      body: Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(
+            context,
+          ).colorScheme.copyWith(primary: _stepColors[_currentStep]),
+        ),
+        child: Stepper(
+          type: StepperType.vertical,
+          currentStep: _currentStep,
+          onStepContinue: () => _onStepContinue(),
+          onStepCancel: _onStepCancel,
+          controlsBuilder: (BuildContext context, ControlsDetails details) {
+            final isLastStep = _currentStep == _buildSteps().length - 1;
+
+            return Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: details.onStepContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _stepColors[_currentStep],
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        isLastStep ? 'Complete' : 'Continue',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  if (_currentStep > 0)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: details.onStepCancel,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: _stepColors[_currentStep]),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text('Back'),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(width: 8),
-              TextButton(
-                onPressed: details.onStepCancel,
-                child: const Text('Go Back'),
-              ),
-            ],
-          );
-        },
-        steps: _buildSteps(),
+            );
+          },
+          steps: _buildSteps(),
+        ),
       ),
     );
   }

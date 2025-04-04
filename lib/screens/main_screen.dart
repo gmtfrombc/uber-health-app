@@ -4,21 +4,35 @@ import '../screens/patient/home_screen.dart';
 import '../screens/patient/consults_screen.dart'; // Renamed from visits_screen
 import '../screens/patient/account_screen.dart';
 import '../providers/medical_questions_provider.dart';
+import '../utils/context_utils.dart'; // Import the new utilities
 import '../theme.dart';
 
+/// Main navigation screen of the app containing the bottom navigation and tab view
 class MainScreen extends StatefulWidget {
   final int initialTab;
 
   const MainScreen({super.key, this.initialTab = 0});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  MainScreenState createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen>
+/// State class for the main screen
+///
+/// IMPORTANT: When using Provider in a stateful widget, follow these best practices:
+/// 1. Store provider references in class variables during initState() or didChangeDependencies()
+/// 2. Never use Provider.of() in dispose() methods as the BuildContext may be deactivated
+/// 3. Add null checks and safe handling for any provider operations
+/// 4. Use the mounted check before performing any operations after async gaps
+///
+/// This class demonstrates the proper pattern for handling Provider access in lifecycle methods
+class MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
   late int _selectedIndex;
   late TabController _tabController;
+  // Store a reference to the provider that can be used safely in dispose
+  late MedicalQuestionsProvider _questionsProvider;
+  bool _providerInitialized = false;
 
   // Define the screens for each tab - Home, Consults, and Account
   final List<Widget> _widgetOptions = <Widget>[
@@ -44,30 +58,28 @@ class _MainScreenState extends State<MainScreen>
       }
     });
 
-    // Initial refresh and start real-time updates
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final questionsProvider = Provider.of<MedicalQuestionsProvider>(
-          context,
-          listen: false,
-        );
+    // Use our safer context utility for post-frame callbacks
+    ContextUtils.postFrame(context, (safeContext) {
+      _questionsProvider = Provider.of<MedicalQuestionsProvider>(
+        safeContext,
+        listen: false,
+      );
+      _providerInitialized = true;
 
-        // Fetch initial data
-        questionsProvider.refreshQuestions();
+      // Fetch initial data
+      _questionsProvider.refreshQuestions();
 
-        // Start real-time updates
-        questionsProvider.startRealTimeUpdates();
-      }
+      // Start real-time updates
+      _questionsProvider.startRealTimeUpdates();
     });
   }
 
   @override
   void dispose() {
     // Stop real-time updates when screen is disposed
-    Provider.of<MedicalQuestionsProvider>(
-      context,
-      listen: false,
-    ).stopRealTimeUpdates();
+    if (_providerInitialized) {
+      _questionsProvider.stopRealTimeUpdates();
+    }
 
     _tabController.dispose();
     super.dispose();

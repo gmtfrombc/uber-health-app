@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import '../patient/home_screen.dart'; // Updated import path
 import '../../services/firebase_service.dart';
 import '../../models/patient_request.dart';
 import '../../providers/provider_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../theme.dart';
 import '../video_call/video_call_home_screen.dart'; // Add import for VideoCallHomeScreen
+import '../../screens/main_screen.dart';
 
 class FinalScreen extends StatelessWidget {
   final bool isSynchronous;
@@ -81,39 +81,80 @@ class FinalScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Animated success icon with improved container styling
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.successColor.withOpacity(0.1),
+                      AppTheme.backgroundColor.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(10),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+                      color: AppTheme.successColor.withOpacity(0.15),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(24),
-                child: Lottie.asset(
-                  'assets/animations/doctor_connected.json',
-                  width: 200,
-                  height: 200,
-                  repeat: true,
+                padding: const EdgeInsets.all(20),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Lottie.asset(
+                    'assets/animations/doctor_connected.json',
+                    width: 200,
+                    height: 200,
+                    repeat: true,
+                    frameRate: FrameRate.max,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                finalMessage,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.textPrimaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
+              // Message container with improved styling
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 16.0,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.08),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  finalMessage,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppTheme.textPrimaryColor,
+                    fontWeight: FontWeight.bold,
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 40),
+              // Primary action button with improved styling
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
+                  icon: Icon(
+                    isSynchronous ? Icons.video_call : Icons.message,
+                    size: 24,
+                  ),
+                  label: Text(buttonText),
                   onPressed: () {
                     if (isSynchronous) {
                       // Navigate to video call screen for synchronous consultations
@@ -128,28 +169,41 @@ class FinalScreen extends StatelessWidget {
                       // Return to home for all other cases
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                        MaterialPageRoute(builder: (_) => const MainScreen()),
                         (route) => false,
                       );
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor:
+                        isSynchronous
+                            ? AppTheme.successColor
+                            : AppTheme.primaryColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  child: Text(
-                    buttonText,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    elevation: 2,
                   ),
                 ),
               ),
+              // Alternative action - return home
+              if (isSynchronous)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.home_outlined),
+                    label: const Text("Return to Home"),
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainScreen()),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),

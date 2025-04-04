@@ -20,17 +20,35 @@ class ConsultsScreen extends StatefulWidget {
   State<ConsultsScreen> createState() => _ConsultsScreenState();
 }
 
-class _ConsultsScreenState extends State<ConsultsScreen> {
+class _ConsultsScreenState extends State<ConsultsScreen>
+    with WidgetsBindingObserver {
   final FirebaseService _firebaseService = FirebaseService();
   bool _checkedAppointments = false;
 
   @override
   void initState() {
     super.initState();
+    // Register observer to detect when the screen becomes visible
+    WidgetsBinding.instance.addObserver(this);
+
     // Load data when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeProviders();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Refresh data when app comes to foreground
+    if (state == AppLifecycleState.resumed) {
+      _initializeProviders();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _initializeProviders() async {
@@ -212,8 +230,36 @@ class _ConsultsScreenState extends State<ConsultsScreen> {
     }
   }
 
+  void _openMedicalQuestion(MedicalQuestion question) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => MedicalQuestionDetailsScreen(questionId: question.id),
+      ),
+    );
+
+    // If the result is true, the question was marked as done
+    // or some other action was taken that requires refreshing
+    if (result == true) {
+      // Refresh questions data
+      final questionsProvider = Provider.of<MedicalQuestionsProvider>(
+        context,
+        listen: false,
+      );
+
+      // Refresh to make sure our UI is updated after the operation
+      questionsProvider.refreshQuestions();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Refresh data when tab is selected
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeProviders();
+    });
+
     return Scaffold(
       appBar: AppBar(title: const Text('Consults & Questions')),
       backgroundColor: AppTheme.backgroundColor,
@@ -371,21 +417,7 @@ class _ConsultsScreenState extends State<ConsultsScreen> {
       child: InkWell(
         onTap: () async {
           debugPrint('Navigating to question details for id: ${question.id}');
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (_) => MedicalQuestionDetailsScreen(questionId: question.id),
-            ),
-          );
-
-          // Refresh questions when returning
-          if (mounted) {
-            await Provider.of<MedicalQuestionsProvider>(
-              context,
-              listen: false,
-            ).refreshQuestions();
-          }
+          _openMedicalQuestion(question);
         },
         borderRadius: BorderRadius.circular(12.0),
         child: Padding(

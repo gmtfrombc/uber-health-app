@@ -352,13 +352,25 @@ class MedicalQuestionsProvider with ChangeNotifier {
 
   // Stop real-time updates when they're no longer needed
   void stopRealTimeUpdates() {
-    _questionsSubscription?.cancel();
-    _questionsSubscription = null;
+    try {
+      if (_questionsSubscription != null) {
+        _questionsSubscription?.cancel();
+        _questionsSubscription = null;
+        debugPrint('Real-time updates successfully stopped');
+      }
+    } catch (e) {
+      // Just log the error and continue - this is a cleanup method
+      debugPrint('Error stopping real-time updates: $e');
+    }
   }
 
   @override
   void dispose() {
-    stopRealTimeUpdates();
+    try {
+      stopRealTimeUpdates();
+    } catch (e) {
+      debugPrint('Error in MedicalQuestionsProvider.dispose(): $e');
+    }
     super.dispose();
   }
 

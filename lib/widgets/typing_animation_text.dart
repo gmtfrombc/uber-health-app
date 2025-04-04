@@ -16,10 +16,10 @@ class TypingAnimationText extends StatefulWidget {
   });
 
   @override
-  State<TypingAnimationText> createState() => _TypingAnimationTextState();
+  TypingAnimationTextState createState() => TypingAnimationTextState();
 }
 
-class _TypingAnimationTextState extends State<TypingAnimationText> {
+class TypingAnimationTextState extends State<TypingAnimationText> {
   String _displayText = '';
   Timer? _timer;
   int _currentIndex = 0;

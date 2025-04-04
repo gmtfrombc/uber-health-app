@@ -1,7 +1,7 @@
 name: uber_health_app
 description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to 
-version: 1.0.0+1
+version: 0.9.0+10  # Pre-release version ready for testing
 
 environment:
   sdk: ^3.7.0
@@ -54,6 +54,6 @@ flutter:
 
 flutter_native_splash:
   color: "#1565C0"
-  image: assets/images/welcome.png
   android: true
   ios: true
+  web: true

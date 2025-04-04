@@ -6,9 +6,9 @@ import '../providers/request_provider.dart';
 import '../providers/provider_provider.dart';
 import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart';
-import '../screens/patient/home_screen.dart';
 import '../screens/consultation/final_screen.dart';
 import '../theme.dart';
+import '../screens/main_screen.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -223,29 +223,58 @@ class AnimatedConsultationScreenState
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryLightColor.withOpacity(0.1),
+                      AppTheme.backgroundColor.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(10),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(24),
-                child: Lottie.asset(
-                  animations.isNotEmpty
-                      ? animations[currentStage]
-                      : 'assets/animations/doctor_request.json',
-                  width: 200,
-                  height: 200,
-                  repeat: true,
+                padding: const EdgeInsets.all(20),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Lottie.asset(
+                    animations.isNotEmpty
+                        ? animations[currentStage]
+                        : 'assets/animations/doctor_request.json',
+                    width: 200,
+                    height: 200,
+                    repeat: true,
+                    frameRate: FrameRate.max,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              const SizedBox(height: 40),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.08),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
                 child: Text(
                   messages.isNotEmpty
                       ? messages[currentStage]
@@ -253,6 +282,7 @@ class AnimatedConsultationScreenState
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppTheme.textPrimaryColor,
                     fontWeight: FontWeight.w500,
+                    height: 1.4,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -266,7 +296,7 @@ class AnimatedConsultationScreenState
                       onPressed: () {
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          MaterialPageRoute(builder: (_) => const MainScreen()),
                           (route) => false,
                         );
                       },
@@ -275,8 +305,9 @@ class AnimatedConsultationScreenState
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 2,
                       ),
                       child: const Text(
                         'Got it!',

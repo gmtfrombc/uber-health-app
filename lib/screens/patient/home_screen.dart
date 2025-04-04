@@ -17,17 +17,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch user profile when screen loads
+    // Use post-frame callback to ensure the widget is fully built before fetching data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeUser();
+      _refreshData();
     });
   }
 
-  Future<void> _initializeUser() async {
+  Future<void> _refreshData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (!userProvider.isProfileLoaded) {
-      await userProvider.fetchUserProfile();
-    }
+    await userProvider.fetchUserProfile();
   }
 
   @override
@@ -37,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: const Text('XUBER Health')),
       body: RefreshIndicator(
         onRefresh: () async {
-          await _initializeUser();
+          await _refreshData();
         },
         child: Consumer<UserProvider>(
           builder: (context, userProvider, _) {

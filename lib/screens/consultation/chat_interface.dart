@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
 import '../../providers/medical_questions_provider.dart';
 import '../../theme.dart';
+import '../../screens/main_screen.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -385,7 +386,7 @@ class ChatInterfaceState extends State<ChatInterface> {
       if (!mounted) return;
 
       if (isMedicalQuestion) {
-        // For medical questions, show success message and navigate back to home
+        // For medical questions, show success message and navigate to MainScreen
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -395,8 +396,11 @@ class ChatInterfaceState extends State<ChatInterface> {
           ),
         );
 
-        // Pop back to the home screen
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        // Replace the pop navigation with a proper navigation to MainScreen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+          (route) => false,
+        );
       } else {
         // For consultations, navigate to the animation screen
         Navigator.push(

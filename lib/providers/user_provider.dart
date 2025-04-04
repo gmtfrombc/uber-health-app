@@ -38,13 +38,21 @@ class UserProvider with ChangeNotifier {
       return;
     }
 
+    // Set loading state first, then notify
     _isLoading = true;
     _error = '';
     notifyListeners();
 
     try {
-      _userProfile = await _firebaseService.getUserMedicalInfo(userId);
+      // Get user data from Firebase
+      final userData = await _firebaseService.getUserMedicalInfo(userId);
+
+      // Update state in a separate operation after data is received
+      _userProfile = userData;
+      _user = userData; // Keep both in sync
       _isLoading = false;
+
+      // Notify after all state changes are complete
       notifyListeners();
     } catch (e) {
       _isLoading = false;

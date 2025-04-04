@@ -11,10 +11,10 @@ class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
 
   @override
-  _AppDrawerState createState() => _AppDrawerState();
+  AppDrawerState createState() => AppDrawerState();
 }
 
-class _AppDrawerState extends State<AppDrawer> {
+class AppDrawerState extends State<AppDrawer> {
   Future<void> _signOut() async {
     try {
       await FirebaseAuth.instance.signOut();

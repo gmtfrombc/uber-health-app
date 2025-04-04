@@ -20,7 +20,7 @@ class ProviderBottomSheet extends StatefulWidget {
   });
 
   @override
-  _ProviderBottomSheetState createState() => _ProviderBottomSheetState();
+  ProviderBottomSheetState createState() => ProviderBottomSheetState();
 
   // Static method to show bottom sheet
   static Future<void> show(
@@ -61,7 +61,7 @@ class ProviderBottomSheet extends StatefulWidget {
   }
 }
 
-class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
+class ProviderBottomSheetState extends State<ProviderBottomSheet> {
   int? _selectedProviderIndex;
 
   @override
