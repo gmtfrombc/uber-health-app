@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../screens/patient/home_screen.dart';
 import '../screens/patient/consults_screen.dart'; // Renamed from visits_screen
 import '../screens/patient/account_screen.dart';
+import '../providers/medical_questions_provider.dart';
 import '../theme.dart';
 
 class MainScreen extends StatefulWidget {
@@ -41,10 +43,32 @@ class _MainScreenState extends State<MainScreen>
         });
       }
     });
+
+    // Initial refresh and start real-time updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final questionsProvider = Provider.of<MedicalQuestionsProvider>(
+          context,
+          listen: false,
+        );
+
+        // Fetch initial data
+        questionsProvider.refreshQuestions();
+
+        // Start real-time updates
+        questionsProvider.startRealTimeUpdates();
+      }
+    });
   }
 
   @override
   void dispose() {
+    // Stop real-time updates when screen is disposed
+    Provider.of<MedicalQuestionsProvider>(
+      context,
+      listen: false,
+    ).stopRealTimeUpdates();
+
     _tabController.dispose();
     super.dispose();
   }
@@ -65,32 +89,137 @@ class _MainScreenState extends State<MainScreen>
             const NeverScrollableScrollPhysics(), // Prevent swipe navigation
         children: _widgetOptions,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'Consults',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Account',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textTertiaryColor,
-        backgroundColor: AppTheme.surfaceColor,
-        type:
-            BottomNavigationBarType.fixed, // Ensures labels are always visible
-        elevation: 8,
-        onTap: _onItemTapped,
+      bottomNavigationBar: Consumer<MedicalQuestionsProvider>(
+        builder: (context, questionsProvider, child) {
+          // Check for questions needing attention (pending or any answered)
+          final questionsNeedingAttention =
+              questionsProvider.questionsNeedingAttention;
+          final pendingQuestions = questionsProvider.pendingQuestions;
+          final answeredQuestions = questionsProvider.answeredQuestions;
+
+          // Log for debugging
+          debugPrint(
+            'Questions needing attention: ${questionsNeedingAttention.length}',
+          );
+          debugPrint('Pending questions: ${pendingQuestions.length}');
+          debugPrint('Answered questions: ${answeredQuestions.length}');
+
+          // Determine badge color:
+          // - Orange for pending questions (higher priority)
+          // - Green for answered questions
+          final bool hasPendingQuestions = pendingQuestions.isNotEmpty;
+
+          // Only use one variable since we're not using hasAnsweredQuestions
+          final Color badgeColor =
+              hasPendingQuestions
+                  ? Colors
+                      .orange
+                      .shade700 // Orange for pending (higher priority)
+                  : Colors.green.shade700; // Green for answered
+
+          final int badgeCount = questionsNeedingAttention.length;
+
+          return BottomNavigationBar(
+            items: <BottomNavigationBarItem>[
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.calendar_today_outlined),
+                    if (badgeCount > 0)
+                      Positioned(
+                        right: -6,
+                        top: -3,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: badgeColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 8,
+                            minHeight: 8,
+                          ),
+                          child: Center(
+                            child:
+                                badgeCount > 1
+                                    ? Text(
+                                      '$badgeCount',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    )
+                                    : null,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                activeIcon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.calendar_today),
+                    if (badgeCount > 0)
+                      Positioned(
+                        right: -6,
+                        top: -3,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: badgeColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 8,
+                            minHeight: 8,
+                          ),
+                          child: Center(
+                            child:
+                                badgeCount > 1
+                                    ? Text(
+                                      '$badgeCount',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    )
+                                    : null,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                label: 'Consults',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Account',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            selectedItemColor: AppTheme.primaryColor,
+            unselectedItemColor: AppTheme.textTertiaryColor,
+            backgroundColor: AppTheme.surfaceColor,
+            type:
+                BottomNavigationBarType
+                    .fixed, // Ensures labels are always visible
+            elevation: 8,
+            onTap: _onItemTapped,
+          );
+        },
       ),
     );
   }
