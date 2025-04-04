@@ -210,7 +210,7 @@ class CategorySelectionScreen extends StatelessWidget {
                                                   context,
                                                 ).colorScheme.primary,
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 18,
+                                            fontSize: 24,
                                           ),
                                           textAlign: TextAlign.center,
                                           maxLines: 2,

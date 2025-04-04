@@ -340,24 +340,32 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
               // Continue button
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: ElevatedButton(
-                  onPressed:
-                      _selectedProviderIndex != null
-                          ? () => _selectProvider(
-                            context,
-                            Provider.of<ProviderProvider>(
+                child: SizedBox(
+                  width:
+                      MediaQuery.of(context).size.width *
+                      0.6, // Reduced width - 60% of screen width
+                  child: ElevatedButton(
+                    onPressed:
+                        _selectedProviderIndex != null
+                            ? () => _selectProvider(
                               context,
-                              listen: false,
-                            ).providers[_selectedProviderIndex!],
-                          )
-                          : null,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                              Provider.of<ProviderProvider>(
+                                context,
+                                listen: false,
+                              ).providers[_selectedProviderIndex!],
+                            )
+                            : null,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                      ), // Reduced vertical padding
+                      minimumSize: const Size(100, 40), // Set minimum size
+                    ),
                     child: Text(
                       widget.isUrgent
                           ? 'Start Consult Now'
                           : 'Continue to Scheduling',
-                      style: const TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 14), // Reduced font size
                     ),
                   ),
                 ),
