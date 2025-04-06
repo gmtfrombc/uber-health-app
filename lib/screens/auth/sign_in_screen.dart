@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_up_screen.dart';
+import 'auth_wrapper.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -52,8 +53,11 @@ class _SignInScreenState extends State<SignInScreen> {
           // Clear any cached state
           await Future.delayed(Duration(milliseconds: 300));
 
-          // Force navigation to the main app
-          Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+          // Navigate to the AuthWrapper which will determine the correct screen
+          // based on user role
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const AuthWrapper()),
+          );
           return; // Success, exit the method
         }
       } on FirebaseAuthException catch (e) {

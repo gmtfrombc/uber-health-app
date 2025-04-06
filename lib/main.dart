@@ -17,6 +17,7 @@ import 'providers/theme_provider.dart'; // Import theme provider
 import 'screens/main_screen.dart'; // Import the new MainScreen
 import 'screens/splash_screen.dart'; // Import the new SplashScreen
 import 'screens/error_details_screen.dart'; // Import the error details screen
+import 'screens/provider/provider_dashboard_screen.dart'; // Import provider dashboard screen
 import 'utils/debug_utils.dart'; // Import debug utilities
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -321,6 +322,9 @@ class MyApp extends StatelessWidget {
                     (context) => const MainScreen(
                       initialTab: 1,
                     ), // Navigate to consults tab
+                '/provider_dashboard':
+                    (context) =>
+                        const ProviderDashboardScreen(), // Add provider dashboard route
                 // Add error details route for direct navigation
                 '/error_details':
                     (context) => ErrorDetailsScreen(
@@ -382,38 +386,14 @@ class ProviderInitializerState extends State<ProviderInitializer> {
         userProvider.initialize();
         appointmentProvider.initialize();
 
-        // FIXED: Use a post-frame callback for navigation to ensure context is valid
-        // This fixes the "Navigator operation requested with a context that does not include a Navigator" error
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return; // Double-check still mounted
+        // Don't navigate here - let the AuthWrapper handle navigation based on user role
+        // This prevents overriding the provider dashboard navigation
 
-          try {
-            // Safer navigation with null-check and try-catch
-            if (context.mounted) {
-              final navigator = Navigator.maybeOf(context);
-              if (navigator != null) {
-                final routeName = ModalRoute.of(context)?.settings.name;
-                if (routeName != '/main') {
-                  navigator.pushNamedAndRemoveUntil('/main', (route) => false);
-                }
-              } else {
-                debugPrint(
-                  'Navigator not found in context - skipping navigation',
-                );
-              }
-
-              // Delay loading medical questions until after navigation is initiated
-              // This ensures we don't try to access context during navigation
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (mounted) {
-                  // Initialize medical questions provider with the new safer method
-                  medicalQuestionsProvider.initialize();
-                }
-              });
-            }
-          } catch (e) {
-            debugPrint('Error during navigation: $e');
-            // Navigation will be handled later when the user interacts with the app
+        // Initialize medical questions provider
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            // Initialize medical questions provider
+            medicalQuestionsProvider.initialize();
           }
         });
       } else {
