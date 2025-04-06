@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../../providers/video_call_provider.dart';
-import '../patient/home_screen.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String? roomId;
@@ -71,8 +70,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Video Call'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -274,11 +271,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             TextButton.icon(
               onPressed: () {
                 provider.endCall();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  (route) => false,
-                );
+                Navigator.of(context).pop();
               },
               icon: const Icon(Icons.home, color: Colors.white),
               label: const Text(

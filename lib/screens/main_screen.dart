@@ -5,7 +5,6 @@ import '../screens/patient/consults_screen.dart'; // Renamed from visits_screen
 import '../screens/patient/account_screen.dart';
 import '../providers/medical_questions_provider.dart';
 import '../utils/context_utils.dart'; // Import the new utilities
-import '../theme.dart';
 
 /// Main navigation screen of the app containing the bottom navigation and tab view
 class MainScreen extends StatefulWidget {
@@ -94,6 +93,9 @@ class MainScreenState extends State<MainScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: TabBarView(
         controller: _tabController,
@@ -131,6 +133,10 @@ class MainScreenState extends State<MainScreen>
 
           final int badgeCount = questionsNeedingAttention.length;
 
+          // The badge border should be the same as the background to create contrast
+          final badgeBorderColor =
+              isDarkMode ? theme.scaffoldBackgroundColor : Colors.white;
+
           return BottomNavigationBar(
             items: <BottomNavigationBarItem>[
               const BottomNavigationBarItem(
@@ -152,7 +158,10 @@ class MainScreenState extends State<MainScreen>
                           decoration: BoxDecoration(
                             color: badgeColor,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(
+                              color: badgeBorderColor,
+                              width: 1.5,
+                            ),
                           ),
                           constraints: const BoxConstraints(
                             minWidth: 8,
@@ -189,7 +198,10 @@ class MainScreenState extends State<MainScreen>
                           decoration: BoxDecoration(
                             color: badgeColor,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(
+                              color: badgeBorderColor,
+                              width: 1.5,
+                            ),
                           ),
                           constraints: const BoxConstraints(
                             minWidth: 8,
@@ -222,13 +234,23 @@ class MainScreenState extends State<MainScreen>
               ),
             ],
             currentIndex: _selectedIndex,
-            selectedItemColor: AppTheme.primaryColor,
-            unselectedItemColor: AppTheme.textTertiaryColor,
-            backgroundColor: AppTheme.surfaceColor,
+            selectedItemColor: theme.colorScheme.primary,
+            unselectedItemColor: theme.textTheme.bodySmall?.color,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            // Add elevation color for dark mode
+            elevation: 8,
             type:
                 BottomNavigationBarType
                     .fixed, // Ensures labels are always visible
-            elevation: 8,
+            // Apply theme-specific settings
+            selectedLabelStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+            unselectedLabelStyle: TextStyle(
+              color: theme.textTheme.bodySmall?.color,
+            ),
+            // Dark mode specific customization
             onTap: _onItemTapped,
           );
         },

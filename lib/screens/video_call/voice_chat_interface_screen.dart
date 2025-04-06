@@ -1,6 +1,6 @@
 // lib/screens/voice_chat_interface_screen.dart
 import 'package:flutter/material.dart';
-import 'package:uber_health_app/widgets/animated_consultation_screen.dart';
+import 'package:quickcarept/widgets/animated_consultation_screen.dart';
 
 class VoiceChatInterfaceScreen extends StatefulWidget {
   final bool isSynchronous;

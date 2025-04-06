@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme.dart';
 
 /// A screen to display detailed error information when the app encounters
 /// an unexpected exception. This provides users with information they can
@@ -21,6 +20,8 @@ class ErrorDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Error Details'),
@@ -36,14 +37,14 @@ class ErrorDetailsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Something went wrong',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'We apologize for the inconvenience. The error has been logged and will be addressed.',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
             _buildInfoCard(
@@ -99,7 +100,7 @@ ${stackTrace != null ? '\nStack Trace: $stackTrace' : ''}
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
+                      backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
                   ),

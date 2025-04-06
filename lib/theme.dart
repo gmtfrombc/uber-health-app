@@ -1,352 +1,123 @@
-// lib/theme.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Primary Color Palette
-  static const Color primaryColor = Color(0xFF4C8DAE); // Calming blue
-  static const Color primaryLightColor = Color(0xFF6CABC9); // Lighter blue
-  static const Color primaryDarkColor = Color(0xFF337799); // Darker blue
-
-  // Accent Colors
-  static const Color accentColor = Color(0xFFE2966C); // Warm terracotta
-  static const Color accentLightColor = Color(0xFFF4B896); // Lighter terracotta
-  static const Color accentDarkColor = Color(0xFFD17A4B); // Darker terracotta
-
-  // Background Colors
-  static const Color backgroundColor = Color(0xFFF9F7F3); // Warm off-white
-  static const Color surfaceColor = Color(0xFFFFFFFF); // Pure white
-  static const Color cardBackgroundColor = Color(0xFFFFFFFF); // Card background
-
-  // Text Colors
-  static const Color textPrimaryColor = Color(0xFF35424A); // Dark blue-gray
-  static const Color textSecondaryColor = Color(0xFF6B7C85); // Medium blue-gray
-  static const Color textTertiaryColor = Color(0xFF9EACB4); // Light blue-gray
-
-  // Functional Colors
-  static const Color successColor = Color(0xFF76B99E); // Soothing green
-  static const Color warningColor = Color(0xFFF7D06F); // Soft yellow
-  static const Color errorColor = Color(0xFFE57373); // Gentle red
-  static const Color infoColor = Color(0xFF64B5F6); // Light blue
-
-  // Status Colors for medical urgency
-  static const Color lowUrgencyColor = Color(0xFF88C399); // Soft green
-  static const Color mediumUrgencyColor = Color(0xFFFFCC80); // Soft orange
-  static const Color highUrgencyColor = Color(0xFFE57373); // Soft red
-  static const Color emergencyColor = Color(0xFFD32F2F); // Deeper red
-
-  // Gradient for header elements
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryColor, primaryDarkColor],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  // Shadows
-  static List<BoxShadow> get softShadow => [
-    BoxShadow(
-      color: Colors.black.withAlpha(13),
-      blurRadius: 8,
-      offset: Offset(0, 2),
-    ),
-  ];
-
-  static final ThemeData lightTheme = ThemeData(
-    useMaterial3: true,
-    primaryColor: primaryColor,
-    colorScheme: ColorScheme.light(
-      primary: primaryColor,
-      primaryContainer: primaryLightColor,
-      secondary: accentColor,
-      secondaryContainer: accentLightColor,
-      surface: surfaceColor,
-      error: errorColor,
-      onPrimary: Colors.white,
-      onSecondary: textPrimaryColor,
-      onSurface: textPrimaryColor,
-      onError: Colors.white,
-    ),
-    scaffoldBackgroundColor: backgroundColor,
-
-    // AppBar styling
-    appBarTheme: AppBarTheme(
-      backgroundColor: primaryColor,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      titleTextStyle: GoogleFonts.poppins(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-        letterSpacing: 0.5,
+  /// Light Theme for the Telehealth App
+  static ThemeData get lightTheme {
+    final base = ThemeData.light();
+    return base.copyWith(
+      primaryColor: const Color(0xFF005A9C),
+      scaffoldBackgroundColor: Colors.white,
+      colorScheme: base.colorScheme.copyWith(
+        primary: const Color(0xFF005A9C),
+        secondary: const Color(0xFF009688),
+        onPrimary: Colors.white,
+        brightness: Brightness.light,
       ),
-      iconTheme: IconThemeData(color: Colors.white),
-      centerTitle: false,
-    ),
-
-    // Text styling
-    textTheme: TextTheme(
-      // Large titles
-      displayLarge: GoogleFonts.poppins(
-        fontSize: 32,
-        fontWeight: FontWeight.bold,
-        color: textPrimaryColor,
-        letterSpacing: -0.5,
-      ),
-      displayMedium: GoogleFonts.poppins(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        color: textPrimaryColor,
-      ),
-      displaySmall: GoogleFonts.poppins(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: textPrimaryColor,
-      ),
-
-      // Headings
-      headlineLarge: GoogleFonts.poppins(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: textPrimaryColor,
-      ),
-      headlineMedium: GoogleFonts.poppins(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: textPrimaryColor,
-      ),
-      headlineSmall: GoogleFonts.poppins(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: textPrimaryColor,
-      ),
-
-      // Titles and subtitles
-      titleLarge: GoogleFonts.poppins(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: textPrimaryColor,
-      ),
-      titleMedium: GoogleFonts.poppins(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: textPrimaryColor,
-      ),
-      titleSmall: GoogleFonts.poppins(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: textSecondaryColor,
-      ),
-
-      // Body text
-      bodyLarge: GoogleFonts.poppins(
-        fontSize: 16,
-        fontWeight: FontWeight.normal,
-        color: textPrimaryColor,
-        height: 1.5,
-      ),
-      bodyMedium: GoogleFonts.poppins(
-        fontSize: 14,
-        fontWeight: FontWeight.normal,
-        color: textPrimaryColor,
-        height: 1.5,
-      ),
-      bodySmall: GoogleFonts.poppins(
-        fontSize: 12,
-        fontWeight: FontWeight.normal,
-        color: textSecondaryColor,
-        height: 1.5,
-      ),
-
-      // Labels
-      labelLarge: GoogleFonts.poppins(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: primaryColor,
-      ),
-      labelMedium: GoogleFonts.poppins(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: primaryColor,
-      ),
-      labelSmall: GoogleFonts.poppins(
-        fontSize: 10,
-        fontWeight: FontWeight.w500,
-        color: textTertiaryColor,
-      ),
-    ),
-
-    // Card styling
-    cardTheme: CardTheme(
-      color: cardBackgroundColor,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: textTertiaryColor.withAlpha(26), width: 1),
-      ),
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shadowColor: Colors.black.withAlpha(26),
-    ),
-
-    // Button styling
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        textStyle: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      textTheme: GoogleFonts.outfitTextTheme(
+        base.textTheme,
+      ).apply(bodyColor: Colors.black87, displayColor: Colors.black87),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A3B5D),
         elevation: 0,
-      ),
-    ),
-
-    // Text button styling
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: primaryColor,
-        textStyle: GoogleFonts.poppins(
-          fontSize: 16,
+        iconTheme: const IconThemeData(color: Color(0xFF1A3B5D)),
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 20,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+          color: const Color(0xFF1A3B5D),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        centerTitle: false,
       ),
-    ),
-
-    // Outlined button styling
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: primaryColor,
-        side: BorderSide(color: primaryColor, width: 1.5),
-        textStyle: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    ),
-
-    // Icon styling
-    iconTheme: IconThemeData(color: primaryColor, size: 24),
-
-    // Input field styling
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: surfaceColor,
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: textTertiaryColor.withAlpha(77),
-          width: 1,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF005A9C),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.0),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: textTertiaryColor.withAlpha(77),
-          width: 1,
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Color(0xFF005A9C)),
+          borderRadius: BorderRadius.circular(8.0),
         ),
+        labelStyle: const TextStyle(color: Color(0xFF005A9C)),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primaryColor, width: 2),
+      cardTheme: CardTheme(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        elevation: 4,
+        margin: const EdgeInsets.all(8.0),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: errorColor, width: 1),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFE0E0E0),
+        thickness: 1,
+        space: 1,
       ),
-      labelStyle: GoogleFonts.poppins(fontSize: 16, color: textSecondaryColor),
-      hintStyle: GoogleFonts.poppins(fontSize: 16, color: textTertiaryColor),
-    ),
-
-    // Divider styling
-    dividerTheme: DividerThemeData(
-      color: textTertiaryColor.withAlpha(51),
-      thickness: 1,
-      space: 24,
-    ),
-
-    // Chip styling
-    chipTheme: ChipThemeData(
-      backgroundColor: primaryLightColor.withAlpha(38),
-      disabledColor: textTertiaryColor.withAlpha(26),
-      selectedColor: primaryColor.withAlpha(77),
-      secondarySelectedColor: accentColor.withAlpha(77),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      labelStyle: GoogleFonts.poppins(fontSize: 14, color: primaryColor),
-      secondaryLabelStyle: GoogleFonts.poppins(
-        fontSize: 14,
-        color: textSecondaryColor,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-
-    // Checkbox styling
-    checkboxTheme: CheckboxThemeData(
-      fillColor: WidgetStateProperty.resolveWith<Color>((states) {
-        if (states.contains(WidgetState.selected)) {
-          return primaryColor;
-        }
-        return Colors.transparent;
-      }),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-    ),
-
-    // Bottom navigation bar styling
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: surfaceColor,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: textTertiaryColor,
-      selectedLabelStyle: GoogleFonts.poppins(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-      ),
-      unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
-      elevation: 8,
-    ),
-
-    // Progress indicator styling
-    progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: primaryColor,
-      circularTrackColor: primaryLightColor.withAlpha(51),
-      linearTrackColor: primaryLightColor.withAlpha(51),
-    ),
-  );
-
-  // Helper methods for consistent UI elements
-
-  // Create a gradient container for headers
-  static Widget gradientHeader({required Widget child, double height = 200}) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        gradient: primaryGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-      ),
-      child: child,
     );
   }
 
-  // Create a styled card with consistent shadow and border radius
-  static Widget styledCard({
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBackgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: softShadow,
+  /// Dark Theme for the Telehealth App
+  static ThemeData get darkTheme {
+    final base = ThemeData.dark();
+    return base.copyWith(
+      primaryColor: const Color(0xFF005A9C),
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: base.colorScheme.copyWith(
+        primary: const Color(0xFF005A9C),
+        secondary: const Color(0xFF009688),
+        onPrimary: Colors.white,
+        brightness: Brightness.dark,
       ),
-      padding: padding ?? EdgeInsets.all(16),
-      child: child,
+      textTheme: GoogleFonts.outfitTextTheme(
+        base.textTheme,
+      ).apply(bodyColor: Colors.white70, displayColor: Colors.white70),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF121212),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        centerTitle: false,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF005A9C),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.0),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Color(0xFF005A9C)),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        labelStyle: const TextStyle(color: Color(0xFF005A9C)),
+      ),
+      cardTheme: CardTheme(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        elevation: 4,
+        margin: const EdgeInsets.all(8.0),
+        color: const Color(0xFF1E1E1E),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF2C2C2C),
+        thickness: 1,
+        space: 1,
+      ),
     );
   }
 }

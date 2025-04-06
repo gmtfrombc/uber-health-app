@@ -13,6 +13,7 @@ import 'providers/provider_dashboard_provider.dart'; // Provider dashboard state
 import 'providers/appointment_provider.dart'; // Import new appointment provider
 import 'providers/provider_data_provider.dart'; // Import new provider data provider
 import 'providers/medical_questions_provider.dart'; // Import medical questions provider
+import 'providers/theme_provider.dart'; // Import theme provider
 import 'screens/main_screen.dart'; // Import the new MainScreen
 import 'screens/splash_screen.dart'; // Import the new SplashScreen
 import 'screens/error_details_screen.dart'; // Import the error details screen
@@ -294,33 +295,42 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => ProviderDataProvider()),
         ChangeNotifierProvider(create: (_) => MedicalQuestionsProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: ProviderInitializer(
-        child: MaterialApp(
-          title: 'XUBER Health Prototype',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme, // Use our custom theme
-          navigatorKey:
-              navigatorKey, // Add global navigator key for error handling
-          // Use SplashScreen as the initial screen
-          home: const SplashScreen(),
-          // Define routes for navigation after login
-          routes: {
-            '/main': (context) => const MainScreen(),
-            '/account':
-                (context) =>
-                    const MainScreen(initialTab: 2), // Navigate to account tab
-            '/consults':
-                (context) =>
-                    const MainScreen(initialTab: 1), // Navigate to consults tab
-            // Add error details route for direct navigation
-            '/error_details':
-                (context) => ErrorDetailsScreen(
-                  errorMessage: 'Test error message',
-                  stackTrace: 'Simulated stack trace for testing',
-                  timestamp: DateTime.now(),
-                ),
-            // Add other routes as needed
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return MaterialApp(
+              title: 'XUBER Health Prototype',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+              navigatorKey:
+                  navigatorKey, // Add global navigator key for error handling
+              // Use SplashScreen as the initial screen
+              home: const SplashScreen(),
+              // Define routes for navigation after login
+              routes: {
+                '/main': (context) => const MainScreen(),
+                '/account':
+                    (context) => const MainScreen(
+                      initialTab: 2,
+                    ), // Navigate to account tab
+                '/consults':
+                    (context) => const MainScreen(
+                      initialTab: 1,
+                    ), // Navigate to consults tab
+                // Add error details route for direct navigation
+                '/error_details':
+                    (context) => ErrorDetailsScreen(
+                      errorMessage: 'Test error message',
+                      stackTrace: 'Simulated stack trace for testing',
+                      timestamp: DateTime.now(),
+                    ),
+                // Add other routes as needed
+              },
+            );
           },
         ),
       ),
@@ -362,7 +372,7 @@ class ProviderInitializerState extends State<ProviderInitializer> {
           context,
           listen: false,
         );
-        // Initialize medical questions provider
+        // Get medical questions provider reference
         final medicalQuestionsProvider = Provider.of<MedicalQuestionsProvider>(
           context,
           listen: false,
@@ -371,8 +381,6 @@ class ProviderInitializerState extends State<ProviderInitializer> {
         // Initialize user profile and appointments
         userProvider.initialize();
         appointmentProvider.initialize();
-        // Load medical questions
-        medicalQuestionsProvider.refreshQuestions();
 
         // FIXED: Use a post-frame callback for navigation to ensure context is valid
         // This fixes the "Navigator operation requested with a context that does not include a Navigator" error
@@ -393,6 +401,15 @@ class ProviderInitializerState extends State<ProviderInitializer> {
                   'Navigator not found in context - skipping navigation',
                 );
               }
+
+              // Delay loading medical questions until after navigation is initiated
+              // This ensures we don't try to access context during navigation
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted) {
+                  // Initialize medical questions provider with the new safer method
+                  medicalQuestionsProvider.initialize();
+                }
+              });
             }
           } catch (e) {
             debugPrint('Error during navigation: $e');

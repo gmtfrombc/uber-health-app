@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../screens/auth/sign_in_screen.dart';
 import '../screens/consultation/summary_list_screen.dart';
 import '../providers/user_provider.dart';
-import '../theme.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -30,6 +29,7 @@ class AppDrawerState extends State<AppDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.userProfile;
 
@@ -53,7 +53,7 @@ class AppDrawerState extends State<AppDrawer> {
       child: Column(
         children: [
           Container(
-            color: AppTheme.backgroundColor,
+            color: theme.scaffoldBackgroundColor,
             padding: const EdgeInsets.symmetric(vertical: 32),
             width: double.infinity,
             child: Column(
@@ -63,7 +63,7 @@ class AppDrawerState extends State<AppDrawer> {
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.primaryColor,
+                    color: theme.colorScheme.primary,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withAlpha(26),
@@ -87,20 +87,14 @@ class AppDrawerState extends State<AppDrawer> {
                 if (user != null)
                   Text(
                     '${user.firstname} ${user.lastname}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppTheme.textPrimaryColor,
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 if (user?.email != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      user!.email,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                    ),
+                    child: Text(user!.email, style: theme.textTheme.bodyMedium),
                   ),
               ],
             ),
@@ -145,7 +139,7 @@ class AppDrawerState extends State<AppDrawer> {
                   icon: Icons.logout,
                   title: 'Sign Out',
                   onTap: _signOut,
-                  color: AppTheme.errorColor,
+                  color: Colors.red,
                 ),
               ],
             ),
@@ -162,21 +156,22 @@ class AppDrawerState extends State<AppDrawer> {
     required VoidCallback onTap,
     Color? color,
   }) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: ListTile(
-        leading: Icon(icon, color: color ?? AppTheme.primaryColor),
+        leading: Icon(icon, color: color ?? theme.colorScheme.primary),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: color ?? AppTheme.textPrimaryColor,
+            color: color ?? theme.textTheme.bodyLarge?.color,
           ),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         onTap: onTap,
-        hoverColor: AppTheme.primaryColor.withAlpha(26),
+        hoverColor: theme.colorScheme.primary.withAlpha(26),
       ),
     );
   }

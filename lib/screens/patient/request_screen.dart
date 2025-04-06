@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../providers/request_provider.dart';
 import '../../models/patient_request.dart';
-import '../../theme.dart';
 import 'category_selection_screen.dart';
 import '../consultation/chat_interface.dart';
 
@@ -51,6 +50,9 @@ class _RequestScreenState extends State<RequestScreen> {
     // Use Consumer to rebuild when provider type changes
     return Consumer<RequestProvider>(
       builder: (context, requestProvider, _) {
+        final theme = Theme.of(context);
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
         // Update UI toggle if it doesn't match provider state
         if ((requestProvider.providerType == ProviderType.medicalProvider &&
                 selectedProviderToggleIndex != 0) ||
@@ -73,9 +75,18 @@ class _RequestScreenState extends State<RequestScreen> {
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDarkMode ? theme.colorScheme.surface : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: AppTheme.softShadow,
+            boxShadow: [
+              BoxShadow(
+                color:
+                    isDarkMode
+                        ? Colors.black.withAlpha(77)
+                        : Colors.black.withAlpha(26),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -86,13 +97,13 @@ class _RequestScreenState extends State<RequestScreen> {
                   children: [
                     Icon(
                       Icons.local_hospital_rounded,
-                      color: AppTheme.primaryColor,
+                      color: theme.colorScheme.primary,
                       size: 22,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'Choose Provider Type',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: theme.textTheme.titleLarge,
                     ),
                   ],
                 ),
@@ -122,14 +133,18 @@ class _RequestScreenState extends State<RequestScreen> {
                           color:
                               requestProvider.providerType ==
                                       ProviderType.medicalProvider
-                                  ? AppTheme.primaryColor.withAlpha(20)
+                                  ? theme.colorScheme.primary.withAlpha(20)
+                                  : isDarkMode
+                                  ? theme.colorScheme.surface.withAlpha(150)
                                   : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color:
                                 requestProvider.providerType ==
                                         ProviderType.medicalProvider
-                                    ? AppTheme.primaryColor
+                                    ? theme.colorScheme.primary
+                                    : isDarkMode
+                                    ? Colors.grey.shade700
                                     : Colors.grey.shade300,
                             width: 2,
                           ),
@@ -143,7 +158,9 @@ class _RequestScreenState extends State<RequestScreen> {
                                 color:
                                     requestProvider.providerType ==
                                             ProviderType.medicalProvider
-                                        ? AppTheme.primaryColor
+                                        ? theme.colorScheme.primary
+                                        : isDarkMode
+                                        ? Colors.grey.shade700
                                         : Colors.grey.shade200,
                                 shape: BoxShape.circle,
                               ),
@@ -153,6 +170,8 @@ class _RequestScreenState extends State<RequestScreen> {
                                     requestProvider.providerType ==
                                             ProviderType.medicalProvider
                                         ? Colors.white
+                                        : isDarkMode
+                                        ? Colors.grey.shade300
                                         : Colors.grey.shade600,
                                 size: 18,
                               ),
@@ -164,25 +183,24 @@ class _RequestScreenState extends State<RequestScreen> {
                                 children: [
                                   Text(
                                     'Medical Provider',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          requestProvider.providerType ==
-                                                  ProviderType.medicalProvider
-                                              ? AppTheme.primaryDarkColor
-                                              : AppTheme.textSecondaryColor,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              requestProvider.providerType ==
+                                                      ProviderType
+                                                          .medicalProvider
+                                                  ? theme.colorScheme.primary
+                                                  : theme
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.color,
+                                        ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     'General health, medication, diagnoses',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.textSecondaryColor,
-                                    ),
+                                    style: theme.textTheme.bodySmall,
                                   ),
                                 ],
                               ),
@@ -195,7 +213,9 @@ class _RequestScreenState extends State<RequestScreen> {
                               color:
                                   requestProvider.providerType ==
                                           ProviderType.medicalProvider
-                                      ? AppTheme.primaryColor
+                                      ? theme.colorScheme.primary
+                                      : isDarkMode
+                                      ? Colors.grey.shade500
                                       : Colors.grey.shade400,
                               size: 24,
                             ),
@@ -229,14 +249,18 @@ class _RequestScreenState extends State<RequestScreen> {
                           color:
                               requestProvider.providerType ==
                                       ProviderType.physicalTherapist
-                                  ? AppTheme.primaryColor.withAlpha(20)
+                                  ? theme.colorScheme.primary.withAlpha(20)
+                                  : isDarkMode
+                                  ? theme.colorScheme.surface.withAlpha(150)
                                   : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color:
                                 requestProvider.providerType ==
                                         ProviderType.physicalTherapist
-                                    ? AppTheme.primaryColor
+                                    ? theme.colorScheme.primary
+                                    : isDarkMode
+                                    ? Colors.grey.shade700
                                     : Colors.grey.shade300,
                             width: 2,
                           ),
@@ -250,7 +274,9 @@ class _RequestScreenState extends State<RequestScreen> {
                                 color:
                                     requestProvider.providerType ==
                                             ProviderType.physicalTherapist
-                                        ? AppTheme.primaryColor
+                                        ? theme.colorScheme.primary
+                                        : isDarkMode
+                                        ? Colors.grey.shade700
                                         : Colors.grey.shade200,
                                 shape: BoxShape.circle,
                               ),
@@ -260,6 +286,8 @@ class _RequestScreenState extends State<RequestScreen> {
                                     requestProvider.providerType ==
                                             ProviderType.physicalTherapist
                                         ? Colors.white
+                                        : isDarkMode
+                                        ? Colors.grey.shade300
                                         : Colors.grey.shade600,
                                 size: 18,
                               ),
@@ -271,25 +299,24 @@ class _RequestScreenState extends State<RequestScreen> {
                                 children: [
                                   Text(
                                     'Physical Therapist',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          requestProvider.providerType ==
-                                                  ProviderType.physicalTherapist
-                                              ? AppTheme.primaryDarkColor
-                                              : AppTheme.textSecondaryColor,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              requestProvider.providerType ==
+                                                      ProviderType
+                                                          .physicalTherapist
+                                                  ? theme.colorScheme.primary
+                                                  : theme
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.color,
+                                        ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     'Injuries, rehabilitation, exercises',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.textSecondaryColor,
-                                    ),
+                                    style: theme.textTheme.bodySmall,
                                   ),
                                 ],
                               ),
@@ -302,7 +329,9 @@ class _RequestScreenState extends State<RequestScreen> {
                               color:
                                   requestProvider.providerType ==
                                           ProviderType.physicalTherapist
-                                      ? AppTheme.primaryColor
+                                      ? theme.colorScheme.primary
+                                      : isDarkMode
+                                      ? Colors.grey.shade500
                                       : Colors.grey.shade400,
                               size: 24,
                             ),
@@ -331,111 +360,126 @@ class _RequestScreenState extends State<RequestScreen> {
     required IconData icon,
     required Color accentColor,
   }) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? theme.colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.softShadow,
+        boxShadow: [
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withAlpha(77)
+                    : Colors.black.withAlpha(26),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: () {
-          final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-          final requestProvider = Provider.of<RequestProvider>(
-            context,
-            listen: false,
-          );
-          // For consults, default category is "Other"; for questions, default to "Medical Question".
-          String category =
-              type == RequestType.consult ? "Other" : "Medical Question";
-          requestProvider.createRequest(
-            PatientRequest(
-              patientId: uid,
-              requestType: type,
-              urgency: urgency,
-              category: category,
-              providerType: requestProvider.providerType,
-            ),
-          );
-          if (type == RequestType.consult) {
-            // Add debug print to check provider type before navigation
-            debugPrint(
-              'DEBUG: Provider type before navigation: ${requestProvider.providerType.name}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+            final requestProvider = Provider.of<RequestProvider>(
+              context,
+              listen: false,
             );
+            // For consults, default category is "Other"; for questions, default to "Medical Question".
+            String category =
+                type == RequestType.consult ? "Other" : "Medical Question";
+            requestProvider.createRequest(
+              PatientRequest(
+                patientId: uid,
+                requestType: type,
+                urgency: urgency,
+                category: category,
+                providerType: requestProvider.providerType,
+              ),
+            );
+            if (type == RequestType.consult) {
+              // Add debug print to check provider type before navigation
+              debugPrint(
+                'DEBUG: Provider type before navigation: ${requestProvider.providerType.name}',
+              );
 
-            // Navigate to CategorySelectionScreen - no need to pass provider type
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CategorySelectionScreen(urgency: urgency),
-              ),
-            );
-          } else {
-            // For questions, navigate directly to ChatInterface
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => ChatInterface(
-                      isSynchronous: false,
-                      isImmediate: true,
-                      urgency: "Routine",
-                    ),
-              ),
-            );
-          }
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Left icon section
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: accentColor.withAlpha(26),
-                  shape: BoxShape.circle,
+              // Navigate to CategorySelectionScreen - no need to pass provider type
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CategorySelectionScreen(urgency: urgency),
                 ),
-                child: Icon(icon, color: accentColor, size: 28),
-              ),
-              const SizedBox(width: 16),
-              // Center text section
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+              );
+            } else {
+              // For questions, navigate directly to ChatInterface
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => ChatInterface(
+                        isSynchronous: false,
+                        isImmediate: true,
+                        urgency: "Routine",
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(timing, style: Theme.of(context).textTheme.bodySmall),
-                  ],
                 ),
-              ),
-              // Right price section
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Left icon section
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: accentColor.withAlpha(26),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: accentColor, size: 28),
                 ),
-                decoration: BoxDecoration(
-                  color: accentColor.withAlpha(26),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  price,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: accentColor,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                // Center text section
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(timing, style: theme.textTheme.bodySmall),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                // Right price section
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor.withAlpha(26),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    price,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: accentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -444,41 +488,33 @@ class _RequestScreenState extends State<RequestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Request Care'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text('Request Care')),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gradient header section with descriptive text
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            // Header section with descriptive text
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'How can we help you today?',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Select a provider type and consultation option below',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withAlpha(230),
-                    ),
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ],
               ),
@@ -498,13 +534,13 @@ class _RequestScreenState extends State<RequestScreen> {
                 children: [
                   Icon(
                     FontAwesomeIcons.calendarCheck,
-                    color: AppTheme.primaryColor,
+                    color: theme.colorScheme.primary,
                     size: 18,
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Consultation Options',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: theme.textTheme.titleLarge,
                   ),
                 ],
               ),
@@ -521,7 +557,7 @@ class _RequestScreenState extends State<RequestScreen> {
               timing: 'Available now',
               price: '\$70',
               icon: FontAwesomeIcons.bolt,
-              accentColor: AppTheme.highUrgencyColor,
+              accentColor: theme.colorScheme.secondary,
             ),
 
             // Routine Consult Option
@@ -533,13 +569,16 @@ class _RequestScreenState extends State<RequestScreen> {
               timing: 'Schedule an appointment',
               price: '\$50',
               icon: FontAwesomeIcons.calendar,
-              accentColor: AppTheme.primaryColor,
+              accentColor: theme.colorScheme.primary,
             ),
 
             // Divider with padding
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              child: Divider(thickness: 1, color: Colors.grey.shade300),
+              child: Divider(
+                thickness: 1,
+                color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+              ),
             ),
 
             // Medical Questions section header
@@ -549,14 +588,11 @@ class _RequestScreenState extends State<RequestScreen> {
                 children: [
                   Icon(
                     FontAwesomeIcons.circleQuestion,
-                    color: AppTheme.primaryColor,
+                    color: theme.colorScheme.primary,
                     size: 18,
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    'Medical Questions',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  Text('Medical Questions', style: theme.textTheme.titleLarge),
                 ],
               ),
             ),
@@ -572,7 +608,7 @@ class _RequestScreenState extends State<RequestScreen> {
               timing: 'Response time: less than 1 hour',
               price: '\$30',
               icon: FontAwesomeIcons.comment,
-              accentColor: AppTheme.infoColor,
+              accentColor: Colors.blue,
             ),
 
             const SizedBox(height: 24),

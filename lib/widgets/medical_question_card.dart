@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../providers/medical_questions_provider.dart'; // Use MedicalQuestion
-import '../theme.dart';
 import 'package:intl/intl.dart';
 import '../screens/patient/medical_question_details_screen.dart';
 
@@ -11,6 +10,7 @@ class MedicalQuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, yyyy');
     final String formattedDate = dateFormat.format(question.timestamp);
     final bool isAnswered = question.status.toLowerCase() == 'answered';
@@ -19,16 +19,13 @@ class MedicalQuestionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
-        side: BorderSide(
-          color: AppTheme.textTertiaryColor.withAlpha(51),
-          width: 1,
-        ),
+        side: BorderSide(color: theme.dividerColor, width: 1),
       ),
       elevation: 1,
       child: ListTile(
         leading: Icon(
           isAnswered ? Icons.mark_chat_read_outlined : Icons.help_outline,
-          color: isAnswered ? AppTheme.successColor : AppTheme.primaryColor,
+          color: isAnswered ? Colors.green : theme.colorScheme.primary,
         ),
         title: Text(
           question.question,

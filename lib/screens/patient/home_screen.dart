@@ -1,7 +1,6 @@
 // lib/screens/patient/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../theme.dart';
 import 'request_screen.dart';
 import '../../providers/user_provider.dart';
 import '../auth/profile_edit_screen.dart';
@@ -30,8 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(title: const Text('XUBER Health')),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -42,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (userProvider.isLoading) {
               return Center(
                 child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: theme.colorScheme.primary,
                 ),
               );
             }
@@ -70,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.only(top: 16.0),
                     height: 250, // Increased height to show full image
                     child: Image.asset(
-                      'assets/images/welcome.png',
+                      'assets/images/xuber_health.png',
                       fit: BoxFit.contain, // Changed from cover to contain
                       width: double.infinity,
                     ),
@@ -85,8 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Text(
                       greeting,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: AppTheme.textPrimaryColor,
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: theme.textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -101,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.medical_services_outlined,
                         color: Colors.white,
                       ),
-                      label: const Text('Request a Consult or Ask Question'),
+                      label: const Text('Request a Consult or Ask a Question'),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -131,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color: AppTheme.textTertiaryColor.withAlpha(51),
+                          color: theme.dividerColor.withAlpha(51),
                           width: 1,
                         ),
                       ),
@@ -145,10 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   "Your Health Summary",
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleLarge?.copyWith(
-                                    color: AppTheme.primaryColor,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: theme.primaryColor,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -171,14 +170,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             _buildInfoSection("Medications", user.medications),
                             const SizedBox(height: 8),
                             Divider(
-                              color: AppTheme.textTertiaryColor.withAlpha(100),
+                              color: theme.dividerColor.withAlpha(100),
                               thickness: 0.8,
                             ),
                             const SizedBox(height: 8),
                             _buildInfoSection("Allergies", user.allergies),
                             const SizedBox(height: 8),
                             Divider(
-                              color: AppTheme.textTertiaryColor.withAlpha(100),
+                              color: theme.dividerColor.withAlpha(100),
                               thickness: 0.8,
                             ),
                             const SizedBox(height: 8),
@@ -235,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimaryColor,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ],
@@ -249,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
               "None",
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontStyle: FontStyle.italic,
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           )
@@ -262,9 +261,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     .map(
                       (item) => Chip(
                         label: Text(item),
-                        backgroundColor: AppTheme.backgroundColor,
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
                         side: BorderSide(color: iconColor.withAlpha(77)),
-                        labelStyle: TextStyle(color: AppTheme.textPrimaryColor),
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,
                           vertical: 0,

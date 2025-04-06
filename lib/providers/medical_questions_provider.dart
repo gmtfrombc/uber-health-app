@@ -203,7 +203,15 @@ class MedicalQuestionsProvider with ChangeNotifier {
 
   Future<void> refreshQuestions() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      debugPrint('Cannot refresh questions: No authenticated user');
+      return;
+    }
+
+    if (_isLoading) {
+      debugPrint('Already loading questions, skipping duplicate request');
+      return;
+    }
 
     _isLoading = true;
     notifyListeners();
@@ -242,11 +250,9 @@ class MedicalQuestionsProvider with ChangeNotifier {
       debugPrint(
         'After filtering: ${_questions.length} active medical questions',
       );
-
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
       debugPrint('Error fetching medical questions: $e');
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -511,6 +517,33 @@ class MedicalQuestionsProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error marking question as done: $e');
       return false;
+    }
+  }
+
+  // Initialize safely with automatic error handling
+  Future<void> initialize() async {
+    // Cancel any existing subscriptions to be safe
+    stopRealTimeUpdates();
+
+    // Start fresh with a new subscription
+    try {
+      // Check if user is authenticated
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint(
+          'Cannot initialize MedicalQuestionsProvider: No authenticated user',
+        );
+        return;
+      }
+
+      // Refresh questions first to populate the initial data
+      await refreshQuestions();
+
+      // After initial data is loaded, start real-time updates
+      startRealTimeUpdates();
+      debugPrint('MedicalQuestionsProvider initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing MedicalQuestionsProvider: $e');
     }
   }
 }

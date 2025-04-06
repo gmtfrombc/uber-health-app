@@ -170,9 +170,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         });
       }
 
-      // Pop back to previous screen instead of creating a new instance
+      // Safe navigation: check if mounted and use the stored context
       if (mounted) {
-        Navigator.pop(currentContext);
+        // Only try to pop if we can
+        if (Navigator.of(currentContext).canPop()) {
+          Navigator.of(currentContext).pop();
+        }
 
         // Show success message
         ScaffoldMessenger.of(currentContext).showSnackBar(
@@ -187,56 +190,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         ).showSnackBar(SnackBar(content: Text("Error updating profile: $e")));
       }
     }
-  }
-
-  // Function to handle back button / navigation
-  Future<bool> _onWillPop() async {
-    if (_hasChanges) {
-      // Store the context before the async operation
-      final BuildContext currentContext = context;
-
-      // Only proceed if still mounted
-      if (!mounted) return true;
-
-      final result = await showDialog<bool>(
-        context: currentContext,
-        builder:
-            (dialogContext) => AlertDialog(
-              title: const Text('Unsaved Changes'),
-              content: const Text(
-                'You have unsaved changes. Do you want to save them before leaving?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed:
-                      () => Navigator.of(
-                        dialogContext,
-                      ).pop(false), // Don't save and leave
-                  child: const Text('Discard'),
-                ),
-                TextButton(
-                  onPressed:
-                      () => Navigator.of(
-                        dialogContext,
-                      ).pop(true), // Save and leave
-                  child: const Text('Save'),
-                ),
-              ],
-            ),
-      );
-
-      // Check if we're still mounted after the dialog
-      if (!mounted) return true;
-
-      if (result == true) {
-        // User wants to save before leaving
-        await _saveProfile();
-      }
-
-      return true; // Allow navigation
-    }
-
-    return true; // No unsaved changes, allow navigation
   }
 
   @override
@@ -255,10 +208,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   // Build the Medications section as a Card with an ExpansionTile.
   Widget _buildMedicationsCard() {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.all(8),
+      color: theme.cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        title: const Text("Medications"),
+        collapsedBackgroundColor: theme.cardColor,
+        backgroundColor: theme.cardColor,
+        iconColor: theme.colorScheme.primary,
+        title: Text("Medications", style: theme.textTheme.titleMedium),
         initiallyExpanded: true,
         children: [
           Padding(
@@ -299,6 +259,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           });
                         }
                       },
+                      style: Theme.of(context).elevatedButtonTheme.style,
                       child: const Text("Add"),
                     ),
                   ],
@@ -311,6 +272,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           .map(
                             (med) => Chip(
                               label: Text(med),
+                              backgroundColor:
+                                  theme.brightness == Brightness.dark
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.primary.withAlpha(40),
+                              labelStyle: TextStyle(
+                                color:
+                                    theme.brightness == Brightness.dark
+                                        ? theme.colorScheme.onPrimaryContainer
+                                        : theme.colorScheme.primary,
+                              ),
+                              deleteIconColor: theme.colorScheme.primary,
                               onDeleted: () {
                                 setState(() {
                                   _medications.remove(med);
@@ -330,10 +302,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   // Build the Drug Allergies section as a Card with an ExpansionTile.
   Widget _buildAllergiesCard() {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.all(8),
+      color: theme.cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        title: const Text("Drug Allergies"),
+        collapsedBackgroundColor: theme.cardColor,
+        backgroundColor: theme.cardColor,
+        iconColor: theme.colorScheme.primary,
+        title: Text("Drug Allergies", style: theme.textTheme.titleMedium),
         initiallyExpanded: true,
         children: [
           Padding(
@@ -370,6 +349,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           });
                         }
                       },
+                      style: Theme.of(context).elevatedButtonTheme.style,
                       child: const Text("Add"),
                     ),
                   ],
@@ -382,6 +362,19 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           .map(
                             (allergy) => Chip(
                               label: Text(allergy),
+                              backgroundColor:
+                                  theme.brightness == Brightness.dark
+                                      ? theme.colorScheme.secondaryContainer
+                                      : theme.colorScheme.secondary.withAlpha(
+                                        40,
+                                      ),
+                              labelStyle: TextStyle(
+                                color:
+                                    theme.brightness == Brightness.dark
+                                        ? theme.colorScheme.onSecondaryContainer
+                                        : theme.colorScheme.secondary,
+                              ),
+                              deleteIconColor: theme.colorScheme.secondary,
                               onDeleted: () {
                                 setState(() {
                                   _allergies.remove(allergy);
@@ -401,10 +394,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   // Build the Active Conditions section as a Card with an ExpansionTile.
   Widget _buildConditionsCard() {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.all(8),
+      color: theme.cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        title: const Text("Active Conditions"),
+        collapsedBackgroundColor: theme.cardColor,
+        backgroundColor: theme.cardColor,
+        iconColor: theme.colorScheme.primary,
+        title: Text("Active Conditions", style: theme.textTheme.titleMedium),
         initiallyExpanded: true,
         children: [
           Padding(
@@ -443,6 +443,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           });
                         }
                       },
+                      style: Theme.of(context).elevatedButtonTheme.style,
                       child: const Text("Add"),
                     ),
                   ],
@@ -455,6 +456,19 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           .map(
                             (cond) => Chip(
                               label: Text(cond),
+                              backgroundColor:
+                                  theme.brightness == Brightness.dark
+                                      ? theme.colorScheme.tertiaryContainer
+                                      : theme.colorScheme.tertiary.withAlpha(
+                                        40,
+                                      ),
+                              labelStyle: TextStyle(
+                                color:
+                                    theme.brightness == Brightness.dark
+                                        ? theme.colorScheme.onTertiaryContainer
+                                        : theme.colorScheme.tertiary,
+                              ),
+                              deleteIconColor: theme.colorScheme.tertiary,
                               onDeleted: () {
                                 setState(() {
                                   _conditions.remove(cond);
@@ -474,32 +488,90 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
+    // Helper function to show the confirmation dialog
+    void showUnsavedChangesDialog() {
+      // Store context to ensure consistency
+      final BuildContext currentContext = context;
 
-        final shouldPop = await _onWillPop();
-        if (shouldPop && mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Edit Profile"),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              final shouldPop = await _onWillPop();
-              if (shouldPop && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-          ),
+      showDialog<bool>(
+        context: currentContext,
+        builder:
+            (dialogContext) => AlertDialog(
+              backgroundColor:
+                  Theme.of(currentContext).dialogTheme.backgroundColor,
+              title: Text(
+                'Unsaved Changes',
+                style: Theme.of(currentContext).textTheme.titleLarge,
+              ),
+              content: Text(
+                'You have unsaved changes. Do you want to save them before leaving?',
+                style: Theme.of(currentContext).textTheme.bodyMedium,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // Close dialog and discard changes
+                    Navigator.of(dialogContext).pop();
+                    if (mounted) {
+                      Navigator.of(currentContext).pop();
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(currentContext).colorScheme.error,
+                  ),
+                  child: const Text('Discard'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Close dialog and save changes
+                    Navigator.of(dialogContext).pop();
+                    if (mounted) {
+                      _saveProfile();
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor:
+                        Theme.of(currentContext).colorScheme.primary,
+                  ),
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Edit Profile"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Skip the confirmation dialog if no changes were made
+            if (!_hasChanges) {
+              Navigator.of(context).pop();
+              return;
+            }
+
+            // Show the unsaved changes dialog
+            showUnsavedChangesDialog();
+          },
         ),
-        body:
+      ),
+      body: PopScope(
+        canPop: !_hasChanges,
+        onPopInvoked: (didPop) {
+          // Handle system back button
+          if (!didPop && _hasChanges) {
+            showUnsavedChangesDialog();
+          }
+        },
+        child:
             _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                )
                 : Form(
                   key: _formKey,
                   child: Stack(
@@ -523,14 +595,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         right: 20,
                         child: ElevatedButton(
                           onPressed: _saveProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          style: Theme.of(
+                            context,
+                          ).elevatedButtonTheme.style?.copyWith(
+                            padding: WidgetStateProperty.all(
+                              const EdgeInsets.symmetric(vertical: 15),
                             ),
-                            elevation: 4,
                           ),
                           child: const Text(
                             'SAVE CHANGES',

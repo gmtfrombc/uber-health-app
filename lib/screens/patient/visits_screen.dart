@@ -4,7 +4,6 @@ import '../../providers/appointment_provider.dart';
 import '../../providers/medical_questions_provider.dart';
 import '../../widgets/appointment_card.dart'; // Will create this
 import '../../widgets/medical_question_card.dart'; // Will create this
-import '../../theme.dart';
 
 class VisitsScreen extends StatefulWidget {
   const VisitsScreen({super.key});
@@ -32,9 +31,15 @@ class _VisitsScreenState extends State<VisitsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Visits & Questions')),
-      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        title: const Text('Visits & Questions'),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
+      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: RefreshIndicator(
         onRefresh: () async {
           await Provider.of<AppointmentProvider>(
@@ -61,12 +66,14 @@ class _VisitsScreenState extends State<VisitsScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          color: AppTheme.primaryColor,
+        style: theme.textTheme.headlineSmall?.copyWith(
+          color: theme.colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),

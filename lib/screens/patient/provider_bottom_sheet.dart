@@ -6,7 +6,6 @@ import '../../models/provider_model.dart';
 import '../../models/patient_request.dart';
 import './scheduling_screen.dart';
 import '../consultation/chat_interface.dart';
-import '../../theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProviderBottomSheet extends StatefulWidget {
@@ -66,6 +65,8 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return DraggableScrollableSheet(
       initialChildSize: 0.75, // Changed from 0.6 to 0.75 (3/4 of screen)
       minChildSize: 0.4, // Minimum height (40% of screen)
@@ -74,7 +75,7 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -117,7 +118,7 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                         Flexible(
                           child: Text(
                             widget.isUrgent ? 'Quick Consult' : 'Routine Visit',
-                            style: Theme.of(context).textTheme.headlineMedium,
+                            style: theme.textTheme.headlineMedium,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -133,11 +134,11 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                       margin: const EdgeInsets.only(bottom: 8),
                       child: Chip(
                         label: Text(widget.category),
-                        backgroundColor: AppTheme.primaryLightColor.withAlpha(
+                        backgroundColor: theme.colorScheme.primary.withAlpha(
                           38,
                         ),
                         labelStyle: TextStyle(
-                          color: AppTheme.primaryColor,
+                          color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                         padding: const EdgeInsets.symmetric(
@@ -157,11 +158,9 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                                 : 'Physical Therapists';
                         return Text(
                           providerTypeText,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.copyWith(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.accentColor,
+                            color: theme.colorScheme.secondary,
                           ),
                         );
                       },
@@ -173,7 +172,7 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                       widget.isUrgent
                           ? 'These providers are available now for immediate consultation'
                           : 'Select a provider for your appointment',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ],
                 ),
@@ -221,7 +220,7 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                             border: Border.all(
                               color:
                                   isSelected
-                                      ? Theme.of(context).colorScheme.primary
+                                      ? theme.colorScheme.primary
                                       : Colors.grey.withAlpha(77),
                               width: isSelected ? 2 : 1,
                             ),
@@ -245,12 +244,8 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                                     decoration: BoxDecoration(
                                       color:
                                           isSelected
-                                              ? Theme.of(
-                                                context,
-                                              ).colorScheme.primary
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.primary
                                                   .withAlpha(26),
                                       shape: BoxShape.circle,
                                     ),
@@ -271,9 +266,9 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                                                   color:
                                                       isSelected
                                                           ? Colors.white
-                                                          : Theme.of(
-                                                            context,
-                                                          ).colorScheme.primary,
+                                                          : theme
+                                                              .colorScheme
+                                                              .primary,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 18,
                                                 ),
@@ -289,20 +284,16 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                                       children: [
                                         Text(
                                           provider.fullName,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           provider.specialty ??
                                               'General Provider',
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium,
+                                          style: theme.textTheme.bodyMedium,
                                         ),
                                         const SizedBox(height: 8),
                                         if (widget.isUrgent)
@@ -311,16 +302,19 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                                               Icon(
                                                 Icons.access_time,
                                                 size: 16,
-                                                color: AppTheme.accentColor,
+                                                color:
+                                                    theme.colorScheme.secondary,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 'Available now',
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.bodySmall?.copyWith(
-                                                  color: AppTheme.accentColor,
-                                                ),
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color:
+                                                          theme
+                                                              .colorScheme
+                                                              .secondary,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -360,6 +354,7 @@ class ProviderBottomSheetState extends State<ProviderBottomSheet> {
                         vertical: 8,
                       ), // Reduced vertical padding
                       minimumSize: const Size(100, 40), // Set minimum size
+                      backgroundColor: theme.colorScheme.primary,
                     ),
                     child: Text(
                       widget.isUrgent

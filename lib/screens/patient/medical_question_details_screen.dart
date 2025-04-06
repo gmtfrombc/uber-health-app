@@ -72,6 +72,7 @@ class _MedicalQuestionDetailsScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Medical Question'), elevation: 0),
@@ -86,7 +87,7 @@ class _MedicalQuestionDetailsScreenState
                     Text(
                       'Error',
                       style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.red,
+                        color: theme.colorScheme.error,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -110,7 +111,15 @@ class _MedicalQuestionDetailsScreenState
                     margin: const EdgeInsets.only(bottom: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color:
+                            isDarkMode
+                                ? theme.dividerColor.withAlpha(128)
+                                : Colors.grey.shade300,
+                        width: 1,
+                      ),
                     ),
+                    color: isDarkMode ? theme.cardColor : Colors.white,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -166,10 +175,10 @@ class _MedicalQuestionDetailsScreenState
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color:
-                                      _question!.status == 'pending'
-                                          ? Colors.orange.shade100
-                                          : Colors.green.shade100,
+                                  color: _getStatusBgColor(
+                                    _question!.status,
+                                    isDarkMode,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -179,10 +188,10 @@ class _MedicalQuestionDetailsScreenState
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        _question!.status == 'pending'
-                                            ? Colors.orange.shade800
-                                            : Colors.green.shade800,
+                                    color: _getStatusTextColor(
+                                      _question!.status,
+                                      isDarkMode,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -211,7 +220,15 @@ class _MedicalQuestionDetailsScreenState
                       margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color:
+                              isDarkMode
+                                  ? theme.dividerColor.withAlpha(128)
+                                  : Colors.grey.shade300,
+                          width: 1,
+                        ),
                       ),
+                      color: isDarkMode ? theme.cardColor : Colors.white,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -267,7 +284,32 @@ class _MedicalQuestionDetailsScreenState
     );
   }
 
+  // Helper method to get status background color based on theme
+  Color _getStatusBgColor(String status, bool isDarkMode) {
+    if (status == 'pending') {
+      return isDarkMode
+          ? Colors.orange.shade900.withAlpha(77)
+          : Colors.orange.shade100;
+    } else {
+      return isDarkMode
+          ? Colors.green.shade900.withAlpha(77)
+          : Colors.green.shade100;
+    }
+  }
+
+  // Helper method to get status text color based on theme
+  Color _getStatusTextColor(String status, bool isDarkMode) {
+    if (status == 'pending') {
+      return isDarkMode ? Colors.orange.shade300 : Colors.orange.shade800;
+    } else {
+      return isDarkMode ? Colors.green.shade300 : Colors.green.shade800;
+    }
+  }
+
   Widget _buildActions() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
@@ -286,6 +328,10 @@ class _MedicalQuestionDetailsScreenState
                           'Are you sure you want to mark this question as done? '
                           'It will no longer appear in your active questions list.',
                         ),
+                        backgroundColor:
+                            isDarkMode
+                                ? theme.colorScheme.surface
+                                : Colors.white,
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(dialogContext).pop(),
@@ -306,9 +352,10 @@ class _MedicalQuestionDetailsScreenState
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Theme.of(context).primaryColor,
-                side: BorderSide(color: Theme.of(context).primaryColor),
+                backgroundColor:
+                    isDarkMode ? theme.colorScheme.surface : Colors.white,
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(color: theme.colorScheme.primary),
               ),
               child: const Text('Done with Question'),
             ),
@@ -372,6 +419,9 @@ class _MedicalQuestionDetailsScreenState
   }
 
   Widget _buildStatusBar() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     final String statusText =
         _question!.status == 'pending'
             ? 'Question Status: Pending'
@@ -381,18 +431,18 @@ class _MedicalQuestionDetailsScreenState
 
     final Color statusColor =
         _question!.status == 'pending'
-            ? Colors
-                .orange
-                .shade800 // Orange
+            ? (isDarkMode ? Colors.orange.shade300 : Colors.orange.shade800)
             : _question!.status == 'answered'
-            ? Colors
-                .green
-                .shade800 // Green
-            : Theme.of(context).primaryColor; // Default
+            ? (isDarkMode ? Colors.green.shade300 : Colors.green.shade800)
+            : theme.colorScheme.primary;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      color: statusColor.withAlpha(40),
+      decoration: BoxDecoration(
+        color: statusColor.withAlpha(isDarkMode ? 60 : 40),
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(color: statusColor.withAlpha(77), width: 1),
+      ),
       child: Row(
         children: [
           Icon(

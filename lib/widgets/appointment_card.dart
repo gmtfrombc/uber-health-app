@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/patient_request.dart';
 import '../providers/provider_data_provider.dart';
-import '../theme.dart';
 
 class AppointmentCard extends StatelessWidget {
   final PatientRequest appointment;
@@ -21,6 +20,8 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     final dateFormat = DateFormat('MMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
 
@@ -28,12 +29,10 @@ class AppointmentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
-        side: BorderSide(
-          color: AppTheme.textTertiaryColor.withAlpha(51),
-          width: 1,
-        ),
+        side: BorderSide(color: theme.dividerColor, width: 1),
       ),
       elevation: 1,
+      color: isDarkMode ? theme.cardColor : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -45,8 +44,8 @@ class AppointmentCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     "Appointment Details",
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -59,7 +58,7 @@ class AppointmentCard extends StatelessWidget {
                     icon: const Icon(Icons.cancel_outlined, size: 14),
                     label: const Text('Cancel', style: TextStyle(fontSize: 12)),
                     style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: theme.colorScheme.error,
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       minimumSize: const Size(30, 30),
                     ),
@@ -69,17 +68,17 @@ class AppointmentCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               "${appointment.category} (${appointment.urgency})",
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today,
                   size: 16,
-                  color: AppTheme.primaryColor,
+                  color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
                 Flexible(
@@ -87,7 +86,7 @@ class AppointmentCard extends StatelessWidget {
                     appointment.scheduledDateTime != null
                         ? "${dateFormat.format(appointment.scheduledDateTime!)} at ${timeFormat.format(appointment.scheduledDateTime!)}"
                         : "Date not specified",
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ),
               ],
@@ -95,10 +94,10 @@ class AppointmentCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.person_outline,
                   size: 16,
-                  color: AppTheme.primaryColor,
+                  color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
                 // Provider name
@@ -107,9 +106,12 @@ class AppointmentCard extends StatelessWidget {
                     builder: (context, providerDataProvider, child) {
                       if (appointment.providerId == null ||
                           appointment.providerId!.isEmpty) {
-                        return const Text(
+                        return Text(
                           "Provider: TBD",
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.textTheme.bodyMedium?.color,
+                          ),
                         );
                       }
 
@@ -120,13 +122,22 @@ class AppointmentCard extends StatelessWidget {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return const Text("Provider: Loading...");
+                            return Text(
+                              "Provider: Loading...",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: theme.textTheme.bodyMedium?.color,
+                              ),
+                            );
                           }
 
                           final providerName = snapshot.data ?? "TBD";
                           return Text(
                             "Provider: $providerName",
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.textTheme.bodyMedium?.color,
+                            ),
                           );
                         },
                       );
@@ -143,6 +154,10 @@ class AppointmentCard extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => onReschedule!(appointment),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.primary,
+                          side: BorderSide(color: theme.colorScheme.primary),
+                        ),
                         child: const Text('Reschedule'),
                       ),
                     ),
@@ -152,6 +167,10 @@ class AppointmentCard extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => onCheckIn!(appointment),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                        ),
                         child: const Text('Start Now'),
                       ),
                     ),
@@ -165,6 +184,9 @@ class AppointmentCard extends StatelessWidget {
   }
 
   void _showCancelConfirmation(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -173,14 +195,19 @@ class AppointmentCard extends StatelessWidget {
           content: const Text(
             'This will permanently cancel your appointment. This action cannot be undone.',
           ),
+          backgroundColor:
+              isDarkMode ? theme.dialogBackgroundColor : Colors.white,
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: theme.textTheme.bodyLarge?.color,
+              ),
               child: const Text('No, Keep It'),
             ),
             TextButton(
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: theme.colorScheme.error,
               ),
               onPressed: () {
                 Navigator.of(context).pop();

@@ -273,4 +273,24 @@ class FirebaseService {
       return [];
     }
   }
+
+  // Fetch a patient request by ID
+  Future<PatientRequest?> getPatientRequestById(String requestId) async {
+    try {
+      final docSnapshot =
+          await _firestore.collection('conversations').doc(requestId).get();
+
+      if (docSnapshot.exists) {
+        return PatientRequest.fromMap(
+          docSnapshot.data()!,
+          docId: docSnapshot.id,
+        );
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('ERROR fetching patient request by ID: $e');
+      return null;
+    }
+  }
 }

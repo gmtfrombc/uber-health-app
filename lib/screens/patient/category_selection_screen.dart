@@ -7,10 +7,10 @@ import '../../models/chat_mode.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/provider_provider.dart';
 import '../../utils/categories.dart';
-import '../../theme.dart';
 import './provider_bottom_sheet.dart';
 import './scheduling_screen.dart';
 import '../consultation/chat_interface.dart';
+import '../../services/firebase_service.dart';
 
 class CategorySelectionScreen extends StatelessWidget {
   final String urgency;
@@ -32,6 +32,7 @@ class CategorySelectionScreen extends StatelessWidget {
       listen: false,
     );
     final providerType = requestProvider.providerType;
+    final theme = Theme.of(context);
 
     // Log which provider type is being used for clarity
     debugPrint(
@@ -44,13 +45,8 @@ class CategorySelectionScreen extends StatelessWidget {
             : physicalTherapistCategories;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text("Choose a Category"),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text("Choose a Category")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -104,19 +100,46 @@ class CategorySelectionScreen extends StatelessWidget {
                       }
                       if (chatMode == ChatMode.immediate &&
                           appointmentId != null) {
-                        Navigator.push(
+                        // Get the request provider and set the category
+                        final requestProvider = Provider.of<RequestProvider>(
                           context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ChatInterface(
-                                  isSynchronous: true,
-                                  isImmediate: true,
-                                  urgency: urgency,
-                                  appointmentId: appointmentId,
-                                  category: category['title']!,
-                                ),
-                          ),
+                          listen: false,
                         );
+
+                        // Set the category for the existing appointment
+                        requestProvider.setCategory(category['title']!);
+
+                        // Get the appointment document from Firebase
+                        FirebaseService().getPatientRequestById(appointmentId!).then((
+                          request,
+                        ) {
+                          if (request != null) {
+                            // Create a request with the existing data but update the category
+                            requestProvider.createRequest(
+                              request.copyWith(
+                                category: category['title']!,
+                                requestType:
+                                    RequestType
+                                        .consult, // Explicitly set as consult
+                              ),
+                            );
+
+                            // Navigate to chat interface
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => ChatInterface(
+                                      isSynchronous: true,
+                                      isImmediate: true,
+                                      urgency: urgency,
+                                      appointmentId: appointmentId,
+                                      category: category['title']!,
+                                    ),
+                              ),
+                            );
+                          }
+                        });
                         return;
                       }
 

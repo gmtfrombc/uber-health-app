@@ -7,7 +7,6 @@ import '../../models/patient_request.dart';
 import '../../models/chat_mode.dart';
 import '../../services/firebase_service.dart';
 import '../../widgets/appointment_card.dart';
-import '../../theme.dart';
 import 'category_selection_screen.dart';
 import 'scheduling_screen.dart';
 import 'medical_question_details_screen.dart';
@@ -52,22 +51,25 @@ class _ConsultsScreenState extends State<ConsultsScreen>
   }
 
   Future<void> _initializeProviders() async {
-    // Get appointment provider and refresh data
+    // Store providers before async operation
     final appointmentProvider = Provider.of<AppointmentProvider>(
       context,
       listen: false,
     );
-    await appointmentProvider.refreshAppointments();
-
-    // Also refresh medical questions
     final medicalQuestionsProvider = Provider.of<MedicalQuestionsProvider>(
       context,
       listen: false,
     );
+
+    // Perform async operations
+    await appointmentProvider.refreshAppointments();
     await medicalQuestionsProvider.refreshQuestions();
 
+    // Check if widget is still mounted before continuing
+    if (!mounted) return;
+
     // Check for upcoming appointments
-    if (!_checkedAppointments && mounted) {
+    if (!_checkedAppointments) {
       appointmentProvider.showAppointmentNotification((appointment) {
         if (mounted) {
           _showAppointmentCheckInDialog(appointment);
@@ -134,120 +136,140 @@ class _ConsultsScreenState extends State<ConsultsScreen>
 
   // Handle appointment cancellation
   Future<void> _cancelAppointment(PatientRequest appointment) async {
+    // Store provider and messenger before async operation
+    final appointmentProvider = Provider.of<AppointmentProvider>(
+      context,
+      listen: false,
+    );
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
-      // Use AppointmentProvider to cancel appointment
-      final appointmentProvider = Provider.of<AppointmentProvider>(
-        context,
-        listen: false,
-      );
+      // Perform async operation
       final success = await appointmentProvider.cancelAppointment(appointment);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Appointment cancelled successfully'
-                  : 'Error cancelling appointment',
-            ),
+      // Check if widget is still mounted before continuing
+      if (!mounted) return;
+
+      // Use stored messenger instead of context after async operation
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Appointment cancelled successfully'
+                : 'Error cancelling appointment',
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error cancelling appointment: $e')),
-        );
-      }
+      // Check if widget is still mounted before continuing
+      if (!mounted) return;
+
+      // Use stored messenger instead of context after async operation
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error cancelling appointment: $e')),
+      );
     }
   }
 
   // Handle appointment rescheduling
   Future<void> _rescheduleAppointment(PatientRequest appointment) async {
+    // Store navigator before async operation
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
-      // First cancel the current appointment
+      // Perform async operation
       await _firebaseService.updateAppointmentStatus(
         appointment.id,
         RequestStatus.cancelled,
       );
 
-      if (mounted) {
-        // Navigate to scheduling screen
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => SchedulingScreen(
-                  category: appointment.category,
-                  isUrgent: appointment.urgency.toLowerCase() == 'urgent',
-                  selectedProvider: null, // We don't have provider info here
-                ),
-          ),
-        );
-      }
+      // Check if widget is still mounted before continuing
+      if (!mounted) return;
+
+      // Use stored navigator instead of context after async operation
+      navigator.push(
+        MaterialPageRoute(
+          builder:
+              (_) => SchedulingScreen(
+                category: appointment.category,
+                isUrgent: appointment.urgency.toLowerCase() == 'urgent',
+                selectedProvider: null, // We don't have provider info here
+              ),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error rescheduling appointment: $e')),
-        );
-      }
+      // Check if widget is still mounted before continuing
+      if (!mounted) return;
+
+      // Use stored messenger instead of context after async operation
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error rescheduling appointment: $e')),
+      );
     }
   }
 
   // Handle appointment check-in
   Future<void> _checkInForAppointment(PatientRequest appointment) async {
+    // Store navigator before async operation
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
-      // Update status to checked in
+      // Perform async operation
       await _firebaseService.updateAppointmentStatus(
         appointment.id,
         RequestStatus.checkedIn,
       );
 
-      if (mounted) {
-        // Navigate to category selection screen first to ensure consistent flow
-        // This will allow the AI prompt to be based on the selected category
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => CategorySelectionScreen(
-                  urgency: appointment.urgency,
-                  chatMode:
-                      ChatMode
-                          .immediate, // Add a new mode to indicate immediate start
-                  appointmentId:
-                      appointment.id, // Pass the appointment ID for context
-                ),
-          ),
-        );
-      }
+      // Check if widget is still mounted before continuing
+      if (!mounted) return;
+
+      // Use stored navigator instead of context after async operation
+      navigator.push(
+        MaterialPageRoute(
+          builder:
+              (_) => CategorySelectionScreen(
+                urgency: appointment.urgency,
+                chatMode:
+                    ChatMode
+                        .immediate, // Add a new mode to indicate immediate start
+                appointmentId:
+                    appointment.id, // Pass the appointment ID for context
+              ),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error checking in: $e')));
-      }
+      // Check if widget is still mounted before continuing
+      if (!mounted) return;
+
+      // Use stored messenger instead of context after async operation
+      messenger.showSnackBar(SnackBar(content: Text('Error checking in: $e')));
     }
   }
 
   void _openMedicalQuestion(MedicalQuestion question) async {
-    final result = await Navigator.push(
+    // Store provider and navigator before async operation
+    final questionsProvider = Provider.of<MedicalQuestionsProvider>(
       context,
+      listen: false,
+    );
+    final navigator = Navigator.of(context);
+
+    // Perform async operation
+    final result = await navigator.push(
       MaterialPageRoute(
         builder:
             (context) => MedicalQuestionDetailsScreen(questionId: question.id),
       ),
     );
 
+    // Check if widget is still mounted before continuing
+    if (!mounted) return;
+
     // If the result is true, the question was marked as done
     // or some other action was taken that requires refreshing
     if (result == true) {
-      // Refresh questions data
-      final questionsProvider = Provider.of<MedicalQuestionsProvider>(
-        context,
-        listen: false,
-      );
-
       // Refresh to make sure our UI is updated after the operation
       questionsProvider.refreshQuestions();
     }
@@ -262,7 +284,7 @@ class _ConsultsScreenState extends State<ConsultsScreen>
 
     return Scaffold(
       appBar: AppBar(title: const Text('Consults & Questions')),
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RefreshIndicator(
         onRefresh: () async {
           await _initializeProviders();
@@ -275,7 +297,7 @@ class _ConsultsScreenState extends State<ConsultsScreen>
               padding: const EdgeInsets.only(bottom: 24.0),
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.medical_services_outlined),
-                label: const Text('Request a Consult or Ask Question'),
+                label: const Text('Request a Consult or Ask a Question'),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -308,7 +330,7 @@ class _ConsultsScreenState extends State<ConsultsScreen>
       child: Text(
         title,
         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          color: AppTheme.primaryColor,
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -316,6 +338,9 @@ class _ConsultsScreenState extends State<ConsultsScreen>
   }
 
   Widget _buildEnhancedAppointmentList(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Consumer<AppointmentProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
@@ -325,12 +350,15 @@ class _ConsultsScreenState extends State<ConsultsScreen>
           return Center(child: Text('Error: ${provider.error}'));
         }
         if (provider.upcomingAppointments.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Center(
               child: Text(
                 "No upcoming appointments",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDarkMode ? Colors.grey[400] : Colors.black54,
+                ),
               ),
             ),
           );
@@ -356,6 +384,9 @@ class _ConsultsScreenState extends State<ConsultsScreen>
   }
 
   Widget _buildEnhancedMedicalQuestionList(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Consumer<MedicalQuestionsProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
@@ -367,12 +398,15 @@ class _ConsultsScreenState extends State<ConsultsScreen>
         final allQuestions = [...pendingQuestions, ...answeredQuestions];
 
         if (allQuestions.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Center(
               child: Text(
                 "No medical questions",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDarkMode ? Colors.grey[400] : Colors.black54,
+                ),
               ),
             ),
           );
@@ -393,6 +427,7 @@ class _ConsultsScreenState extends State<ConsultsScreen>
 
   Widget _buildQuestionItem(MedicalQuestion question) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     // Truncate question text if too long
     final displayText =
@@ -404,18 +439,35 @@ class _ConsultsScreenState extends State<ConsultsScreen>
     final dateFormat = DateFormat('MMM d, yyyy');
     final formattedDate = dateFormat.format(question.timestamp);
 
+    final isPending = question.status == 'pending';
+
+    // Theme-aware colors
+    final statusColor = isPending ? Colors.orange : Colors.green;
+
+    final statusBgColor =
+        isPending
+            ? (isDarkMode
+                ? Colors.orange.shade900.withOpacity(0.3)
+                : Colors.orange.shade100)
+            : (isDarkMode
+                ? Colors.green.shade900.withOpacity(0.3)
+                : Colors.green.shade100);
+
+    final statusTextColor =
+        isPending
+            ? (isDarkMode ? Colors.orange.shade300 : Colors.orange.shade800)
+            : (isDarkMode ? Colors.green.shade300 : Colors.green.shade800);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
-        side: BorderSide(
-          color: AppTheme.textTertiaryColor.withAlpha(51),
-          width: 1,
-        ),
+        side: BorderSide(color: theme.dividerColor.withAlpha(51), width: 1),
       ),
       elevation: 1,
+      color: isDarkMode ? theme.cardColor : Colors.white,
       child: InkWell(
-        onTap: () async {
+        onTap: () {
           debugPrint('Navigating to question details for id: ${question.id}');
           _openMedicalQuestion(question);
         },
@@ -432,10 +484,7 @@ class _ConsultsScreenState extends State<ConsultsScreen>
                 margin: const EdgeInsets.only(top: 4, right: 8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color:
-                      question.status == 'pending'
-                          ? Colors.orange
-                          : Colors.green,
+                  color: statusColor,
                 ),
               ),
               Expanded(
@@ -459,23 +508,15 @@ class _ConsultsScreenState extends State<ConsultsScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                question.status == 'pending'
-                                    ? Colors.orange.shade100
-                                    : Colors.green.shade100,
+                            color: statusBgColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            question.status == 'pending'
-                                ? 'Pending'
-                                : 'Answered',
+                            isPending ? 'Pending' : 'Answered',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  question.status == 'pending'
-                                      ? Colors.orange.shade800
-                                      : Colors.green.shade800,
+                              color: statusTextColor,
                             ),
                           ),
                         ),

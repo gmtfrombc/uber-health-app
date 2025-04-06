@@ -32,6 +32,9 @@ class SignalingService {
   Stream<RTCPeerConnectionState> get connectionStateChanges =>
       _connectionStateController.stream;
 
+  // Add a boolean flag to track if the controller is open
+  bool _isConnectionStateControllerOpen = true;
+
   // Constructor
   SignalingService() {
     _roomsCollection = _firestore.collection('videoRooms');
@@ -39,6 +42,7 @@ class SignalingService {
 
   // Close all resources
   void dispose() {
+    _isConnectionStateControllerOpen = false;
     _localStreamController.close();
     _remoteStreamController.close();
     _connectionStateController.close();
@@ -325,7 +329,10 @@ class SignalingService {
         debugPrint('WebRTC connection state: $state');
     }
 
-    _connectionStateController.add(state);
+    // Check if the controller is still open before adding
+    if (_isConnectionStateControllerOpen) {
+      _connectionStateController.add(state);
+    }
   }
 
   // Listen for remote ICE candidates

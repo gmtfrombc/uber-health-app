@@ -11,7 +11,6 @@ import '../../widgets/animated_message_bubble.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
 import '../../providers/medical_questions_provider.dart';
-import '../../theme.dart';
 import '../../screens/main_screen.dart';
 
 class ChatInterface extends StatefulWidget {
@@ -445,9 +444,11 @@ class ChatInterfaceState extends State<ChatInterface> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Virtual Assistant')),
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           Expanded(
@@ -463,67 +464,11 @@ class ChatInterfaceState extends State<ChatInterface> {
             SizedBox(
               height: 2,
               child: LinearProgressIndicator(
-                backgroundColor: AppTheme.backgroundColor,
-                color: AppTheme.primaryColor,
+                backgroundColor: theme.scaffoldBackgroundColor,
+                color: theme.colorScheme.primary,
               ),
             ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(10),
-                  blurRadius: 4,
-                  offset: Offset(0, -1),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      hintText: 'Describe your symptoms...',
-                      hintStyle: TextStyle(color: AppTheme.textTertiaryColor),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: AppTheme.backgroundColor,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      isDense: true,
-                    ),
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    minLines: 1,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _handleSend(),
-                    enabled: !_triageComplete,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color:
-                        _triageComplete
-                            ? AppTheme.textTertiaryColor
-                            : AppTheme.primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
-                    onPressed: _triageComplete ? null : _handleSend,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildInputArea(),
           Padding(
             padding: const EdgeInsets.all(16),
             child:
@@ -532,13 +477,13 @@ class ChatInterfaceState extends State<ChatInterface> {
                       child: Column(
                         children: [
                           CircularProgressIndicator(
-                            color: AppTheme.primaryColor,
+                            color: theme.colorScheme.primary,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Generating summary...',
                             style: TextStyle(
-                              color: AppTheme.textSecondaryColor,
+                              color: theme.textTheme.bodyMedium?.color,
                             ),
                           ),
                         ],
@@ -548,14 +493,10 @@ class ChatInterfaceState extends State<ChatInterface> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _triageComplete ? _handleDone : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                        style: theme.elevatedButtonTheme.style?.copyWith(
+                          padding: WidgetStateProperty.all(
+                            const EdgeInsets.symmetric(vertical: 16.0),
                           ),
-                          elevation: 0,
                         ),
                         child: const Text(
                           'Done',
@@ -566,6 +507,63 @@ class ChatInterfaceState extends State<ChatInterface> {
                         ),
                       ),
                     ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputArea() {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: theme.dividerColor, width: 1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Input field and send button row
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  decoration: InputDecoration(
+                    hintText: 'Type your message...',
+                    hintStyle: TextStyle(color: theme.hintColor),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: theme.scaffoldBackgroundColor,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  keyboardType: TextInputType.multiline,
+                  maxLines: null,
+                  minLines: 1,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _handleSend(),
+                  enabled: !_triageComplete,
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.send,
+                  color:
+                      _textController.text.isEmpty
+                          ? theme.disabledColor
+                          : theme.colorScheme.primary,
+                ),
+                onPressed: _triageComplete ? null : _handleSend,
+              ),
+            ],
           ),
         ],
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:async';
-import '../theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/debug_utils.dart';
 import 'auth/auth_wrapper.dart';
 
@@ -36,12 +36,29 @@ class SplashScreenState extends State<SplashScreen>
     // Start the animation
     _controller.forward();
 
-    // Navigate to the next screen after animation completes
-    Timer(const Duration(milliseconds: 3500), () {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthWrapper()));
-    });
+    // Initialize SharedPreferences early
+    _initializePreferences();
+  }
+
+  Future<void> _initializePreferences() async {
+    try {
+      // Pre-initialize SharedPreferences
+      await SharedPreferences.getInstance();
+      debugPrint('SharedPreferences initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing SharedPreferences: $e');
+    }
+
+    // Navigate to the next screen after animation completes, even if preferences failed
+    if (mounted) {
+      Timer(const Duration(milliseconds: 3500), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const AuthWrapper()),
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -52,8 +69,9 @@ class SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       body: Stack(
         children: [
           Center(
@@ -81,9 +99,7 @@ class SplashScreenState extends State<SplashScreen>
                       // App name with large text
                       Text(
                         'XUBER HEALTH',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.headlineMedium?.copyWith(
+                        style: theme.textTheme.headlineMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.5,
@@ -93,9 +109,7 @@ class SplashScreenState extends State<SplashScreen>
                       // Tagline
                       Text(
                         'Healthcare at your fingertips',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.titleMedium?.copyWith(
                           color: Colors.white.withAlpha(204),
                           fontWeight: FontWeight.w500,
                         ),

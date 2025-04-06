@@ -6,7 +6,6 @@ import '../../services/firebase_service.dart';
 import '../patient/home_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
-import '../../theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -38,13 +37,27 @@ class OnboardingScreenState extends State<OnboardingScreen> {
   bool _isLoading = true;
 
   // Define step colors for better visual distinction
-  final List<Color> _stepColors = [
-    AppTheme.primaryColor, // Welcome
-    Colors.blue, // Medications
-    Colors.orange, // Allergies
-    Colors.green, // Conditions
-    AppTheme.primaryColor, // Review
-  ];
+  late List<Color> _stepColors;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final theme = Theme.of(context);
+    // Initialize step colors using theme
+    _stepColors = [
+      theme.colorScheme.primary, // Welcome
+      Colors.blue, // Medications
+      Colors.orange, // Allergies
+      Colors.green, // Conditions
+      theme.colorScheme.primary, // Review
+    ];
+  }
 
   Future<void> _fetchUserData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? "";
@@ -548,12 +561,6 @@ class OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _fetchUserData();
-  }
-
-  @override
   void dispose() {
     _medicationsController.dispose();
     _allergiesController.dispose();
@@ -563,12 +570,16 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     // Use _isLoading to show a loader during Firebase interactions.
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
           title: const Text("Health Information"),
           centerTitle: true,
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: Colors.white,
         ),
         body: const Center(
           child: Column(
@@ -587,6 +598,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
       appBar: AppBar(
         title: const Text("Health Information"),
         centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
       ),
       body: Theme(
         data: Theme.of(context).copyWith(

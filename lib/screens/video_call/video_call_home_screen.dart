@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/video_call_provider.dart';
 import 'video_call_screen.dart';
-import '../patient/home_screen.dart';
+import '../main_screen.dart';
 
 class VideoCallHomeScreen extends StatefulWidget {
   const VideoCallHomeScreen({super.key});
@@ -79,7 +79,19 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
         title: const Text('Video Call'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            // Instead of just popping, we need to handle the case where this screen
+            // might have been pushed with pushAndRemoveUntil, in which case there's
+            // nothing to pop back to
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // If we can't pop, navigate to MainScreen
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const MainScreen()),
+              );
+            }
+          },
         ),
       ),
       body: Center(
@@ -90,7 +102,11 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Logo or icon
-              const Icon(Icons.video_call, size: 80, color: Colors.blue),
+              Icon(
+                Icons.video_call,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 32),
 
               // Title
@@ -102,9 +118,12 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
               const SizedBox(height: 8),
 
               // Subtitle
-              const Text(
+              Text(
                 'Connect with your healthcare provider through video call',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).hintColor,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
@@ -114,24 +133,30 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
                 onPressed: _startNewCall,
                 icon: const Icon(Icons.video_call),
                 label: const Text('Start New Call'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                  padding: WidgetStateProperty.all(
+                    const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
               // Divider with text
-              const Row(
+              Row(
                 children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('OR'),
+                  Expanded(
+                    child: Divider(color: Theme.of(context).dividerColor),
                   ),
-                  Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(color: Theme.of(context).hintColor),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: Theme.of(context).dividerColor),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -154,17 +179,19 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
                 onPressed: _isJoining ? null : _joinExistingCall,
                 icon:
                     _isJoining
-                        ? const SizedBox(
+                        ? SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
                         )
                         : const Icon(Icons.login),
                 label: Text(_isJoining ? 'Joining...' : 'Join Call'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                  padding: WidgetStateProperty.all(
+                    const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
               ),
@@ -176,12 +203,20 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    MaterialPageRoute(builder: (_) => const MainScreen()),
                     (route) => false,
                   );
                 },
-                icon: const Icon(Icons.home),
-                label: const Text('Return to Home'),
+                icon: Icon(
+                  Icons.home,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  'Return to Home',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
             ],
           ),

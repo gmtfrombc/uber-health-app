@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
-import '../../theme.dart';
 import '../auth/sign_in_screen.dart'; // Import SignInScreen
+import '../../providers/theme_provider.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -18,6 +18,7 @@ class _AccountScreenState extends State<AccountScreen> {
     super.initState();
     // Fetch profile if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (!userProvider.isProfileLoaded) {
         userProvider.fetchUserProfile();
@@ -27,9 +28,11 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Account & Profile')),
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
           if (userProvider.isLoading) {
@@ -70,12 +73,14 @@ class _AccountScreenState extends State<AccountScreen> {
     if (user.lastname.isNotEmpty) initials += user.lastname[0].toUpperCase();
     if (initials.isEmpty) initials = 'U';
 
+    final theme = Theme.of(context);
+
     return Center(
       child: Column(
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: AppTheme.primaryColor,
+            backgroundColor: theme.colorScheme.primary,
             child: Text(
               initials,
               style: const TextStyle(
@@ -96,7 +101,7 @@ class _AccountScreenState extends State<AccountScreen> {
           Text(
             user.email,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondaryColor,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ],
@@ -105,12 +110,14 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: AppTheme.primaryColor,
+        style: theme.textTheme.titleLarge?.copyWith(
+          color: theme.colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -119,12 +126,16 @@ class _AccountScreenState extends State<AccountScreen> {
 
   // New card for demographic information
   Widget _buildDemographicCard(BuildContext context, UserModel user) {
+    final theme = Theme.of(context);
+
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
         side: BorderSide(
-          color: AppTheme.textTertiaryColor.withAlpha(51),
+          color:
+              theme.textTheme.bodyLarge?.color?.withAlpha(51) ??
+              Colors.grey.withAlpha(51),
           width: 1,
         ),
       ),
@@ -146,21 +157,51 @@ class _AccountScreenState extends State<AccountScreen> {
 
   // New card for account settings
   Widget _buildAccountSettingsCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    // Get theme mode and appropriate icon
+    IconData themeIcon;
+    String themeName;
+
+    if (themeProvider.themeMode == ThemeMode.system) {
+      themeIcon = Icons.brightness_auto;
+      themeName = 'System Theme';
+    } else if (themeProvider.themeMode == ThemeMode.light) {
+      themeIcon = Icons.light_mode;
+      themeName = 'Light Mode';
+    } else {
+      themeIcon = Icons.dark_mode;
+      themeName = 'Dark Mode';
+    }
+
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
         side: BorderSide(
-          color: AppTheme.textTertiaryColor.withAlpha(51),
+          color:
+              theme.textTheme.bodyLarge?.color?.withAlpha(51) ??
+              Colors.grey.withAlpha(51),
           width: 1,
         ),
       ),
       child: Column(
         children: [
+          // Theme selector
           ListTile(
-            leading: const Icon(Icons.notifications_outlined),
-            title: const Text('Notification Preferences'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: Icon(themeIcon, color: theme.colorScheme.primary),
+            title: Text('App Theme', style: theme.textTheme.bodyMedium),
+            subtitle: Text(themeName, style: theme.textTheme.bodySmall),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              _showThemeSelectionDialog(context, themeProvider);
+            },
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.notifications_outlined,
+            title: 'Notification Preferences',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -169,33 +210,30 @@ class _AccountScreenState extends State<AccountScreen> {
               );
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('Privacy Settings'),
-            trailing: const Icon(Icons.chevron_right),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Settings',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Coming Soon: Privacy Settings')),
               );
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: const Text('Change Password'),
-            trailing: const Icon(Icons.chevron_right),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.lock_outline,
+            title: 'Change Password',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Coming Soon: Password Change')),
               );
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.payment_outlined),
-            title: const Text('Subscriptions & Payments'),
-            trailing: const Icon(Icons.chevron_right),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.payment_outlined,
+            title: 'Subscriptions & Payments',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -209,6 +247,28 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? iconColor,
+  }) {
+    final theme = Theme.of(context);
+
+    return ListTile(
+      leading: Icon(icon, color: iconColor ?? theme.textTheme.bodyLarge?.color),
+      title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
+      trailing: Icon(Icons.chevron_right, color: theme.colorScheme.primary),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildDivider() {
+    final theme = Theme.of(context);
+
+    return Divider(color: theme.dividerColor.withAlpha(51));
+  }
+
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -219,13 +279,18 @@ class _AccountScreenState extends State<AccountScreen> {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(color: AppTheme.textSecondaryColor),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -235,78 +300,121 @@ class _AccountScreenState extends State<AccountScreen> {
 
   // Action list for sign out and help
   Widget _buildActionsList(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
         side: BorderSide(
-          color: AppTheme.textTertiaryColor.withAlpha(51),
+          color:
+              theme.textTheme.bodyLarge?.color?.withAlpha(51) ??
+              Colors.grey.withAlpha(51),
           width: 1,
         ),
       ),
       child: Column(
         children: [
-          ListTile(
-            leading: const Icon(Icons.help_outline),
-            title: const Text('Help & Support'),
-            trailing: const Icon(Icons.chevron_right),
+          _buildMenuItem(
+            icon: Icons.help_outline,
+            title: 'Help & Support',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Coming Soon: Help & Support')),
               );
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.logout, color: AppTheme.errorColor),
-            title: const Text(
-              'Sign Out',
-              style: TextStyle(color: AppTheme.errorColor),
-            ),
-            onTap: () {
-              // Sign out logic
-              showDialog(
-                context: context,
-                builder:
-                    (dContext) => AlertDialog(
-                      title: const Text("Confirm Sign Out"),
-                      content: const Text("Are you sure you want to sign out?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dContext),
-                          child: const Text("Cancel"),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(dContext);
-                            Provider.of<UserProvider>(
-                              context,
-                              listen: false,
-                            ).clearUserData();
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SignInScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.errorColor,
-                          ),
-                          child: const Text("Sign Out"),
-                        ),
-                      ],
-                    ),
-              );
-            },
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: AppTheme.errorColor,
-            ),
-          ),
+          _buildDivider(),
+          _buildLogoutButton(),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    final theme = Theme.of(context);
+
+    return ListTile(
+      leading: Icon(Icons.logout, color: theme.colorScheme.error),
+      title: Text('Logout', style: TextStyle(color: theme.colorScheme.error)),
+      onTap: () {
+        // Sign out logic
+        showDialog(
+          context: context,
+          builder:
+              (dContext) => AlertDialog(
+                title: const Text("Confirm Sign Out"),
+                content: const Text("Are you sure you want to sign out?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dContext),
+                    child: const Text("Cancel"),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dContext);
+                      Provider.of<UserProvider>(
+                        context,
+                        listen: false,
+                      ).clearUserData();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SignInScreen()),
+                        (route) => false,
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                    ),
+                    child: const Text("Sign Out"),
+                  ),
+                ],
+              ),
+        );
+      },
+      trailing: Icon(Icons.chevron_right, color: theme.colorScheme.error),
+    );
+  }
+
+  void _showThemeSelectionDialog(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Theme'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.brightness_auto),
+                  title: Text('System Theme'),
+                  onTap: () {
+                    themeProvider.setThemeMode(ThemeMode.system);
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.light_mode),
+                  title: Text('Light Mode'),
+                  onTap: () {
+                    themeProvider.setThemeMode(ThemeMode.light);
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.dark_mode),
+                  title: Text('Dark Mode'),
+                  onTap: () {
+                    themeProvider.setThemeMode(ThemeMode.dark);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
     );
   }
 }

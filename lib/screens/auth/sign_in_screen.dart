@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_up_screen.dart';
-import 'auth_wrapper.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -19,10 +18,18 @@ class _SignInScreenState extends State<SignInScreen> {
     text: "password",
   ); // Hard-coded for testing
 
+  bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
 
   Future<void> _signIn() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter both email and password';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -39,11 +46,14 @@ class _SignInScreenState extends State<SignInScreen> {
             );
 
         if (credential.user != null) {
+          // Force navigation instead of relying solely on the auth state listener
           if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AuthWrapper()),
-          );
+
+          // Clear any cached state
+          await Future.delayed(Duration(milliseconds: 300));
+
+          // Force navigation to the main app
+          Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
           return; // Success, exit the method
         }
       } on FirebaseAuthException catch (e) {
@@ -68,8 +78,16 @@ class _SignInScreenState extends State<SignInScreen> {
       }
     }
 
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _signInWithApple() async {
     setState(() {
-      _isLoading = false;
+      _errorMessage = 'Apple sign-in is not implemented yet';
     });
   }
 
@@ -82,45 +100,256 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Use theme colors instead of hardcoded colors
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign In")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('XUBER Health'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SignUpScreen()),
+              );
+            },
+            child: Text(
+              'SIGN UP',
+              style: TextStyle(
+                color: theme.appBarTheme.foregroundColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            if (_errorMessage != null)
-              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                  onPressed: _signIn,
-                  child: const Text("Sign In"),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Main content
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Error message
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error.withAlpha(26),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: theme.colorScheme.error,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+
+                    // Sign in heading
+                    Text(
+                      'Sign in to XUBER Health.',
+                      style: theme.textTheme.displaySmall,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Email field
+                    Container(
+                      decoration: BoxDecoration(
+                        color:
+                            isDarkMode
+                                ? theme.colorScheme.surface
+                                : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: theme.dividerColor),
+                      ),
+                      child: TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(
+                          color: theme.textTheme.bodyLarge?.color,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Email address',
+                          hintStyle: TextStyle(color: theme.hintColor),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Password field
+                    Container(
+                      decoration: BoxDecoration(
+                        color:
+                            isDarkMode
+                                ? theme.colorScheme.surface
+                                : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: theme.dividerColor),
+                      ),
+                      child: TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        style: TextStyle(
+                          color: theme.textTheme.bodyLarge?.color,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Password',
+                          hintStyle: TextStyle(color: theme.hintColor),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: theme.hintColor,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Forgot password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // Navigate to forgot password
+                        },
+                        child: Text(
+                          'FORGOT YOUR PASSWORD?',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.textTheme.bodySmall?.color,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // OR divider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(color: theme.dividerColor, height: 1),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.textTheme.bodySmall?.color,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(color: theme.dividerColor, height: 1),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Sign in with Apple button
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color:
+                            isDarkMode
+                                ? theme.colorScheme.surface
+                                : Colors.white,
+                        border: Border.all(color: theme.dividerColor),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextButton.icon(
+                        icon: Icon(
+                          Icons.apple,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          size: 24,
+                        ),
+                        label: Text(
+                          'Sign in with Apple',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        onPressed: _signInWithApple,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor:
+                              isDarkMode
+                                  ? theme.colorScheme.surface
+                                  : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                );
-              },
-              child: const Text("Don't have an account? Sign Up"),
+              ),
             ),
-          ],
-        ),
+          ),
+
+          // Sign in button at bottom
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _signIn,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child:
+                    _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                          'SIGN IN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

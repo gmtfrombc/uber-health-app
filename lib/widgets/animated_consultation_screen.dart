@@ -7,7 +7,6 @@ import '../providers/provider_provider.dart';
 import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart';
 import '../screens/consultation/final_screen.dart';
-import '../theme.dart';
 import '../screens/main_screen.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
@@ -43,6 +42,8 @@ class AnimatedConsultationScreenState
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
       final providerProvider = Provider.of<ProviderProvider>(
         context,
         listen: false,
@@ -184,6 +185,8 @@ class AnimatedConsultationScreenState
   }
 
   Future<void> _generateSummary() async {
+    if (!mounted) return;
+
     final requestProvider = Provider.of<RequestProvider>(
       context,
       listen: false,
@@ -200,6 +203,7 @@ class AnimatedConsultationScreenState
     conversation.insert(0, {"role": "system", "content": triagePrompt});
     try {
       String summary = await ChatGPTService().getAIResponse(conversation);
+      if (!mounted) return;
       requestProvider.updateConversationWithSummary(summary, {});
     } catch (e) {
       debugPrint("Error generating summary: $e");
@@ -208,13 +212,11 @@ class AnimatedConsultationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Processing Request'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-      ),
-      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(title: const Text('Processing Request')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -223,22 +225,24 @@ class AnimatedConsultationScreenState
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor,
+                  color: theme.scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(24),
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryLightColor.withOpacity(0.1),
-                      AppTheme.backgroundColor.withOpacity(0.8),
+                      theme.colorScheme.primary.withAlpha(26),
+                      theme.scaffoldBackgroundColor.withAlpha(204),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
+                      color:
+                          isDarkMode
+                              ? Colors.black.withAlpha(77)
+                              : theme.colorScheme.primary.withAlpha(20),
+                      blurRadius: 10,
+                      spreadRadius: 0,
                     ),
                   ],
                 ),
@@ -265,11 +269,14 @@ class AnimatedConsultationScreenState
                   vertical: 12.0,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDarkMode ? theme.colorScheme.surface : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.08),
+                      color:
+                          isDarkMode
+                              ? Colors.black.withAlpha(77)
+                              : theme.colorScheme.primary.withAlpha(20),
                       blurRadius: 10,
                       spreadRadius: 0,
                     ),
@@ -279,10 +286,11 @@ class AnimatedConsultationScreenState
                   messages.isNotEmpty
                       ? messages[currentStage]
                       : "Processing your request...",
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppTheme.textPrimaryColor,
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w500,
                     height: 1.4,
+                    color:
+                        isDarkMode ? theme.textTheme.titleLarge?.color : null,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -300,22 +308,8 @@ class AnimatedConsultationScreenState
                           (route) => false,
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: const Text(
-                        'Got it!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      style: Theme.of(context).elevatedButtonTheme.style,
+                      child: const Text('Got it!'),
                     ),
                   ),
                 ),

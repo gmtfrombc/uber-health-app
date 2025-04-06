@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import 'typing_animation_text.dart';
-import '../theme.dart';
 
 class AnimatedMessageBubble extends StatelessWidget {
   final Message message;
@@ -15,6 +14,7 @@ class AnimatedMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final bool isPatient = message.sender == 'patient';
 
     return Align(
@@ -28,14 +28,14 @@ class AnimatedMessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color:
               isPatient
-                  ? AppTheme.primaryLightColor.withAlpha(77)
-                  : AppTheme.backgroundColor,
+                  ? theme.colorScheme.primary.withAlpha(77)
+                  : theme.scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color:
                 isPatient
-                    ? AppTheme.primaryColor.withAlpha(51)
-                    : AppTheme.textTertiaryColor.withAlpha(51),
+                    ? theme.colorScheme.primary.withAlpha(51)
+                    : theme.dividerColor.withAlpha(51),
             width: 1,
           ),
           boxShadow: [
@@ -51,14 +51,14 @@ class AnimatedMessageBubble extends StatelessWidget {
                 ? Text(
                   message.content,
                   style: TextStyle(
-                    color: AppTheme.textPrimaryColor,
+                    color: theme.textTheme.bodyLarge?.color,
                     fontSize: 15,
                   ),
                 )
                 : TypingAnimationText(
                   text: message.content,
                   style: TextStyle(
-                    color: AppTheme.textPrimaryColor,
+                    color: theme.textTheme.bodyLarge?.color,
                     fontSize: 15,
                   ),
                   typingSpeed: const Duration(milliseconds: 20),

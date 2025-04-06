@@ -7,7 +7,6 @@ import '../../providers/request_provider.dart';
 import '../../models/patient_request.dart';
 import '../../services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../theme.dart';
 import '../../models/provider_model.dart';
 
 class SchedulingScreen extends StatefulWidget {
@@ -153,22 +152,18 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
   Widget build(BuildContext context) {
     final DateFormat dateFormat = DateFormat('EEEE, MMMM d, yyyy');
     final DateFormat timeFormat = DateFormat('h:mm a');
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Schedule Your Consult'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text('Schedule Your Consult'), elevation: 0),
       body: Column(
         children: [
           // Header with selected date time info
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
+              color: theme.scaffoldBackgroundColor,
               borderRadius: const BorderRadius.vertical(
                 bottom: Radius.circular(24),
               ),
@@ -180,14 +175,14 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                   children: [
                     Icon(
                       Icons.calendar_today,
-                      color: Colors.white.withAlpha(230),
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 10),
                     Text(
                       'Your Appointment',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -196,25 +191,24 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                 const SizedBox(height: 10),
                 Text(
                   dateFormat.format(scheduledDateTime),
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'at ${timeFormat.format(scheduledDateTime)}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white.withAlpha(230),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.8),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Card(
-                  elevation: 0,
-                  color: Colors.white.withAlpha(38),
+                  elevation: 2,
+                  color: theme.colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: Colors.white.withAlpha(51)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -225,7 +219,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                       children: [
                         Icon(
                           Icons.medical_services,
-                          color: Colors.white.withAlpha(230),
+                          color: theme.colorScheme.onPrimary.withAlpha(230),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -234,20 +228,17 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                             children: [
                               Text(
                                 widget.category,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               if (widget.selectedProvider != null)
                                 Text(
                                   'with Dr. ${widget.selectedProvider!.lastname}',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white.withAlpha(230),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onPrimary
+                                        .withAlpha(230),
                                   ),
                                 ),
                             ],
@@ -261,14 +252,14 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                           decoration: BoxDecoration(
                             color:
                                 widget.isUrgent
-                                    ? AppTheme.highUrgencyColor.withAlpha(77)
-                                    : AppTheme.lowUrgencyColor.withAlpha(77),
+                                    ? theme.colorScheme.error.withAlpha(77)
+                                    : theme.colorScheme.tertiary.withAlpha(77),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             widget.isUrgent ? 'Urgent' : 'Routine',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: theme.colorScheme.onPrimary,
                               fontWeight: FontWeight.w500,
                               fontSize: 12,
                             ),
@@ -287,8 +278,8 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
             padding: const EdgeInsets.all(20.0),
             child: Text(
               'Select a date and time for your appointment',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppTheme.textSecondaryColor,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -300,9 +291,21 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color:
+                    theme.brightness == Brightness.dark
+                        ? theme.colorScheme.surface
+                        : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: AppTheme.softShadow,
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        theme.brightness == Brightness.dark
+                            ? Colors.black.withAlpha(50)
+                            : Colors.black.withAlpha(25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
@@ -311,7 +314,10 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                   minimumDate: _minimumDate,
                   mode: CupertinoDatePickerMode.dateAndTime,
                   minuteInterval: 15,
-                  backgroundColor: Colors.white,
+                  backgroundColor:
+                      theme.brightness == Brightness.dark
+                          ? theme.colorScheme.surface
+                          : Colors.white,
                   onDateTimeChanged: (newDateTime) {
                     // Ensure the date is not in the past
                     if (newDateTime.isBefore(_minimumDate)) {
@@ -334,22 +340,20 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
               height: 56,
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _saveScheduledAppointment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                style: theme.elevatedButtonTheme.style?.copyWith(
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  disabledBackgroundColor: AppTheme.primaryColor.withAlpha(128),
                 ),
                 child:
                     _isSubmitting
-                        ? const SizedBox(
+                        ? SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                             strokeWidth: 3,
                           ),
                         )
@@ -360,10 +364,8 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                             const SizedBox(width: 10),
                             Text(
                               'Confirm Appointment',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

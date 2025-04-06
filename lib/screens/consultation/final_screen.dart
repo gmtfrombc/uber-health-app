@@ -6,7 +6,6 @@ import '../../services/firebase_service.dart';
 import '../../models/patient_request.dart';
 import '../../providers/provider_provider.dart';
 import '../../providers/request_provider.dart';
-import '../../theme.dart';
 import '../video_call/video_call_home_screen.dart'; // Add import for VideoCallHomeScreen
 import '../../screens/main_screen.dart';
 
@@ -22,6 +21,9 @@ class FinalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     // Get provider info
     final providerProvider = Provider.of<ProviderProvider>(
       context,
@@ -69,12 +71,8 @@ class FinalScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connected'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-      ),
-      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(title: const Text('Connected')),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -84,19 +82,19 @@ class FinalScreen extends StatelessWidget {
               // Animated success icon with improved container styling
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor,
+                  color: theme.scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(24),
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.successColor.withOpacity(0.1),
-                      AppTheme.backgroundColor.withOpacity(0.8),
+                      theme.colorScheme.primary.withAlpha(26),
+                      theme.scaffoldBackgroundColor.withAlpha(204),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.successColor.withOpacity(0.15),
+                      color: theme.colorScheme.primary.withAlpha(38),
                       blurRadius: 20,
                       spreadRadius: 2,
                       offset: const Offset(0, 4),
@@ -125,11 +123,18 @@ class FinalScreen extends StatelessWidget {
                   vertical: 16.0,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color:
+                      isDarkMode ? theme.colorScheme.surface : theme.cardColor,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDarkMode ? theme.dividerColor : Colors.transparent,
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.08),
+                      color: theme.colorScheme.primary.withAlpha(
+                        isDarkMode ? 30 : 20,
+                      ),
                       blurRadius: 10,
                       spreadRadius: 0,
                     ),
@@ -137,8 +142,7 @@ class FinalScreen extends StatelessWidget {
                 ),
                 child: Text(
                   finalMessage,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppTheme.textPrimaryColor,
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     height: 1.3,
                   ),
@@ -157,6 +161,28 @@ class FinalScreen extends StatelessWidget {
                   label: Text(buttonText),
                   onPressed: () {
                     if (isSynchronous) {
+                      // Update the appointment status to inProgress if it hasn't been done already
+                      if (appointmentId != null) {
+                        _updateAppointmentStatus(
+                          appointmentId!,
+                          RequestStatus.inProgress,
+                        );
+
+                        // Make sure we preserve the request type as consult
+                        final reqProvider = Provider.of<RequestProvider>(
+                          context,
+                          listen: false,
+                        );
+                        if (reqProvider.currentRequest != null) {
+                          // Create a new request with the same data but explicitly set as consult
+                          reqProvider.createRequest(
+                            reqProvider.currentRequest!.copyWith(
+                              requestType: RequestType.consult,
+                            ),
+                          );
+                        }
+                      }
+
                       // Navigate to video call screen for synchronous consultations
                       Navigator.pushAndRemoveUntil(
                         context,
@@ -174,17 +200,10 @@ class FinalScreen extends StatelessWidget {
                       );
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isSynchronous
-                            ? AppTheme.successColor
-                            : AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  style: theme.elevatedButtonTheme.style?.copyWith(
+                    padding: WidgetStateProperty.all(
+                      const EdgeInsets.symmetric(vertical: 18),
                     ),
-                    elevation: 2,
                   ),
                 ),
               ),
@@ -193,8 +212,14 @@ class FinalScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: TextButton.icon(
-                    icon: const Icon(Icons.home_outlined),
-                    label: const Text("Return to Home"),
+                    icon: Icon(
+                      Icons.home_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    label: Text(
+                      "Return to Home",
+                      style: TextStyle(color: theme.colorScheme.primary),
+                    ),
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
