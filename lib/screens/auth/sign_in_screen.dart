@@ -1,6 +1,7 @@
 // lib/screens/sign_in_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../widgets/consistent_app_bar.dart';
 import 'sign_up_screen.dart';
 import 'auth_wrapper.dart';
 
@@ -110,8 +111,8 @@ class _SignInScreenState extends State<SignInScreen> {
     // Use theme colors instead of hardcoded colors
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('XUBER Health'),
+      appBar: ConsistentAppBar(
+        title: 'XUBER Health',
         actions: [
           TextButton(
             onPressed: () {
@@ -246,7 +247,13 @@ class _SignInScreenState extends State<SignInScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // Navigate to forgot password
+                          // Show a simple message since password reset isn't implemented
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Password reset coming soon!'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
                         },
                         child: Text(
                           'FORGOT YOUR PASSWORD?',

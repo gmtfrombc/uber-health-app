@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../providers/request_provider.dart';
 import '../../models/patient_request.dart';
+import '../../widgets/consistent_app_bar.dart';
 import 'category_selection_screen.dart';
 import '../consultation/chat_interface.dart';
 
@@ -492,8 +493,7 @@ class _RequestScreenState extends State<RequestScreen> {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('Request Care')),
+      appBar: const ConsistentAppBar(title: 'Request Care'),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

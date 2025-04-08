@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'request_screen.dart';
 import '../../providers/user_provider.dart';
+import '../../widgets/consistent_app_bar.dart';
 import '../auth/profile_edit_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -33,7 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('XUBER Health')),
+      appBar: const ConsistentAppBar(
+        title: 'XUBER Health',
+        automaticallyImplyLeading: false,
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           await _refreshData();

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../screens/patient/home_screen.dart';
 import '../screens/patient/consults_screen.dart'; // Renamed from visits_screen
+import '../screens/patient/activity_screen.dart'; // Import the new ActivityScreen
 import '../screens/patient/account_screen.dart';
 import '../providers/medical_questions_provider.dart';
-import '../utils/context_utils.dart'; // Import the new utilities
+import '../utils/context_utils.dart'; // Import ContextUtils
 
 /// Main navigation screen of the app containing the bottom navigation and tab view
 class MainScreen extends StatefulWidget {
@@ -33,10 +34,11 @@ class MainScreenState extends State<MainScreen>
   late MedicalQuestionsProvider _questionsProvider;
   bool _providerInitialized = false;
 
-  // Define the screens for each tab - Home, Consults, and Account
+  // Define the screens for each tab - Home, Consults, Activity, and Account
   final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     const ConsultsScreen(), // Renamed from VisitsScreen
+    const ActivityScreen(), // Add the new ActivityScreen
     const AccountScreen(),
   ];
 
@@ -226,6 +228,11 @@ class MainScreenState extends State<MainScreen>
                   ],
                 ),
                 label: 'Consults',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.bar_chart_outlined),
+                activeIcon: Icon(Icons.bar_chart),
+                label: 'Activity',
               ),
               const BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),

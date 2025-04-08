@@ -8,6 +8,7 @@ import '../../services/chatgpt_service.dart';
 import '../../utils/prompts.dart';
 import '../../widgets/animated_consultation_screen.dart';
 import '../../widgets/animated_message_bubble.dart';
+import '../../widgets/consistent_app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
 import '../../providers/medical_questions_provider.dart';
@@ -173,6 +174,27 @@ class ChatInterfaceState extends State<ChatInterface> {
       "Current message sequence: ${patientCount == 1 ? 'Initial question' : 'Follow-up response'}",
     );
 
+    // Force triage completion after 2 patient messages (initial question + 1 follow-up)
+    // This means the patient has sent their second message (patientCount == 2)
+    if (patientCount == 2) {
+      debugPrint("Second patient message detected, marking triage as complete");
+      setState(() {
+        _messages.add(
+          Message(
+            sender: 'ai',
+            content:
+                "Okay, I have all the information that I need. Please click 'Done' to continue.",
+            timestamp: DateTime.now(),
+          ),
+        );
+        _isLoadingAI = false;
+        _triageComplete = true;
+      });
+      _scrollToBottom();
+      return;
+    }
+
+    // Original max message check (keeping as a fallback)
     if (patientCount >= 10) {
       debugPrint("Maximum message count reached, marking triage as complete");
       setState(() {
@@ -194,6 +216,58 @@ class ChatInterfaceState extends State<ChatInterface> {
     try {
       // Get response from AI
       debugPrint("Sending conversation to ChatGPT");
+
+      // Special handling for the very first patient message
+      if (patientCount == 1) {
+        final aiResponse = await _chatGPTService.getAIResponse(conversation);
+        debugPrint(
+          "Received response to first patient message: ${aiResponse.substring(0, aiResponse.length > 50 ? 50 : aiResponse.length)}...",
+        );
+
+        // Check if the AI indicates triage is complete already
+        final bool containsTriageComplete = aiResponse.contains(
+          "[TRIAGE_COMPLETE]",
+        );
+
+        if (containsTriageComplete) {
+          // The question was complete enough, no follow-up needed
+          final cleanedResponse =
+              aiResponse.replaceAll("[TRIAGE_COMPLETE]", "").trim();
+
+          setState(() {
+            _messages.add(
+              Message(
+                sender: 'ai',
+                content:
+                    cleanedResponse.isEmpty
+                        ? "Thank you for your question. I'll forward it to the healthcare provider."
+                        : cleanedResponse,
+                timestamp: DateTime.now(),
+              ),
+            );
+            _isLoadingAI = false;
+            _triageComplete = true;
+          });
+        } else {
+          // The AI is asking a clarifying question - this is the ONE allowed question
+          setState(() {
+            _messages.add(
+              Message(
+                sender: 'ai',
+                content: aiResponse,
+                timestamp: DateTime.now(),
+              ),
+            );
+            _isLoadingAI = false;
+          });
+        }
+        _scrollToBottom();
+        return;
+      }
+
+      // For all other messages (when patientCount > 1), we always complete triage
+      // This is handled by the earlier code block that checks patientCount == 2
+
       final aiResponse = await _chatGPTService.getAIResponse(conversation);
       debugPrint(
         "Received response from ChatGPT: ${aiResponse.substring(0, aiResponse.length > 50 ? 50 : aiResponse.length)}...",
@@ -447,7 +521,7 @@ class ChatInterfaceState extends State<ChatInterface> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Virtual Assistant')),
+      appBar: ConsistentAppBar(title: 'Virtual Assistant'),
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [

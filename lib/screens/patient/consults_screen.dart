@@ -7,6 +7,7 @@ import '../../models/patient_request.dart';
 import '../../models/chat_mode.dart';
 import '../../services/firebase_service.dart';
 import '../../widgets/appointment_card.dart';
+import '../../widgets/consistent_app_bar.dart';
 import 'category_selection_screen.dart';
 import 'scheduling_screen.dart';
 import 'medical_question_details_screen.dart';
@@ -175,26 +176,24 @@ class _ConsultsScreenState extends State<ConsultsScreen>
   Future<void> _rescheduleAppointment(PatientRequest appointment) async {
     // Store navigator before async operation
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
     try {
-      // Perform async operation
-      await _firebaseService.updateAppointmentStatus(
-        appointment.id,
-        RequestStatus.cancelled,
-      );
+      // No longer cancelling the appointment here - we'll do that only if user confirms reschedule
 
       // Check if widget is still mounted before continuing
       if (!mounted) return;
 
       // Use stored navigator instead of context after async operation
+      // Now passing the appointmentId to know which appointment to update if rescheduled
       navigator.push(
         MaterialPageRoute(
           builder:
               (_) => SchedulingScreen(
                 category: appointment.category,
                 isUrgent: appointment.urgency.toLowerCase() == 'urgent',
-                selectedProvider: null, // We don't have provider info here
+                selectedProvider: null,
+                appointmentId:
+                    appointment.id, // Pass the appointment ID for reschedule
               ),
         ),
       );
@@ -202,10 +201,10 @@ class _ConsultsScreenState extends State<ConsultsScreen>
       // Check if widget is still mounted before continuing
       if (!mounted) return;
 
-      // Use stored messenger instead of context after async operation
-      messenger.showSnackBar(
-        SnackBar(content: Text('Error rescheduling appointment: $e')),
-      );
+      // Use stored messenger
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error starting reschedule: $e')));
     }
   }
 
@@ -283,43 +282,57 @@ class _ConsultsScreenState extends State<ConsultsScreen>
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Consults & Questions')),
+      appBar: const ConsistentAppBar(title: 'Consults & Questions'),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _initializeProviders();
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // Add request button at the top
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24.0),
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.medical_services_outlined),
-                label: const Text('Request a Consult or Ask a Question'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RequestScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+      body: Stack(
+        children: [
+          // Main content with RefreshIndicator
+          RefreshIndicator(
+            onRefresh: () async {
+              await _initializeProviders();
+            },
+            child: ListView(
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                top: 16.0,
+                bottom: 96.0,
+              ), // Extra bottom padding for button
+              children: [
+                _buildSectionTitle(context, 'Upcoming Appointments'),
+                _buildEnhancedAppointmentList(context),
+                const SizedBox(height: 24),
+                _buildSectionTitle(context, 'Medical Questions'),
+                _buildEnhancedMedicalQuestionList(context),
+              ],
+            ),
+          ),
+
+          // Fixed position button at the bottom
+          Positioned(
+            left: 16.0,
+            right: 16.0,
+            bottom: 24.0, // Padding above bottom nav bar
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.medical_services_outlined),
+              label: const Text('Request a Consult or Ask a Question'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RequestScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 4, // Add shadow for better visibility
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            _buildSectionTitle(context, 'Upcoming Appointments'),
-            _buildEnhancedAppointmentList(context),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Medical Questions'),
-            _buildEnhancedMedicalQuestionList(context),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

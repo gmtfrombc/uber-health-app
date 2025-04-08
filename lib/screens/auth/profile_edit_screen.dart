@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
 import '../../providers/user_provider.dart';
+import '../../widgets/consistent_app_bar.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   const ProfileEditScreen({super.key});
@@ -488,61 +489,41 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // Helper function to show the confirmation dialog
     void showUnsavedChangesDialog() {
-      // Store context to ensure consistency
-      final BuildContext currentContext = context;
-
-      showDialog<bool>(
-        context: currentContext,
-        builder:
-            (dialogContext) => AlertDialog(
-              backgroundColor:
-                  Theme.of(currentContext).dialogTheme.backgroundColor,
-              title: Text(
-                'Unsaved Changes',
-                style: Theme.of(currentContext).textTheme.titleLarge,
-              ),
-              content: Text(
-                'You have unsaved changes. Do you want to save them before leaving?',
-                style: Theme.of(currentContext).textTheme.bodyMedium,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    // Close dialog and discard changes
-                    Navigator.of(dialogContext).pop();
-                    if (mounted) {
-                      Navigator.of(currentContext).pop();
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(currentContext).colorScheme.error,
-                  ),
-                  child: const Text('Discard'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Close dialog and save changes
-                    Navigator.of(dialogContext).pop();
-                    if (mounted) {
-                      _saveProfile();
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor:
-                        Theme.of(currentContext).colorScheme.primary,
-                  ),
-                  child: const Text('Save'),
-                ),
-              ],
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Unsaved Changes"),
+            content: const Text(
+              "You have unsaved changes. Are you sure you want to leave without saving?",
             ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text("Cancel"),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Dismiss the dialog
+                },
+              ),
+              TextButton(
+                child: const Text("Discard"),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Dismiss the dialog
+                  Navigator.of(context).pop(); // Go back to previous screen
+                },
+              ),
+            ],
+          );
+        },
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Edit Profile"),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: ConsistentAppBar(
+        title: 'Edit Profile',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {

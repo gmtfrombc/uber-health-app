@@ -47,7 +47,7 @@ void _logError(String type, Object error, StackTrace stack) {
   // Check for specific error types to provide better guidance
   bool isInheritedWidgetError =
       error.toString().contains('deactivated widget') ||
-      error.toString().contains('Looking up a deactivated widget');
+          error.toString().contains('Looking up a deactivated widget');
 
   // Log errors in debug mode
   if (kDebugMode) {
@@ -86,8 +86,7 @@ void _showErrorUI(String errorMessage, [StackTrace? stack]) {
     }
 
     // Determine if this is a serious error that needs detailed reporting
-    bool isSeriousError =
-        errorMessage.contains("Firebase") ||
+    bool isSeriousError = errorMessage.contains("Firebase") ||
         errorMessage.contains("Exception") ||
         errorMessage.contains("Error") ||
         stack != null;
@@ -99,16 +98,15 @@ void _showErrorUI(String errorMessage, [StackTrace? stack]) {
           // For serious errors, show the detailed error screen
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder:
-                  (context) => ErrorDetailsScreen(
-                    errorMessage: errorMessage,
-                    stackTrace: stack?.toString(),
-                    timestamp: DateTime.now(),
-                    onRetry: () {
-                      Navigator.of(context).pop();
-                      // Here you could add logic to retry the last operation if applicable
-                    },
-                  ),
+              builder: (context) => ErrorDetailsScreen(
+                errorMessage: errorMessage,
+                stackTrace: stack?.toString(),
+                timestamp: DateTime.now(),
+                onRetry: () {
+                  Navigator.of(context).pop();
+                  // Here you could add logic to retry the last operation if applicable
+                },
+              ),
             ),
           );
         } else if (context.mounted) {
@@ -128,12 +126,11 @@ void _showErrorUI(String errorMessage, [StackTrace? stack]) {
                   if (context.mounted) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder:
-                            (context) => ErrorDetailsScreen(
-                              errorMessage: errorMessage,
-                              stackTrace: stack?.toString(),
-                              timestamp: DateTime.now(),
-                            ),
+                        builder: (context) => ErrorDetailsScreen(
+                          errorMessage: errorMessage,
+                          stackTrace: stack?.toString(),
+                          timestamp: DateTime.now(),
+                        ),
                       ),
                     );
                   }
@@ -314,20 +311,19 @@ class MyApp extends StatelessWidget {
               // Define routes for navigation after login
               routes: {
                 '/main': (context) => const MainScreen(),
-                '/account':
-                    (context) => const MainScreen(
-                      initialTab: 2,
-                    ), // Navigate to account tab
-                '/consults':
-                    (context) => const MainScreen(
+                '/account': (context) => const MainScreen(
+                      initialTab: 3,
+                    ), // Navigate to account tab (now at index 3)
+                '/consults': (context) => const MainScreen(
                       initialTab: 1,
                     ), // Navigate to consults tab
-                '/provider_dashboard':
-                    (context) =>
-                        const ProviderDashboardScreen(), // Add provider dashboard route
+                '/activity': (context) => const MainScreen(
+                      initialTab: 2,
+                    ), // Navigate to activity tab
+                '/provider_dashboard': (context) =>
+                    const ProviderDashboardScreen(), // Add provider dashboard route
                 // Add error details route for direct navigation
-                '/error_details':
-                    (context) => ErrorDetailsScreen(
+                '/error_details': (context) => ErrorDetailsScreen(
                       errorMessage: 'Test error message',
                       stackTrace: 'Simulated stack trace for testing',
                       timestamp: DateTime.now(),

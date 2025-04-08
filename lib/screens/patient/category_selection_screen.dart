@@ -7,6 +7,7 @@ import '../../models/chat_mode.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/provider_provider.dart';
 import '../../utils/categories.dart';
+import '../../widgets/consistent_app_bar.dart';
 import './provider_bottom_sheet.dart';
 import './scheduling_screen.dart';
 import '../consultation/chat_interface.dart';
@@ -46,7 +47,7 @@ class CategorySelectionScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text("Choose a Category")),
+      appBar: const ConsistentAppBar(title: "Choose a Category"),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(

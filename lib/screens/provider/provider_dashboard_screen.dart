@@ -460,12 +460,24 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                       () => Navigator.of(
                                         dialogContext,
                                       ).pop(false),
+                                  style: ButtonStyle(
+                                    foregroundColor: WidgetStateProperty.all(
+                                      Theme.of(
+                                        dialogContext,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
                                   child: Text("Cancel"),
                                 ),
                                 TextButton(
                                   onPressed:
                                       () =>
                                           Navigator.of(dialogContext).pop(true),
+                                  style: ButtonStyle(
+                                    foregroundColor: WidgetStateProperty.all(
+                                      Theme.of(dialogContext).colorScheme.error,
+                                    ),
+                                  ),
                                   child: Text("Delete"),
                                 ),
                               ],
@@ -599,6 +611,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 () => Navigator.of(
                                                   dialogContext,
                                                 ).pop(false),
+                                            style: ButtonStyle(
+                                              foregroundColor:
+                                                  WidgetStateProperty.all(
+                                                    Theme.of(
+                                                      dialogContext,
+                                                    ).colorScheme.primary,
+                                                  ),
+                                            ),
                                             child: Text("Cancel"),
                                           ),
                                           TextButton(
@@ -606,6 +626,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 () => Navigator.of(
                                                   dialogContext,
                                                 ).pop(true),
+                                            style: ButtonStyle(
+                                              foregroundColor:
+                                                  WidgetStateProperty.all(
+                                                    Theme.of(
+                                                      dialogContext,
+                                                    ).colorScheme.error,
+                                                  ),
+                                            ),
                                             child: Text("Delete"),
                                           ),
                                         ],
@@ -739,6 +767,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             icon: Icon(Icons.arrow_back),
             label: Text('Back to list'),
             onPressed: () => dashboardProvider.clearSelectedPatient(),
+            style: ButtonStyle(
+              foregroundColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -1253,13 +1286,19 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   'Start Video Call',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(
+                    Theme.of(context).colorScheme.primary,
                   ),
-                  elevation: 3,
+                  foregroundColor: WidgetStateProperty.all(
+                    Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  elevation: WidgetStateProperty.all(3),
                 ),
                 onPressed:
                     hasSelectedPatient

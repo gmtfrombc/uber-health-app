@@ -57,10 +57,14 @@ class AppointmentCard extends StatelessWidget {
                     onPressed: () => _showCancelConfirmation(context),
                     icon: const Icon(Icons.cancel_outlined, size: 14),
                     label: const Text('Cancel', style: TextStyle(fontSize: 12)),
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.colorScheme.error,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      minimumSize: const Size(30, 30),
+                    style: ButtonStyle(
+                      foregroundColor: WidgetStateProperty.all(
+                        theme.colorScheme.error,
+                      ),
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                      minimumSize: WidgetStateProperty.all(const Size(30, 30)),
                     ),
                   ),
               ],
@@ -154,9 +158,13 @@ class AppointmentCard extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => onReschedule!(appointment),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.primary,
-                          side: BorderSide(color: theme.colorScheme.primary),
+                        style: ButtonStyle(
+                          foregroundColor: WidgetStateProperty.all(
+                            theme.colorScheme.primary,
+                          ),
+                          side: WidgetStateProperty.all(
+                            BorderSide(color: theme.colorScheme.primary),
+                          ),
                         ),
                         child: const Text('Reschedule'),
                       ),
@@ -167,9 +175,13 @@ class AppointmentCard extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => onCheckIn!(appointment),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: Colors.white,
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStateProperty.all(
+                            theme.colorScheme.primary,
+                          ),
+                          foregroundColor: WidgetStateProperty.all(
+                            Colors.white,
+                          ),
                         ),
                         child: const Text('Start Now'),
                       ),
@@ -200,14 +212,18 @@ class AppointmentCard extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.textTheme.bodyLarge?.color,
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.all(
+                  theme.textTheme.bodyLarge?.color,
+                ),
               ),
               child: const Text('No, Keep It'),
             ),
             TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.all(
+                  theme.colorScheme.error,
+                ),
               ),
               onPressed: () {
                 Navigator.of(context).pop();

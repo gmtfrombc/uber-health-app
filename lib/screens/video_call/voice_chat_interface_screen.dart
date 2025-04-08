@@ -1,6 +1,7 @@
 // lib/screens/voice_chat_interface_screen.dart
 import 'package:flutter/material.dart';
 import 'package:quickcarept/widgets/animated_consultation_screen.dart';
+import '../../widgets/consistent_app_bar.dart'; // Import ConsistentAppBar
 
 class VoiceChatInterfaceScreen extends StatefulWidget {
   final bool isSynchronous;
@@ -24,8 +25,13 @@ class _VoiceChatInterfaceScreenState extends State<VoiceChatInterfaceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Voice Chat with Triage Assistant')),
+      appBar: ConsistentAppBar(
+        title: 'Voice Chat with Triage Assistant',
+        automaticallyImplyLeading: false, // Disable back button
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -47,6 +53,22 @@ class _VoiceChatInterfaceScreenState extends State<VoiceChatInterfaceScreen> {
                   ),
                 );
               },
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all(
+                  theme.colorScheme.primary,
+                ),
+                foregroundColor: WidgetStateProperty.all(
+                  theme.colorScheme.onPrimary,
+                ),
+                padding: WidgetStateProperty.all(
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.0),
+                  ),
+                ),
+              ),
               child: const Text('Finish Voice Chat'),
             ),
           ],

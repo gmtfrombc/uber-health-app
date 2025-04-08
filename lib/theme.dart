@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  /// Define a consistent back button icon
+  static const IconData backButtonIcon = Icons.arrow_back;
+
   /// Light Theme for the Telehealth App
   static ThemeData get lightTheme {
     final base = ThemeData.light();

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
+import '../../widgets/consistent_app_bar.dart';
 import 'onboarding_screen.dart';
 import 'sign_in_screen.dart';
 import '../../utils/app_config.dart';
@@ -151,17 +152,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('XUBER Health'),
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: ConsistentAppBar(
+        title: 'XUBER Health',
+        automaticallyImplyLeading: true,
         actions: [
           TextButton(
             onPressed: () {
@@ -532,18 +525,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Container(
               width: double.infinity,
               color:
-                  isDarkMode ? theme.colorScheme.surface : theme.dividerColor,
+                  isDarkMode
+                      ? theme.cardTheme.color
+                      : theme.colorScheme.surface,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              child: TextButton(
+              child: ElevatedButton(
                 onPressed: _isLoading ? null : _signUp,
-                style: TextButton.styleFrom(
+                style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  disabledBackgroundColor: theme.colorScheme.primary
+                      .withOpacity(0.6),
                 ),
                 child:
                     _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.0,
+                          ),
+                        )
                         : const Text(
                           'SIGN UP',
                           style: TextStyle(

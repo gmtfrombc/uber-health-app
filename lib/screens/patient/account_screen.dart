@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../widgets/consistent_app_bar.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 import '../auth/sign_in_screen.dart'; // Import SignInScreen
@@ -28,41 +29,47 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Account & Profile')),
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Consumer<UserProvider>(
-        builder: (context, userProvider, child) {
-          if (userProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (userProvider.error.isNotEmpty) {
-            return Center(child: Text('Error: ${userProvider.error}'));
-          }
-          if (userProvider.userProfile == null) {
-            return const Center(child: Text('Profile not loaded.'));
-          }
-
-          final user = userProvider.userProfile!;
-
-          return ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              _buildProfileHeader(context, user),
-              const SizedBox(height: 24),
-              _buildSectionTitle(context, 'Personal Information'),
-              _buildDemographicCard(context, user),
-              const SizedBox(height: 24),
-              _buildSectionTitle(context, 'Account Settings'),
-              _buildAccountSettingsCard(context),
-              const SizedBox(height: 24),
-              _buildSectionTitle(context, 'Actions'),
-              _buildActionsList(context),
-            ],
+      appBar: const ConsistentAppBar(title: 'Account & Profile'),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
           );
+          await userProvider.fetchUserProfile();
         },
+        child: Consumer<UserProvider>(
+          builder: (context, userProvider, child) {
+            if (userProvider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (userProvider.error.isNotEmpty) {
+              return Center(child: Text('Error: ${userProvider.error}'));
+            }
+            if (userProvider.userProfile == null) {
+              return const Center(child: Text('Profile not loaded.'));
+            }
+
+            final user = userProvider.userProfile!;
+
+            return ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                _buildProfileHeader(context, user),
+                const SizedBox(height: 24),
+                _buildSectionTitle(context, 'Personal Information'),
+                _buildDemographicCard(context, user),
+                const SizedBox(height: 24),
+                _buildSectionTitle(context, 'Account Settings'),
+                _buildAccountSettingsCard(context),
+                const SizedBox(height: 24),
+                _buildSectionTitle(context, 'Actions'),
+                _buildActionsList(context),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -93,15 +100,15 @@ class _AccountScreenState extends State<AccountScreen> {
           const SizedBox(height: 16),
           Text(
             '${user.firstname} ${user.lastname}',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             user.email,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).textTheme.bodyLarge?.color,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.textTheme.bodyLarge?.color,
             ),
           ),
         ],
@@ -257,7 +264,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
     return ListTile(
       leading: Icon(icon, color: iconColor ?? theme.textTheme.bodyLarge?.color),
-      title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
+      title: Text(title, style: theme.textTheme.bodyMedium),
       trailing: Icon(Icons.chevron_right, color: theme.colorScheme.primary),
       onTap: onTap,
     );
@@ -270,6 +277,8 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -279,18 +288,18 @@ class _AccountScreenState extends State<AccountScreen> {
             width: 120,
             child: Text(
               label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -389,24 +398,24 @@ class _AccountScreenState extends State<AccountScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Icon(Icons.brightness_auto),
-                  title: Text('System Theme'),
+                  leading: const Icon(Icons.brightness_auto),
+                  title: const Text('System Theme'),
                   onTap: () {
                     themeProvider.setThemeMode(ThemeMode.system);
                     Navigator.pop(context);
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.light_mode),
-                  title: Text('Light Mode'),
+                  leading: const Icon(Icons.light_mode),
+                  title: const Text('Light Mode'),
                   onTap: () {
                     themeProvider.setThemeMode(ThemeMode.light);
                     Navigator.pop(context);
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.dark_mode),
-                  title: Text('Dark Mode'),
+                  leading: const Icon(Icons.dark_mode),
+                  title: const Text('Dark Mode'),
                   onTap: () {
                     themeProvider.setThemeMode(ThemeMode.dark);
                     Navigator.pop(context);

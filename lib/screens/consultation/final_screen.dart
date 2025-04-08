@@ -8,6 +8,7 @@ import '../../providers/provider_provider.dart';
 import '../../providers/request_provider.dart';
 import '../video_call/video_call_home_screen.dart'; // Add import for VideoCallHomeScreen
 import '../../screens/main_screen.dart';
+import '../../widgets/consistent_app_bar.dart'; // Import ConsistentAppBar
 
 class FinalScreen extends StatelessWidget {
   final bool isSynchronous;
@@ -71,7 +72,10 @@ class FinalScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Connected')),
+      appBar: ConsistentAppBar(
+        title: 'Connected',
+        automaticallyImplyLeading: false, // Disable back button
+      ),
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Padding(
@@ -200,9 +204,20 @@ class FinalScreen extends StatelessWidget {
                       );
                     }
                   },
-                  style: theme.elevatedButtonTheme.style?.copyWith(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      theme.colorScheme.primary,
+                    ),
+                    foregroundColor: WidgetStateProperty.all(
+                      theme.colorScheme.onPrimary,
+                    ),
                     padding: WidgetStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 18),
+                    ),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.0),
+                      ),
                     ),
                   ),
                 ),
@@ -227,6 +242,14 @@ class FinalScreen extends StatelessWidget {
                         (route) => false,
                       );
                     },
+                    style: ButtonStyle(
+                      foregroundColor: WidgetStateProperty.all(
+                        theme.colorScheme.primary,
+                      ),
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                    ),
                   ),
                 ),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../../providers/video_call_provider.dart';
+import '../../widgets/consistent_app_bar.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String? roomId;
@@ -68,20 +69,22 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Video Call'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            final provider = Provider.of<VideoCallProvider>(
-              context,
-              listen: false,
-            );
-            provider.endCall();
-            Navigator.of(context).pop();
-          },
-        ),
+      appBar: ConsistentAppBar(
+        title: 'Video Call',
+        automaticallyImplyLeading: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.call_end),
+            tooltip: 'End Call',
+            onPressed: () {
+              final provider = Provider.of<VideoCallProvider>(
+                context,
+                listen: false,
+              );
+              provider.endCall();
+              Navigator.of(context).pop();
+            },
+          ),
           Consumer<VideoCallProvider>(
             builder: (context, provider, _) {
               return provider.callState == CallState.connected
@@ -212,6 +215,22 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                  foregroundColor: WidgetStateProperty.all(
+                    Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  padding: WidgetStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24.0),
+                    ),
+                  ),
+                ),
                 child: const Text('Go Back'),
               ),
             ],

@@ -8,6 +8,7 @@ import '../services/chatgpt_service.dart';
 import '../utils/prompts.dart';
 import '../screens/consultation/final_screen.dart';
 import '../screens/main_screen.dart';
+import '../widgets/consistent_app_bar.dart';
 
 class AnimatedConsultationScreen extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -216,7 +217,10 @@ class AnimatedConsultationScreenState
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Processing Request')),
+      appBar: ConsistentAppBar(
+        title: 'Processing Request',
+        automaticallyImplyLeading: false,
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -308,7 +312,22 @@ class AnimatedConsultationScreenState
                           (route) => false,
                         );
                       },
-                      style: Theme.of(context).elevatedButtonTheme.style,
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                          theme.colorScheme.primary,
+                        ),
+                        foregroundColor: WidgetStateProperty.all(
+                          theme.colorScheme.onPrimary,
+                        ),
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(vertical: 16.0),
+                        ),
+                        shape: WidgetStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24.0),
+                          ),
+                        ),
+                      ),
                       child: const Text('Got it!'),
                     ),
                   ),
