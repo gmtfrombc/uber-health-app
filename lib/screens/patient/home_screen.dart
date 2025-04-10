@@ -106,7 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.medical_services_outlined,
                         color: Colors.white,
                       ),
-                      label: const Text('Request a Consult or Ask a Question'),
+                      label: const Text(
+                        'Request a Consult or Ask a Question',
+                        textAlign: TextAlign.center,
+                      ),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -118,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         minimumSize: const Size.fromHeight(50),
+                        alignment: Alignment.center,
                         textStyle: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

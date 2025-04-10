@@ -314,8 +314,14 @@ class _ConsultsScreenState extends State<ConsultsScreen>
             right: 16.0,
             bottom: 24.0, // Padding above bottom nav bar
             child: ElevatedButton.icon(
-              icon: const Icon(Icons.medical_services_outlined),
-              label: const Text('Request a Consult or Ask a Question'),
+              icon: const Icon(
+                Icons.medical_services_outlined,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Request a Consult or Ask a Question',
+                textAlign: TextAlign.center,
+              ),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -324,6 +330,8 @@ class _ConsultsScreenState extends State<ConsultsScreen>
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                minimumSize: const Size.fromHeight(50),
+                alignment: Alignment.center,
                 elevation: 4, // Add shadow for better visibility
                 textStyle: const TextStyle(
                   fontSize: 16,
