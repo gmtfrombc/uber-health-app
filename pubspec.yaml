@@ -1,7 +1,7 @@
 name: quickcarept
 description: "A telehealth platform for physical therapy and healthcare services."
 publish_to: 'none' # Remove this line if you wish to 
-version: 1.0.0+12  # version 1.0.0, build number 12
+version: 1.0.0+14  # version 1.0.0, build number 12
 
 environment:
   sdk: ^3.7.0
