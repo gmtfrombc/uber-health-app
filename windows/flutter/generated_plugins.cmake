@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   firebase_auth
   firebase_core
+  flutter_tts
   flutter_webrtc
   iris_method_channel
 )

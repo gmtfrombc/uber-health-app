@@ -24,6 +24,9 @@ dependencies:
   google_fonts: ^6.2.1
   font_awesome_flutter: ^10.8.0
   shared_preferences: ^2.2.2
+  voice_chat_core:
+    path: ../triage_test/voice_chat_core
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:

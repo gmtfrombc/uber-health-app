@@ -22,6 +22,8 @@ import 'utils/debug_utils.dart'; // Import debug utilities
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'theme.dart'; // Import our custom theme
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
+import 'package:voice_chat_core/voice_chat_core.dart'; // Import voice package
 
 // Global key for accessing the navigator state from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -47,7 +49,7 @@ void _logError(String type, Object error, StackTrace stack) {
   // Check for specific error types to provide better guidance
   bool isInheritedWidgetError =
       error.toString().contains('deactivated widget') ||
-          error.toString().contains('Looking up a deactivated widget');
+      error.toString().contains('Looking up a deactivated widget');
 
   // Log errors in debug mode
   if (kDebugMode) {
@@ -86,7 +88,8 @@ void _showErrorUI(String errorMessage, [StackTrace? stack]) {
     }
 
     // Determine if this is a serious error that needs detailed reporting
-    bool isSeriousError = errorMessage.contains("Firebase") ||
+    bool isSeriousError =
+        errorMessage.contains("Firebase") ||
         errorMessage.contains("Exception") ||
         errorMessage.contains("Error") ||
         stack != null;
@@ -98,15 +101,16 @@ void _showErrorUI(String errorMessage, [StackTrace? stack]) {
           // For serious errors, show the detailed error screen
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => ErrorDetailsScreen(
-                errorMessage: errorMessage,
-                stackTrace: stack?.toString(),
-                timestamp: DateTime.now(),
-                onRetry: () {
-                  Navigator.of(context).pop();
-                  // Here you could add logic to retry the last operation if applicable
-                },
-              ),
+              builder:
+                  (context) => ErrorDetailsScreen(
+                    errorMessage: errorMessage,
+                    stackTrace: stack?.toString(),
+                    timestamp: DateTime.now(),
+                    onRetry: () {
+                      Navigator.of(context).pop();
+                      // Here you could add logic to retry the last operation if applicable
+                    },
+                  ),
             ),
           );
         } else if (context.mounted) {
@@ -126,11 +130,12 @@ void _showErrorUI(String errorMessage, [StackTrace? stack]) {
                   if (context.mounted) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ErrorDetailsScreen(
-                          errorMessage: errorMessage,
-                          stackTrace: stack?.toString(),
-                          timestamp: DateTime.now(),
-                        ),
+                        builder:
+                            (context) => ErrorDetailsScreen(
+                              errorMessage: errorMessage,
+                              stackTrace: stack?.toString(),
+                              timestamp: DateTime.now(),
+                            ),
                       ),
                     );
                   }
@@ -160,6 +165,57 @@ Future<void> main() async {
   // Run the app in a custom error zone
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Load environment variables from .env.local
+    try {
+      await dotenv.load(fileName: ".env.local");
+      debugPrint(".env.local loaded successfully.");
+    } catch (e) {
+      debugPrint("Error loading .env.local file: $e");
+      // Decide if you want to proceed without env vars or handle error
+    }
+
+    // Instantiate and initialize voice services
+    final elevenLabsApiKey = dotenv.env['ELEVENLABS_API_KEY'];
+    final openAiApiKey = dotenv.env['OPENAI_API_KEY'];
+
+    // Add null/empty checks for API keys
+    if (elevenLabsApiKey == null ||
+        elevenLabsApiKey.isEmpty ||
+        elevenLabsApiKey == 'replace_with_your_key') {
+      debugPrint(
+        'ELEVENLABS_API_KEY not found or is a placeholder in .env.local',
+      );
+      // Handle missing key error - maybe throw or use a default/disabled state
+    }
+    if (openAiApiKey == null ||
+        openAiApiKey.isEmpty ||
+        openAiApiKey == 'replace_with_your_key') {
+      debugPrint('OPENAI_API_KEY not found or is a placeholder in .env.local');
+      // Handle missing key error
+    }
+
+    // Only proceed if keys are valid (basic check)
+    final elevenLabsService = ElevenLabsService(
+      apiKey: elevenLabsApiKey ?? '', // Provide default empty string if null
+      // Add default voice/model IDs if needed, or retrieve from dotenv
+      // defaultVoiceId: dotenv.env['ELEVENLABS_DEFAULT_VOICE_ID'] ?? 'DEFAULT_VOICE_ID',
+    );
+    final speechService = SpeechService(
+      openAiApiKey: openAiApiKey ?? '', // Provide default empty string if null
+      elevenLabsService: elevenLabsService,
+      // You might want to configure other SpeechService parameters here
+      // e.g., openAiBaseUrl, openAiModel, using dotenv or constants
+    );
+
+    try {
+      await elevenLabsService.initialize();
+      await speechService.initialize();
+      debugPrint('Voice services initialized successfully.');
+    } catch (e) {
+      debugPrint("Error initializing voice services: $e");
+      // Handle initialization error
+    }
 
     // Print available debug commands in debug mode
     if (kDebugMode) {
@@ -311,19 +367,24 @@ class MyApp extends StatelessWidget {
               // Define routes for navigation after login
               routes: {
                 '/main': (context) => const MainScreen(),
-                '/account': (context) => const MainScreen(
+                '/account':
+                    (context) => const MainScreen(
                       initialTab: 3,
                     ), // Navigate to account tab (now at index 3)
-                '/consults': (context) => const MainScreen(
+                '/consults':
+                    (context) => const MainScreen(
                       initialTab: 1,
                     ), // Navigate to consults tab
-                '/activity': (context) => const MainScreen(
+                '/activity':
+                    (context) => const MainScreen(
                       initialTab: 2,
                     ), // Navigate to activity tab
-                '/provider_dashboard': (context) =>
-                    const ProviderDashboardScreen(), // Add provider dashboard route
+                '/provider_dashboard':
+                    (context) =>
+                        const ProviderDashboardScreen(), // Add provider dashboard route
                 // Add error details route for direct navigation
-                '/error_details': (context) => ErrorDetailsScreen(
+                '/error_details':
+                    (context) => ErrorDetailsScreen(
                       errorMessage: 'Test error message',
                       stackTrace: 'Simulated stack trace for testing',
                       timestamp: DateTime.now(),
