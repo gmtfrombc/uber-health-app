@@ -1,10 +1,11 @@
 // lib/screens/consultation/chat_interface.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/message.dart';
+import '../../models/message.dart'
+    as app_message; // Import app's Message model with prefix
 import '../../providers/request_provider.dart';
 import '../../models/patient_request.dart';
-import '../../services/chatgpt_service.dart';
+import '../../services/chatgpt_service.dart'; // Keep for summary generation
 import '../../utils/prompts.dart';
 import '../../widgets/animated_consultation_screen.dart';
 import '../../widgets/animated_message_bubble.dart';
@@ -13,6 +14,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firebase_service.dart';
 import '../../providers/medical_questions_provider.dart';
 import '../../screens/main_screen.dart';
+import 'package:voice_chat_core/voice_chat_core.dart' as core;
+import 'dart:async';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -40,17 +43,57 @@ class ChatInterface extends StatefulWidget {
 
 class ChatInterfaceState extends State<ChatInterface> {
   final TextEditingController _textController = TextEditingController();
-  final List<Message> _messages = [];
+  final List<core.Message> _messages = []; // Use package's Message type
   final ScrollController _scrollController = ScrollController();
-  bool _isLoadingAI = false;
-  bool _triageComplete = false;
-  bool _isGeneratingSummary = false; // New flag for summary generation
-  final ChatGPTService _chatGPTService = ChatGPTService();
-  String _systemPrompt = ""; // Store the system prompt for consistent use
+  bool _isLoadingAI = false; // Used by voice service listener now
+  bool _isGeneratingSummary = false;
+  String _systemPrompt = "";
+  final ChatGPTService _chatGPTService = ChatGPTService(); // Keep for summary
+
+  // Voice Service related state
+  late core.SpeechService _speechService;
+  StreamSubscription? _stateSubscription;
+  StreamSubscription? _messageSubscription;
+  // Use correct enum name
+  core.SpeechServiceState _currentVoiceState = core.SpeechServiceState.idle;
+  bool _isFirstInteraction = true; // Track initial interaction
 
   @override
   void initState() {
     super.initState();
+
+    _speechService = Provider.of<core.SpeechService>(context, listen: false);
+
+    // Listener for voice state changes
+    _stateSubscription = _speechService.onStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _currentVoiceState = state; // Use correct enum name
+          // Set loading indicator when voice service is processing
+          _isLoadingAI = (state == core.SpeechServiceState.processing);
+        });
+      }
+    });
+
+    // Listener for new messages (from voice input or AI response via voice service)
+    _messageSubscription = _speechService.onMessageReceived.listen((message) {
+      if (mounted) {
+        setState(() {
+          // Find existing message by ID
+          int existingIndex = _messages.indexWhere((m) => m.id == message.id);
+
+          if (existingIndex != -1) {
+            // If message exists, update it
+            _messages[existingIndex] = message;
+          } else {
+            // If message is new, add it
+            _messages.add(message);
+          }
+        });
+        _scrollToBottom();
+      }
+    });
+
     // Retrieve the current request from the provider.
     final requestProvider = Provider.of<RequestProvider>(
       context,
@@ -106,6 +149,10 @@ class ChatInterfaceState extends State<ChatInterface> {
         category = "Other"; // Default category
       }
 
+      // Use the specific initial prompt for voice/text choice
+      initialPrompt =
+          "Hi, I'm your virtual medical assistant. Enter your symptoms below, or click the microphone to have a voice conversation.";
+
       // Set the system prompt for consultations
       _systemPrompt = getComplaintPrompt(
         requestProvider.providerType,
@@ -116,9 +163,16 @@ class ChatInterfaceState extends State<ChatInterface> {
     debugPrint("Using category: $category for system prompt");
     debugPrint("System prompt: $_systemPrompt");
 
+    // Configure SpeechService with the system prompt
+    _speechService.setSystemPrompt(_systemPrompt);
+
     // Add the welcome message to the UI
     _messages.add(
-      Message(sender: 'ai', content: initialPrompt, timestamp: DateTime.now()),
+      core.Message(
+        isUser: false, // Correct parameter
+        content: initialPrompt,
+        timestamp: DateTime.now(),
+      ),
     );
     _scrollToBottom();
   }
@@ -134,236 +188,28 @@ class ChatInterfaceState extends State<ChatInterface> {
   void _handleSend() async {
     String text = _textController.text.trim();
     if (text.isEmpty) return;
-    if (_triageComplete) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Triage is complete. Please click 'Done' to continue."),
-        ),
-      );
-      return;
-    }
-    setState(() {
-      _messages.add(
-        Message(sender: 'patient', content: text, timestamp: DateTime.now()),
-      );
-      _textController.clear();
-      _isLoadingAI = true;
-    });
-    _scrollToBottom();
+    _textController.clear();
 
-    // Create the conversation history for ChatGPT
-    List<Map<String, String>> conversation =
-        _messages.map((m) {
-          return {
-            "role": m.sender == 'patient' ? "user" : "assistant",
-            "content": m.content,
-          };
-        }).toList();
-
-    // Use the stored system prompt for all ChatGPT interactions
-    conversation.insert(0, {"role": "system", "content": _systemPrompt});
-
-    // Check if we've reached the maximum number of exchanges
-    int patientCount = _messages.where((m) => m.sender == 'patient').length;
-    debugPrint("Patient message count: $patientCount");
-
-    // Log if we're in a medical question flow
-    bool isMedicalQuestion = _systemPrompt.contains('[TRIAGE_COMPLETE]');
-    debugPrint("Is medical question: $isMedicalQuestion");
-    debugPrint(
-      "Current message sequence: ${patientCount == 1 ? 'Initial question' : 'Follow-up response'}",
-    );
-
-    // Force triage completion after 2 patient messages (initial question + 1 follow-up)
-    // This means the patient has sent their second message (patientCount == 2)
-    if (patientCount == 2) {
-      debugPrint("Second patient message detected, marking triage as complete");
-      setState(() {
-        _messages.add(
-          Message(
-            sender: 'ai',
-            content:
-                "Okay, I have all the information that I need. Please click 'Done' to continue.",
-            timestamp: DateTime.now(),
-          ),
-        );
-        _isLoadingAI = false;
-        _triageComplete = true;
-      });
-      _scrollToBottom();
-      return;
+    // Mark that first interaction has happened (if text is sent first)
+    if (_isFirstInteraction) {
+      _isFirstInteraction = false;
     }
 
-    // Original max message check (keeping as a fallback)
-    if (patientCount >= 10) {
-      debugPrint("Maximum message count reached, marking triage as complete");
-      setState(() {
-        _messages.add(
-          Message(
-            sender: 'ai',
-            content:
-                "Okay, I have all the information that I need. Please click 'Done' to continue.",
-            timestamp: DateTime.now(),
-          ),
-        );
-        _isLoadingAI = false;
-        _triageComplete = true;
-      });
-      _scrollToBottom();
-      return;
-    }
-
-    try {
-      // Get response from AI
-      debugPrint("Sending conversation to ChatGPT");
-
-      // Special handling for the very first patient message
-      if (patientCount == 1) {
-        final aiResponse = await _chatGPTService.getAIResponse(conversation);
-        debugPrint(
-          "Received response to first patient message: ${aiResponse.substring(0, aiResponse.length > 50 ? 50 : aiResponse.length)}...",
-        );
-
-        // Check if the AI indicates triage is complete already
-        final bool containsTriageComplete = aiResponse.contains(
-          "[TRIAGE_COMPLETE]",
-        );
-
-        if (containsTriageComplete) {
-          // The question was complete enough, no follow-up needed
-          final cleanedResponse =
-              aiResponse.replaceAll("[TRIAGE_COMPLETE]", "").trim();
-
-          setState(() {
-            _messages.add(
-              Message(
-                sender: 'ai',
-                content:
-                    cleanedResponse.isEmpty
-                        ? "Thank you for your question. I'll forward it to the healthcare provider."
-                        : cleanedResponse,
-                timestamp: DateTime.now(),
-              ),
-            );
-            _isLoadingAI = false;
-            _triageComplete = true;
-          });
-        } else {
-          // The AI is asking a clarifying question - this is the ONE allowed question
-          setState(() {
-            _messages.add(
-              Message(
-                sender: 'ai',
-                content: aiResponse,
-                timestamp: DateTime.now(),
-              ),
-            );
-            _isLoadingAI = false;
-          });
-        }
-        _scrollToBottom();
-        return;
-      }
-
-      // For all other messages (when patientCount > 1), we always complete triage
-      // This is handled by the earlier code block that checks patientCount == 2
-
-      final aiResponse = await _chatGPTService.getAIResponse(conversation);
-      debugPrint(
-        "Received response from ChatGPT: ${aiResponse.substring(0, aiResponse.length > 50 ? 50 : aiResponse.length)}...",
-      );
-
-      // Check for the triage complete token
-      final bool containsTriageComplete = aiResponse.contains(
-        "[TRIAGE_COMPLETE]",
-      );
-      debugPrint("Contains TRIAGE_COMPLETE token: $containsTriageComplete");
-
-      // For medical questions, the first response (to the initial question) should not have the TRIAGE_COMPLETE token
-      // unless it's a simple question that doesn't need clarification
-      if (isMedicalQuestion && patientCount == 1 && containsTriageComplete) {
-        debugPrint(
-          "Medical question first response with TRIAGE_COMPLETE - simple question that doesn't need clarification",
-        );
-      } else if (isMedicalQuestion &&
-          patientCount == 1 &&
-          !containsTriageComplete) {
-        debugPrint(
-          "Medical question first response without TRIAGE_COMPLETE - expecting clarifying question",
-        );
-      } else if (isMedicalQuestion &&
-          patientCount == 2 &&
-          containsTriageComplete) {
-        debugPrint(
-          "Medical question second response with TRIAGE_COMPLETE - completing triage after clarification",
-        );
-      }
-
-      if (containsTriageComplete) {
-        // Remove the token from the displayed message
-        final cleanedResponse =
-            aiResponse.replaceAll("[TRIAGE_COMPLETE]", "").trim();
-
-        debugPrint("Triage complete token found, marking triage as complete");
-        setState(() {
-          _messages.add(
-            Message(
-              sender: 'ai',
-              content:
-                  cleanedResponse.isEmpty
-                      ? "Okay, I have all the information that I need. Please click 'Done' to continue."
-                      : cleanedResponse,
-              timestamp: DateTime.now(),
-            ),
-          );
-          _isLoadingAI = false;
-          _triageComplete = true;
-        });
-      } else {
-        // Regular message, no complete token
-        setState(() {
-          _messages.add(
-            Message(
-              sender: 'ai',
-              content: aiResponse,
-              timestamp: DateTime.now(),
-            ),
-          );
-          _isLoadingAI = false;
-        });
-      }
-      _scrollToBottom();
-    } catch (e) {
-      setState(() {
-        _isLoadingAI = false;
-        _messages.add(
-          Message(
-            sender: 'ai',
-            content:
-                "Sorry, there was an error processing your message. Please try again.",
-            timestamp: DateTime.now(),
-          ),
-        );
-      });
-      debugPrint("Error getting AI response: $e");
-    }
+    // Let the SpeechService handle adding the message and getting the AI response
+    _speechService.addTextMessage(text);
+    _scrollToBottom(); // Scroll after adding text (SpeechService listener will add AI response later)
   }
 
   void _handleDone() async {
-    if (!_triageComplete) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Triage is not complete yet.")),
-      );
-      return;
-    }
     setState(() {
       _isGeneratingSummary = true;
     });
-    // Build conversation for summary generation.
+
+    // Map core.Message back to Map<String, String> for ChatGPTService
     List<Map<String, String>> conversation =
         _messages.map((m) {
           return {
-            "role": m.sender == 'patient' ? "user" : "assistant",
+            "role": m.isUser ? "user" : "assistant", // Use isUser
             "content": m.content,
           };
         }).toList();
@@ -392,6 +238,7 @@ class ChatInterfaceState extends State<ChatInterface> {
 
     String summary = "";
     try {
+      // Use existing ChatGPTService instance for summary
       summary = await _chatGPTService.getAIResponse(conversation);
 
       // Get current user ID for debugging
@@ -407,8 +254,21 @@ class ChatInterfaceState extends State<ChatInterface> {
 
       // Save conversation messages to provider if not already there
       if (requestProvider.conversation == null) {
-        debugPrint("Adding messages to provider before saving summary");
-        await requestProvider.updateConversation(_messages);
+        debugPrint("Mapping messages for provider before saving summary");
+        // Map core.Message back to app_message.Message
+        List<app_message.Message> appMessages =
+            _messages
+                .map(
+                  (m) => app_message.Message(
+                    sender: m.isUser ? 'patient' : 'ai',
+                    content: m.content,
+                    timestamp: m.timestamp,
+                  ),
+                )
+                .toList();
+        await requestProvider.updateConversation(
+          appMessages,
+        ); // Pass mapped list
       }
 
       debugPrint("Is this a medical question? $isMedicalQuestion");
@@ -503,17 +363,28 @@ class ChatInterfaceState extends State<ChatInterface> {
 
   @override
   void dispose() {
+    _stateSubscription?.cancel();
+    _messageSubscription?.cancel();
     _textController.dispose();
     _scrollController.dispose();
+    // Dispose SpeechService if needed (check package docs/implementation)
+    // _speechService.dispose();
     super.dispose();
   }
 
-  Widget _buildMessageBubble(Message message) {
-    // Only animate the first AI message
-    bool shouldAnimate =
-        message.sender == 'ai' && _messages.indexOf(message) == 0;
+  Widget _buildMessageBubble(core.Message message) {
+    // Map core.Message to app_message.Message for the widget
+    final appMessage = app_message.Message(
+      sender: message.isUser ? 'patient' : 'ai', // Map isUser back to sender
+      content: message.content,
+      timestamp: message.timestamp,
+    );
 
-    return AnimatedMessageBubble(message: message, animate: shouldAnimate);
+    // Animate based on the original core.Message sender
+    bool shouldAnimate = !message.isUser && _messages.indexOf(message) == 0;
+
+    // Pass the mapped app_message.Message to the bubble widget
+    return AnimatedMessageBubble(message: appMessage, animate: shouldAnimate);
   }
 
   @override
@@ -531,7 +402,9 @@ class ChatInterfaceState extends State<ChatInterface> {
               padding: const EdgeInsets.all(8),
               itemCount: _messages.length,
               itemBuilder:
-                  (context, index) => _buildMessageBubble(_messages[index]),
+                  (context, index) => _buildMessageBubble(
+                    _messages[index],
+                  ), // Passes core.Message
             ),
           ),
           if (_isLoadingAI)
@@ -566,7 +439,15 @@ class ChatInterfaceState extends State<ChatInterface> {
                     : SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _triageComplete ? _handleDone : null,
+                        // Enable button if last message is from AI and contains the token
+                        onPressed:
+                            (_messages.isNotEmpty &&
+                                    !_messages.last.isUser &&
+                                    _messages.last.content.contains(
+                                      "[TRIAGE_COMPLETE]",
+                                    ))
+                                ? _handleDone
+                                : null,
                         style: theme.elevatedButtonTheme.style?.copyWith(
                           padding: WidgetStateProperty.all(
                             const EdgeInsets.symmetric(vertical: 16.0),
@@ -590,54 +471,115 @@ class ChatInterfaceState extends State<ChatInterface> {
   Widget _buildInputArea() {
     final theme = Theme.of(context);
 
+    // Determine microphone icon and action based on state
+    IconData micIcon;
+    Color micColor = theme.colorScheme.primary;
+    VoidCallback? micAction;
+
+    switch (_currentVoiceState) {
+      case core.SpeechServiceState.listening:
+        micIcon = Icons.mic;
+        micColor = Colors.red; // Indicate recording
+        micAction = () => _speechService.stopListening();
+        break;
+      case core.SpeechServiceState.processing:
+        micIcon = Icons.settings_voice; // Or show a progress indicator
+        micColor = theme.disabledColor;
+        micAction = null; // Disable while processing
+        break;
+      case core.SpeechServiceState.speaking:
+        micIcon = Icons.stop_circle_outlined;
+        micColor = theme.colorScheme.secondary;
+        micAction = () => _speechService.stopSpeaking();
+        break;
+      case core.SpeechServiceState.idle:
+        micIcon = Icons.mic_none;
+        micColor = theme.colorScheme.primary;
+        // Modify mic action for initial interaction
+        micAction = () {
+          if (_isFirstInteraction) {
+            _isFirstInteraction = false;
+            _speechService.initiateVoiceFlow(); // Call new method
+          } else {
+            _speechService.startListening(); // Original action
+          }
+        };
+        break;
+    }
+
+    // Check if triage is complete (using the same logic as the Done button)
+    final bool isTriageComplete =
+        _messages.isNotEmpty &&
+        !_messages.last.isUser &&
+        _messages.last.content.contains("[TRIAGE_COMPLETE]");
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 8,
+      ), // Adjust padding
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: theme.dividerColor, width: 1)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end, // Align items to bottom
         children: [
-          // Input field and send button row
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _textController,
-                  decoration: InputDecoration(
-                    hintText: 'Type your message...',
-                    hintStyle: TextStyle(color: theme.hintColor),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: theme.scaffoldBackgroundColor,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  minLines: 1,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _handleSend(),
-                  enabled: !_triageComplete,
+          // Microphone Button
+          IconButton(
+            icon: Icon(micIcon, color: micColor),
+            onPressed: micAction,
+            tooltip:
+                _currentVoiceState == core.SpeechServiceState.listening
+                    ? 'Stop Listening'
+                    : _currentVoiceState == core.SpeechServiceState.speaking
+                    ? 'Stop Speaking'
+                    : 'Start Listening',
+          ),
+          // Text Input Field
+          Expanded(
+            child: TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                hintText: 'Type or tap mic...', // Update hint
+                hintStyle: TextStyle(color: theme.hintColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
                 ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.send,
-                  color:
-                      _textController.text.isEmpty
-                          ? theme.disabledColor
-                          : theme.colorScheme.primary,
+                filled: true,
+                fillColor:
+                    theme.inputDecorationTheme.fillColor ??
+                    theme.cardColor, // Use theme color
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10, // Adjust padding
                 ),
-                onPressed: _triageComplete ? null : _handleSend,
+                isDense: true, // Make field less tall
               ),
-            ],
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              minLines: 1,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _handleSend(),
+              enabled:
+                  !isTriageComplete, // Disable TextField when triage is complete
+            ),
+          ),
+          // Send Button
+          IconButton(
+            icon: Icon(
+              Icons.send,
+              color:
+                  _textController.text.isEmpty || isTriageComplete
+                      ? theme.disabledColor
+                      : theme.colorScheme.primary,
+            ),
+            // Enable only if text is not empty AND triage is not complete
+            onPressed:
+                _textController.text.isNotEmpty && !isTriageComplete
+                    ? _handleSend
+                    : null,
           ),
         ],
       ),

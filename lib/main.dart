@@ -24,6 +24,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'theme.dart'; // Import our custom theme
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
 import 'package:voice_chat_core/voice_chat_core.dart'; // Import voice package
+import 'package:audio_session/audio_session.dart'; // Import audio_session
 
 // Global key for accessing the navigator state from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -166,6 +167,33 @@ Future<void> main() async {
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // --- Configure Audio Session ---
+    final session = await AudioSession.instance;
+    await session.configure(
+      AudioSessionConfiguration(
+        // Correct way to combine options for iOS
+        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+        avAudioSessionCategoryOptions:
+            AVAudioSessionCategoryOptions.allowBluetooth | // Use bitwise OR
+            AVAudioSessionCategoryOptions.defaultToSpeaker,
+        avAudioSessionMode: AVAudioSessionMode.voiceChat,
+        // avAudioSessionSupportsInAppVoip: true, // This parameter doesn't exist
+        avAudioSessionRouteSharingPolicy:
+            AVAudioSessionRouteSharingPolicy.defaultPolicy,
+        androidAudioAttributes: const AndroidAudioAttributes(
+          // Keep const here
+          contentType: AndroidAudioContentType.speech,
+          usage:
+              AndroidAudioUsage
+                  .voiceCommunication, // Use voiceCommunication for AEC
+        ),
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+        // androidWillPauseWhenDucked: true, // Consider if needed
+      ),
+    );
+    debugPrint("Audio session configured for playAndRecord / voiceChat");
+    // ----------------------------------
+
     // Load environment variables from .env.local
     try {
       await dotenv.load(fileName: ".env.local");
@@ -197,15 +225,18 @@ Future<void> main() async {
 
     // Only proceed if keys are valid (basic check)
     final elevenLabsService = ElevenLabsService(
-      apiKey: elevenLabsApiKey ?? '', // Provide default empty string if null
-      // Add default voice/model IDs if needed, or retrieve from dotenv
-      // defaultVoiceId: dotenv.env['ELEVENLABS_DEFAULT_VOICE_ID'] ?? 'DEFAULT_VOICE_ID',
+      apiKey: elevenLabsApiKey ?? '',
+      baseUrl: 'https://api.elevenlabs.io/v1',
+      defaultVoiceId: 'pNInz6obpgDQGcFmaJgB',
+      defaultModelId: 'eleven_flash_v2_5',
     );
+
+    // SpeechService initialization needs the audio session instance
     final speechService = SpeechService(
-      openAiApiKey: openAiApiKey ?? '', // Provide default empty string if null
+      openAiApiKey: openAiApiKey ?? '',
+      openAiChatUrl: 'https://api.openai.com/v1/chat/completions',
       elevenLabsService: elevenLabsService,
-      // You might want to configure other SpeechService parameters here
-      // e.g., openAiBaseUrl, openAiModel, using dotenv or constants
+      audioSession: session, // Pass the configured session instance
     );
 
     try {
@@ -235,7 +266,13 @@ Future<void> main() async {
       debugPrint('User signed out at app launch');
     }
 
-    runApp(const MyApp());
+    // Pass the initialized services to MyApp
+    runApp(
+      MyApp(
+        speechService: speechService,
+        elevenLabsService: elevenLabsService /*, audioSession: session*/,
+      ),
+    );
   }, _handleZoneError);
 }
 
@@ -336,12 +373,25 @@ Future<void> initializeFirebaseWithRetry() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Accept the services as parameters
+  final SpeechService speechService;
+  final ElevenLabsService elevenLabsService;
+
+  const MyApp({
+    super.key,
+    required this.speechService,
+    required this.elevenLabsService,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // Provide the existing service instances
+        Provider<SpeechService>.value(value: speechService),
+        Provider<ElevenLabsService>.value(value: elevenLabsService),
+
+        // Existing providers
         ChangeNotifierProvider(create: (_) => RequestProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ProviderProvider()),
