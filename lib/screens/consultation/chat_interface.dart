@@ -64,6 +64,9 @@ class ChatInterfaceState extends State<ChatInterface> {
 
     _speechService = Provider.of<core.SpeechService>(context, listen: false);
 
+    // Ensure fresh state each time screen is built
+    _speechService.resetConversation();
+
     // Listener for voice state changes
     _stateSubscription = _speechService.onStateChanged.listen((state) {
       if (mounted) {
