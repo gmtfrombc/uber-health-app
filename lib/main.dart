@@ -173,8 +173,7 @@ Future<void> main() async {
         // Correct way to combine options for iOS
         avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
         avAudioSessionCategoryOptions:
-            AVAudioSessionCategoryOptions.allowBluetooth | // Use bitwise OR
-            AVAudioSessionCategoryOptions.defaultToSpeaker,
+            AVAudioSessionCategoryOptions.allowBluetooth,
         avAudioSessionMode: AVAudioSessionMode.voiceChat,
         // avAudioSessionSupportsInAppVoip: true, // This parameter doesn't exist
         avAudioSessionRouteSharingPolicy:
@@ -233,7 +232,6 @@ Future<void> main() async {
     // SpeechService initialization needs the audio session instance
     final speechService = SpeechService(
       openAiApiKey: openAiApiKey ?? '',
-      openAiChatUrl: 'https://api.openai.com/v1/chat/completions',
       elevenLabsService: elevenLabsService,
       audioSession: session, // Pass the configured session instance
     );
