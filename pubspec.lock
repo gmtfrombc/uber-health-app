@@ -65,14 +65,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  byteplus_rtc:
-    dependency: "direct main"
-    description:
-      name: byteplus_rtc
-      sha256: "982365cad366bb1294750f2a291cdb0a2da36a3feaf11f7096aa746b7260cc77"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.56.2"
   characters:
     dependency: transitive
     description:
@@ -864,9 +856,11 @@ packages:
   voice_chat_core:
     dependency: "direct main"
     description:
-      path: "../triage_test/voice_chat_core"
-      relative: true
-    source: path
+      path: "."
+      ref: main
+      resolved-ref: ea82208e70b42c3f96012ad79ad85cecde83cc24
+      url: "https://github.com/gmtfrombc/voice_chat_core.git"
+    source: git
     version: "0.0.1"
   web:
     dependency: transitive
