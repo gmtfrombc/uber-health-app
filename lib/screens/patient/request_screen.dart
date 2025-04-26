@@ -505,29 +505,49 @@ class _RequestScreenState extends State<RequestScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.forcedProviderType == null) ...[
-              // Header section with descriptive text
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Request Consult or Ask Question',
-                      style: theme.textTheme.headlineMedium?.copyWith(
+            // Service type header (Medical or Physical Therapy)
+            Builder(
+              builder: (context) {
+                final provider = Provider.of<RequestProvider>(context);
+                final ProviderType currentType =
+                    widget.forcedProviderType ?? provider.providerType;
+                final String serviceTitle =
+                    currentType == ProviderType.physicalTherapist
+                        ? 'Physical Therapy Services'
+                        : 'Medical Services';
+                final IconData serviceIcon =
+                    currentType == ProviderType.physicalTherapist
+                        ? FontAwesomeIcons.dumbbell
+                        : FontAwesomeIcons.userDoctor;
+
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        serviceIcon,
                         color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                        size: 24,
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                      const SizedBox(width: 12),
+                      Text(
+                        serviceTitle,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
-              const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-              // Provider toggle section
+            // Provider toggle section (only when provider not forced)
+            if (widget.forcedProviderType == null) ...[
               providerToggle(),
-
               const SizedBox(height: 24),
             ],
 

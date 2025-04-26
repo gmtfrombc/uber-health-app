@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/consistent_app_bar.dart';
 
 class ComingSoonScreen extends StatelessWidget {
   const ComingSoonScreen({super.key});
@@ -7,10 +8,7 @@ class ComingSoonScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Coming Soon'),
-        backgroundColor: theme.colorScheme.primary,
-      ),
+      appBar: const ConsistentAppBar(title: 'Coming Soon'),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

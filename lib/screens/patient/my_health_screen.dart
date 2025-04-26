@@ -52,64 +52,55 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: theme.dividerColor.withAlpha(51),
-                      width: 1,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Your Health Summary',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: theme.primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Health Summary',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        tooltip: 'Edit Health Information',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProfileEditScreen(),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined),
-                              tooltip: 'Edit Health Information',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const ProfileEditScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 20),
-                        _buildInfoSection('Medications', user.medications),
-                        const SizedBox(height: 8),
-                        Divider(
-                          color: theme.dividerColor.withAlpha(100),
-                          thickness: 0.8,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildInfoSection('Allergies', user.allergies),
-                        const SizedBox(height: 8),
-                        Divider(
-                          color: theme.dividerColor.withAlpha(100),
-                          thickness: 0.8,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildInfoSection('Conditions', user.conditions),
-                      ],
-                    ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Medications',
+                  icon: Icons.medication,
+                  color: Colors.blue,
+                  items: user.medications,
+                ),
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Allergies',
+                  icon: Icons.health_and_safety,
+                  color: Colors.orange,
+                  items: user.allergies,
+                ),
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Conditions',
+                  icon: Icons.medical_services,
+                  color: Colors.green,
+                  items: user.conditions,
+                ),
+                const SizedBox(height: 32),
               ],
             );
           },
@@ -118,79 +109,82 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
     );
   }
 
-  Widget _buildInfoSection(String title, List<String>? items) {
-    IconData sectionIcon;
-    Color iconColor;
-    switch (title) {
-      case 'Medications':
-        sectionIcon = Icons.medication;
-        iconColor = Colors.blue;
-        break;
-      case 'Allergies':
-        sectionIcon = Icons.health_and_safety;
-        iconColor = Colors.orange;
-        break;
-      case 'Conditions':
-        sectionIcon = Icons.medical_services;
-        iconColor = Colors.green;
-        break;
-      default:
-        sectionIcon = Icons.info_outline;
-        iconColor = Colors.grey;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    List<String>? items,
+  }) {
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      color:
+          Theme.of(context).brightness == Brightness.light
+              ? Colors.grey.shade100
+              : Colors.grey.shade800,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.black.withOpacity(0.05), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(sectionIcon, color: iconColor, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
+            Row(
+              children: [
+                Icon(icon, color: color, size: 28),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 12),
+            if (items == null || items.isEmpty)
+              Center(
+                child: Text(
+                  'None added yet',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 12,
+                children:
+                    items
+                        .map(
+                          (item) => Chip(
+                            label: Text(item),
+                            backgroundColor:
+                                Theme.of(context).scaffoldBackgroundColor,
+                            side: BorderSide(color: color.withAlpha(77)),
+                            labelStyle: TextStyle(
+                              color: color,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        )
+                        .toList(),
+              ),
           ],
         ),
-        const SizedBox(height: 12),
-        if (items == null || items.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 32),
-            child: Text(
-              'None',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontStyle: FontStyle.italic,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
-            ),
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children:
-                items
-                    .map(
-                      (item) => Chip(
-                        label: Text(item),
-                        backgroundColor:
-                            Theme.of(context).scaffoldBackgroundColor,
-                        side: BorderSide(color: iconColor.withAlpha(77)),
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 0,
-                        ),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    )
-                    .toList(),
-          ),
-      ],
+      ),
     );
   }
 }

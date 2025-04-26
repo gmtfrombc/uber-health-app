@@ -11,7 +11,6 @@ import '../../widgets/consistent_app_bar.dart';
 import 'category_selection_screen.dart';
 import 'scheduling_screen.dart';
 import 'medical_question_details_screen.dart';
-import 'request_screen.dart';
 
 class ConsultsScreen extends StatefulWidget {
   const ConsultsScreen({super.key});
@@ -305,39 +304,6 @@ class _ConsultsScreenState extends State<ConsultsScreen>
                 _buildSectionTitle(context, 'Medical Questions'),
                 _buildEnhancedMedicalQuestionList(context),
               ],
-            ),
-          ),
-
-          // Fixed position button at the bottom
-          Positioned(
-            left: 16.0,
-            right: 16.0,
-            bottom: 24.0, // Padding above bottom nav bar
-            child: ElevatedButton.icon(
-              icon: const Icon(
-                Icons.medical_services_outlined,
-                color: Colors.white,
-              ),
-              label: const Text(
-                'Request a Consult or Ask a Question',
-                textAlign: TextAlign.center,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RequestScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                minimumSize: const Size.fromHeight(50),
-                alignment: Alignment.center,
-                elevation: 4, // Add shadow for better visibility
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
           ),
         ],
