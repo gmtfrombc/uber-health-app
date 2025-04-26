@@ -50,6 +50,8 @@ flutter:
     - assets/animations/
     - assets/images/welcome.png
     - assets/images/xuber_health.png
+    - assets/images/medical_services.png
+    - assets/images/physical_therapy.png
     - assets/images/cough_cold.png
     - assets/images/uti.png
     - assets/images/allergies.png
@@ -66,6 +68,12 @@ flutter:
     - assets/images/hip.png
     - assets/images/knee.png
     - assets/images/foot.png
+    - assets/images/dietician.png
+    - assets/images/pharmacist.png
+    - assets/images/naturopath.png
+    - assets/images/elder_care.png
+    - assets/images/hospice_care.png
+    - assets/images/behavioral_health.png
 
 flutter_native_splash:
   color: "#1565C0"

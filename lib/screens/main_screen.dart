@@ -4,6 +4,7 @@ import '../screens/patient/home_screen.dart';
 import '../screens/patient/consults_screen.dart'; // Renamed from visits_screen
 import '../screens/patient/activity_screen.dart'; // Import the new ActivityScreen
 import '../screens/patient/account_screen.dart';
+import '../screens/patient/my_health_screen.dart';
 import '../providers/medical_questions_provider.dart';
 import '../utils/context_utils.dart'; // Import ContextUtils
 
@@ -34,11 +35,12 @@ class MainScreenState extends State<MainScreen>
   late MedicalQuestionsProvider _questionsProvider;
   bool _providerInitialized = false;
 
-  // Define the screens for each tab - Home, Consults, Activity, and Account
+  // Define the screens for each tab - Home, Consults, Activity, My Health, and Account
   final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     const ConsultsScreen(), // Renamed from VisitsScreen
     const ActivityScreen(), // Add the new ActivityScreen
+    const MyHealthScreen(),
     const AccountScreen(),
   ];
 
@@ -233,6 +235,11 @@ class MainScreenState extends State<MainScreen>
                 icon: Icon(Icons.bar_chart_outlined),
                 activeIcon: Icon(Icons.bar_chart),
                 label: 'Activity',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.favorite_border),
+                activeIcon: Icon(Icons.favorite),
+                label: 'My Health',
               ),
               const BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),

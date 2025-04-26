@@ -10,7 +10,9 @@ import 'category_selection_screen.dart';
 import '../consultation/chat_interface.dart';
 
 class RequestScreen extends StatefulWidget {
-  const RequestScreen({super.key});
+  final ProviderType? forcedProviderType;
+
+  const RequestScreen({this.forcedProviderType, super.key});
 
   @override
   State<RequestScreen> createState() => _RequestScreenState();
@@ -31,6 +33,11 @@ class _RequestScreenState extends State<RequestScreen> {
 
       // Clear request data while preserving provider type
       requestProvider.clearRequest();
+
+      // If a provider type was forced, apply it
+      if (widget.forcedProviderType != null) {
+        requestProvider.setProviderType(widget.forcedProviderType!);
+      }
 
       // Set UI state based on provider state
       setState(() {
@@ -498,34 +505,31 @@ class _RequestScreenState extends State<RequestScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header section with descriptive text
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'How can we help you today?',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+            if (widget.forcedProviderType == null) ...[
+              // Header section with descriptive text
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Request Consult or Ask Question',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Select a provider type and consultation option below',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Provider toggle section
-            providerToggle(),
+              // Provider toggle section
+              providerToggle(),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
             // Consultation section header
             Padding(
