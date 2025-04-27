@@ -3,7 +3,6 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 
 // This service handles WebRTC signaling through Firestore
 class SignalingService {

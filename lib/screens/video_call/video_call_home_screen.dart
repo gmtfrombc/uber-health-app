@@ -181,7 +181,9 @@ class _VideoCallHomeScreenState extends State<VideoCallHomeScreen> {
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
                     _isJoining
-                        ? theme.colorScheme.primary.withOpacity(0.6)
+                        ? theme.colorScheme.primary.withAlpha(
+                          (0.6 * 255).round(),
+                        )
                         : theme.colorScheme.primary,
                   ),
                   foregroundColor: WidgetStateProperty.all(

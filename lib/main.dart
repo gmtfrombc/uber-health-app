@@ -24,6 +24,8 @@ import 'theme.dart'; // Import our custom theme
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
 import 'package:voice_chat_core/voice_chat_core.dart'; // Import voice package
 import 'package:audio_session/audio_session.dart'; // Import audio_session
+import 'providers/voice_provider.dart'; // Import voice provider
+import 'package:flutter/services.dart';
 
 // Import the test widget file using relative path
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -166,6 +168,9 @@ Future<void> main() async {
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // Lock device orientation to portrait (no landscape rotations)
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
     // --- Configure Audio Session ---
     final session = await AudioSession.instance;
     await session.configure(
@@ -221,13 +226,22 @@ Future<void> main() async {
       // Handle missing key error
     }
 
+    // Initialize voice provider
+    final voiceProvider = VoiceProvider();
+    await voiceProvider.init();
+
     // Only proceed if keys are valid (basic check)
     final elevenLabsService = ElevenLabsService(
       apiKey: elevenLabsApiKey ?? '',
       baseUrl: 'https://api.elevenlabs.io/v1',
-      defaultVoiceId: 'pNInz6obpgDQGcFmaJgB',
+      defaultVoiceId: voiceProvider.voiceId,
       defaultModelId: 'eleven_flash_v2_5',
     );
+
+    // Update service when user changes voice
+    voiceProvider.addListener(() {
+      elevenLabsService.setVoiceId(voiceProvider.voiceId);
+    });
 
     // SpeechService initialization needs the audio session instance
     final speechService = SpeechService(
@@ -267,7 +281,8 @@ Future<void> main() async {
     runApp(
       MyApp(
         speechService: speechService,
-        elevenLabsService: elevenLabsService /*, audioSession: session*/,
+        elevenLabsService: elevenLabsService,
+        voiceProvider: voiceProvider,
       ),
     );
   }, _handleZoneError);
@@ -373,11 +388,13 @@ class MyApp extends StatelessWidget {
   // Accept the services as parameters
   final SpeechService speechService;
   final ElevenLabsService elevenLabsService;
+  final VoiceProvider voiceProvider;
 
   const MyApp({
     super.key,
     required this.speechService,
     required this.elevenLabsService,
+    required this.voiceProvider,
   });
 
   @override
@@ -387,6 +404,7 @@ class MyApp extends StatelessWidget {
         // Provide the existing service instances
         Provider<SpeechService>.value(value: speechService),
         Provider<ElevenLabsService>.value(value: elevenLabsService),
+        ChangeNotifierProvider.value(value: voiceProvider),
 
         // Existing providers
         ChangeNotifierProvider(create: (_) => RequestProvider()),

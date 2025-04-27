@@ -124,7 +124,10 @@ class _MyHealthScreenState extends State<MyHealthScreen> {
               : Colors.grey.shade800,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.black.withOpacity(0.05), width: 1),
+        side: BorderSide(
+          color: Colors.black.withAlpha((0.05 * 255).round()),
+          width: 1,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24),

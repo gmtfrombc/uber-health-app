@@ -5,6 +5,7 @@ import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 import '../auth/sign_in_screen.dart'; // Import SignInScreen
 import '../../providers/theme_provider.dart';
+import '../../providers/voice_provider.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -63,6 +64,9 @@ class _AccountScreenState extends State<AccountScreen> {
                 const SizedBox(height: 24),
                 _buildSectionTitle(context, 'Account Settings'),
                 _buildAccountSettingsCard(context),
+                const SizedBox(height: 24),
+                _buildSectionTitle(context, 'Voice Settings'),
+                _buildVoiceSettingsCard(context),
                 const SizedBox(height: 24),
                 _buildSectionTitle(context, 'Actions'),
                 _buildActionsList(context),
@@ -424,6 +428,69 @@ class _AccountScreenState extends State<AccountScreen> {
               ],
             ),
           ),
+    );
+  }
+
+  Widget _buildVoiceSettingsCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final voiceProvider = Provider.of<VoiceProvider>(context);
+
+    const Map<String, String> voices = {
+      'Rachel (US-F)': 'pNInz6obpgDQGcFmaJgB',
+      'Bella (UK-F)': 'EXAVITQu4vr4xnSDxMaL',
+      'Adam (US-M)': 'YoZ06aMxZJJ28mfd3POQ',
+    };
+
+    String currentName =
+        voices.entries
+            .firstWhere(
+              (e) => e.value == voiceProvider.voiceId,
+              orElse: () => const MapEntry('Custom', ''),
+            )
+            .key;
+
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        side: BorderSide(
+          color:
+              theme.textTheme.bodyLarge?.color?.withAlpha(51) ??
+              Colors.grey.withAlpha(51),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        leading: Icon(
+          Icons.record_voice_over,
+          color: theme.colorScheme.primary,
+        ),
+        title: const Text('AI Voice'),
+        subtitle: Text(currentName),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          final selected = await showDialog<String>(
+            context: context,
+            builder: (_) {
+              return SimpleDialog(
+                title: const Text('Select voice'),
+                children:
+                    voices.entries.map((e) {
+                      return RadioListTile<String>(
+                        value: e.value,
+                        groupValue: voiceProvider.voiceId,
+                        title: Text(e.key),
+                        onChanged: (val) => Navigator.pop(context, val),
+                      );
+                    }).toList(),
+              );
+            },
+          );
+          if (selected != null && selected != voiceProvider.voiceId) {
+            voiceProvider.setVoiceId(selected);
+          }
+        },
+      ),
     );
   }
 }

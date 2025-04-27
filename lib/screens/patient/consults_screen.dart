@@ -434,10 +434,10 @@ class _ConsultsScreenState extends State<ConsultsScreen>
     final statusBgColor =
         isPending
             ? (isDarkMode
-                ? Colors.orange.shade900.withOpacity(0.3)
+                ? Colors.orange.shade900.withAlpha((0.3 * 255).round())
                 : Colors.orange.shade100)
             : (isDarkMode
-                ? Colors.green.shade900.withOpacity(0.3)
+                ? Colors.green.shade900.withAlpha((0.3 * 255).round())
                 : Colors.green.shade100);
 
     final statusTextColor =

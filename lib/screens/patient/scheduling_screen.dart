@@ -191,14 +191,16 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
     final DateFormat dateFormat = DateFormat('EEEE, MMMM d, yyyy');
     final DateFormat timeFormat = DateFormat('h:mm a');
     final theme = Theme.of(context);
-
-    return WillPopScope(
-      onWillPop: () async {
-        // Just return to previous screen without cancelling the appointment
-        Navigator.of(
-          context,
-        ).pop(false); // Pass false to indicate no changes were made
-        return false; // Return false to prevent the default back behavior
+    return PopScope(
+      // Block automatic pop so we can run custom logic first
+      canPop: false,
+      // Preferred callback in recent Flutter versions
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (!didPop) {
+          // User tapped back – pop manually and pass `false`
+          // to indicate no changes were made.
+          Navigator.of(context).pop(false);
+        }
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -260,7 +262,9 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                   Text(
                     'at ${timeFormat.format(scheduledDateTime)}',
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.8),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.8 * 255).round(),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -371,24 +375,38 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: CupertinoDatePicker(
-                    initialDateTime: scheduledDateTime,
-                    minimumDate: _minimumDate,
-                    mode: CupertinoDatePickerMode.dateAndTime,
-                    minuteInterval: 15,
-                    backgroundColor:
-                        theme.brightness == Brightness.dark
-                            ? theme.colorScheme.surface
-                            : Colors.white,
-                    onDateTimeChanged: (newDateTime) {
-                      // Ensure the date is not in the past
-                      if (newDateTime.isBefore(_minimumDate)) {
-                        newDateTime = _minimumDate;
-                      }
-                      setState(() {
-                        scheduledDateTime = newDateTime;
-                      });
-                    },
+                  child: CupertinoTheme(
+                    data: CupertinoThemeData(
+                      brightness: theme.brightness,
+                      textTheme: CupertinoTextThemeData(
+                        dateTimePickerTextStyle:
+                            theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ) ??
+                            TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                    child: CupertinoDatePicker(
+                      initialDateTime: scheduledDateTime,
+                      minimumDate: _minimumDate,
+                      mode: CupertinoDatePickerMode.dateAndTime,
+                      minuteInterval: 15,
+                      backgroundColor: Colors.transparent,
+                      onDateTimeChanged: (newDateTime) {
+                        // Ensure the date is not in the past
+                        if (newDateTime.isBefore(_minimumDate)) {
+                          newDateTime = _minimumDate;
+                        }
+                        setState(() {
+                          scheduledDateTime = newDateTime;
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -406,7 +424,7 @@ class _SchedulingScreenState extends State<SchedulingScreen> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     disabledBackgroundColor: theme.colorScheme.primary
-                        .withOpacity(0.6),
+                        .withAlpha((0.6 * 255).round()),
                   ),
                   child:
                       _isSubmitting

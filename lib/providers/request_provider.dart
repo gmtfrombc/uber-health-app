@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../models/patient_request.dart';
 import '../services/firebase_service.dart';

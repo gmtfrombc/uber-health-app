@@ -539,9 +539,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         ),
       ),
       body: PopScope(
-        canPop: !_hasChanges,
-        onPopInvoked: (didPop) {
-          // Handle system back button
+        canPop: true,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          // If the automatic pop was blocked and we have unsaved changes, prompt.
           if (!didPop && _hasChanges) {
             showUnsavedChangesDialog();
           }

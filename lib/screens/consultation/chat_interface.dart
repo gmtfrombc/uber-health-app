@@ -16,6 +16,8 @@ import '../../providers/medical_questions_provider.dart';
 import '../../screens/main_screen.dart';
 import 'package:voice_chat_core/voice_chat_core.dart' as core;
 import 'dart:async';
+import '../video_call/voice_chat_interface_screen.dart';
+import '../../models/chat_mode.dart';
 
 class ChatInterface extends StatefulWidget {
   final bool isSynchronous; // true for consult, false for medical question
@@ -27,6 +29,7 @@ class ChatInterface extends StatefulWidget {
   appointmentId; // ID for scheduled appointments that are being checked into
   final String?
   category; // Category of the consult, used to set the correct prompt
+  final ChatMode chatMode; // Add chat mode to choose text or voice
 
   const ChatInterface({
     required this.isSynchronous,
@@ -34,6 +37,7 @@ class ChatInterface extends StatefulWidget {
     required this.urgency,
     this.appointmentId,
     this.category,
+    this.chatMode = ChatMode.regular,
     super.key,
   });
 
@@ -178,6 +182,35 @@ class ChatInterfaceState extends State<ChatInterface> {
       ),
     );
     _scrollToBottom();
+
+    // Prompt user to choose chat mode if not specified explicitly
+    if (widget.chatMode == ChatMode.regular) {
+      // Delay showing dialog until first frame built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showChatModeDialog();
+        }
+      });
+    } else if (widget.chatMode == ChatMode.voice) {
+      // Directly navigate to voice chat interface
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) => VoiceChatInterfaceScreen(
+                    isSynchronous: widget.isSynchronous,
+                    isImmediate: widget.isImmediate,
+                    urgency: widget.urgency,
+                    appointmentId: widget.appointmentId,
+                    category: widget.category,
+                  ),
+            ),
+          );
+        }
+      });
+    }
   }
 
   void _scrollToBottom() {
@@ -364,6 +397,62 @@ class ChatInterfaceState extends State<ChatInterface> {
     }
   }
 
+  void _showChatModeDialog() {
+    final theme = Theme.of(context);
+    showDialog<ChatMode>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Choose Interaction Mode'),
+          content: const Text(
+            'How would you like to interact with the AI assistant?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(ChatMode.voice);
+              },
+              child: const Text('Voice'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(ChatMode.regular);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+              ),
+              child: const Text('Text'),
+            ),
+          ],
+        );
+      },
+    ).then((selectedMode) {
+      if (!mounted || selectedMode == null) return;
+      if (selectedMode == ChatMode.voice) {
+        // Navigate to dedicated voice chat screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => VoiceChatInterfaceScreen(
+                  isSynchronous: widget.isSynchronous,
+                  isImmediate: widget.isImmediate,
+                  urgency: widget.urgency,
+                  appointmentId: widget.appointmentId,
+                  category: widget.category,
+                ),
+          ),
+        );
+      } else {
+        // Stay in text chat
+        setState(() {
+          // chat mode remains text
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     _stateSubscription?.cancel();
@@ -457,7 +546,7 @@ class ChatInterfaceState extends State<ChatInterface> {
                           ),
                         ),
                         child: const Text(
-                          'Done',
+                          'Next',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

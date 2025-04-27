@@ -118,8 +118,9 @@ class UserModel {
 
   /// Computed property: consider the user onboarded if at least one health info field has been filled.
   bool get onboarded {
-    if (role == 'provider')
+    if (role == 'provider') {
       return true; // Providers are considered onboarded by default
+    }
     return (medications != null && medications!.isNotEmpty) ||
         (allergies != null && allergies!.isNotEmpty) ||
         (conditions != null && conditions!.isNotEmpty);

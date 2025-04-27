@@ -270,8 +270,9 @@ class ProviderDashboardProvider with ChangeNotifier {
 
       // Sort scheduled appointments by date/time
       _scheduledRequests.sort((a, b) {
-        if (a.scheduledDateTime == null && b.scheduledDateTime == null)
+        if (a.scheduledDateTime == null && b.scheduledDateTime == null) {
           return 0;
+        }
         if (a.scheduledDateTime == null) return 1;
         if (b.scheduledDateTime == null) return -1;
         return a.scheduledDateTime!.compareTo(b.scheduledDateTime!);
